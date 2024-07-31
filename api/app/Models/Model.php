@@ -31,4 +31,16 @@ class Model extends LaravelModel
     {
         return $this->table ?? Str::snake(class_basename($this));
     }
+
+    protected static function boot()
+{
+    parent::boot();
+
+    static::deleting(function ($datosIdentificacion) {
+        // Eliminar el objeto relacionado en InformacionInscripcion
+        $datosIdentificacion->informacionInscripcion()->delete();
+    });
+}
+
+    
 }

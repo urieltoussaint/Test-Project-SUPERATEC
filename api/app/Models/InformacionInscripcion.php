@@ -26,6 +26,9 @@ class InformacionInscripcion extends Model
         'observaciones',
         'cedula_identidad'
     ];
+    protected $listable = [
+        'descripcion','id'
+    ];
 
     // Definir relaciones
     public function comoEnteroSuperatec()

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-
+import React, { useState } from 'react';
 import axios from '../axiosConfig';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-
+import SelectComponent from './SelectComponent';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -40,46 +39,15 @@ const CreateDatos = () => {
     observaciones: '',
   });
 
-  const [options, setOptions] = useState({
-    statusSeleccion: [],
-    nacionalidades: [],
-    generos: [],
-    gruposPrioritarios: [],
-    estados: [],
-    procedencias: [],
-    nivelesInstruccion: [],
-    comoEnteroSuperatec: [],
-    cohortes: [],
-    centros: [],
-    periodos: [],
-    areas: [],
-    unidades: [],
-    modalidades: [],
-    niveles: [],
-    tiposPrograma: [],
-  });
-
   const navigate = useNavigate();
 
-  useEffect(() => {
-    getOptions();
-  }, []);
-
-  const getOptions = async () => {
-    try {
-      const response = await axios.get(`${endpoint}/formulario/create`);
-      setOptions(response.data);
-    } catch (error) {
-      console.error('Error fetching options:', error);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value  // Asegúrate de que este valor se está actualizando correctamente.
+    }));
+    
   };
 
   const handleSubmit = async (e) => {
@@ -91,11 +59,10 @@ const CreateDatos = () => {
       console.error('Error creating data:', error);
     }
   };
-    
+
   return (
-    
     <div>
-      <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
+      <meta name="csrf-token" content="{{ csrf_token() }}" />
       <h1>Agregar Nuevo Registro</h1>
       <Form onSubmit={handleSubmit}>
         <script src="{{ mix('js/app.js') }}"></script>
@@ -109,40 +76,29 @@ const CreateDatos = () => {
             required
           />
         </Form.Group>
-        <Form.Group controlId="status_seleccion_id">
-          <Form.Label>Status Selección</Form.Label>
-          <Form.Control
-            as="select"
-            name="status_seleccion_id"
-            value={formData.status_seleccion_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.statusSeleccion.map((status) => (
-              <option key={status.id} value={status.id}>
-                {status.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="nacionalidad_id">
-          <Form.Label>Nacionalidad</Form.Label>
-          <Form.Control
-            as="select"
-            name="nacionalidad_id"
-            value={formData.nacionalidad_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.nacionalidades.map((nacionalidad) => (
-              <option key={nacionalidad.id} value={nacionalidad.id}>
-                {nacionalidad.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
+
+        <SelectComponent
+          endpoint={`${endpoint}/status_seleccion`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.status_seleccion_id}
+          handleChange={handleChange}
+          controlId="status_seleccion_id"
+          label="Status Selección"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/nacionalidad_seleccion`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.nacionalidad_id}
+          handleChange={handleChange}
+          controlId="nacionalidad_id"
+          label="Nacionalidad"
+        />
+
+        {/* Añade más SelectComponent según sea necesario */}
+
         <Form.Group controlId="nombres">
           <Form.Label>Nombres</Form.Label>
           <Form.Control
@@ -183,40 +139,27 @@ const CreateDatos = () => {
             required
           />
         </Form.Group>
-        <Form.Group controlId="genero_id">
-          <Form.Label>Género</Form.Label>
-          <Form.Control
-            as="select"
-            name="genero_id"
-            value={formData.genero_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.generos.map((genero) => (
-              <option key={genero.id} value={genero.id}>
-                {genero.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="grupo_prioritario_id">
-          <Form.Label>Grupo Prioritario</Form.Label>
-          <Form.Control
-            as="select"
-            name="grupo_prioritario_id"
-            value={formData.grupo_prioritario_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.gruposPrioritarios.map((grupo) => (
-              <option key={grupo.id} value={grupo.id}>
-                {grupo.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
+
+        <SelectComponent
+          endpoint={`${endpoint}/genero`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.genero_id}
+          handleChange={handleChange}
+          controlId="genero_id"
+          label="Género"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/grupo_prioritario`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.grupo_prioritario_id}
+          handleChange={handleChange}
+          controlId="grupo_prioritario_id"
+          label="Grupo Prioritario"
+        />
+
         <Form.Group controlId="direccion">
           <Form.Label>Dirección</Form.Label>
           <Form.Control
@@ -227,23 +170,17 @@ const CreateDatos = () => {
             required
           />
         </Form.Group>
-        <Form.Group controlId="estado_id">
-          <Form.Label>Estado</Form.Label>
-          <Form.Control
-            as="select"
-            name="estado_id"
-            value={formData.estado_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.estados.map((estado) => (
-              <option key={estado.id} value={estado.id}>
-                {estado.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
+
+        <SelectComponent
+          endpoint={`${endpoint}/estado`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.estado_id}
+          handleChange={handleChange}
+          controlId="estado_id"
+          label="Estado"
+        />
+
         <Form.Group controlId="direccion_email">
           <Form.Label>Dirección Email</Form.Label>
           <Form.Control
@@ -254,23 +191,17 @@ const CreateDatos = () => {
             required
           />
         </Form.Group>
-        <Form.Group controlId="procedencia_id">
-          <Form.Label>Procedencia</Form.Label>
-          <Form.Control
-            as="select"
-            name="procedencia_id"
-            value={formData.procedencia_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.procedencias.map((procedencia) => (
-              <option key={procedencia.id} value={procedencia.id}>
-                {procedencia.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
+
+        <SelectComponent
+          endpoint={`${endpoint}/procedencia`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.procedencia_id}
+          handleChange={handleChange}
+          controlId="procedencia_id"
+          label="Procedencia"
+        />
+
         <Form.Group controlId="telefono_casa">
           <Form.Label>Teléfono de Casa</Form.Label>
           <Form.Control
@@ -289,177 +220,109 @@ const CreateDatos = () => {
             onChange={handleChange}
           />
         </Form.Group>
-        <Form.Group controlId="nivel_instruccion_id">
-          <Form.Label>Nivel de Instrucción</Form.Label>
-          <Form.Control
-            as="select"
-            name="nivel_instruccion_id"
-            value={formData.nivel_instruccion_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.nivelesInstruccion.map((nivel) => (
-              <option key={nivel.id} value={nivel.id}>
-                {nivel.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
+
+        <SelectComponent
+          endpoint={`${endpoint}/nivel_instruccion`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.nivel_instruccion_id}
+          handleChange={handleChange}
+          controlId="nivel_instruccion_id"
+          label="Nivel de Instrucción"
+        />
+
         <h2>Información de Inscripción</h2>
-        <Form.Group controlId="como_entero_superatec_id">
-          <Form.Label>¿Cómo se enteró de SUPERATEC?</Form.Label>
-          <Form.Control
-            as="select"
-            name="como_entero_superatec_id"
-            value={formData.como_entero_superatec_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.comoEnteroSuperatec.map((opcion) => (
-              <option key={opcion.id} value={opcion.id}>
-                {opcion.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="cohorte_id">
-          <Form.Label>Cohorte</Form.Label>
-          <Form.Control
-            as="select"
-            name="cohorte_id"
-            value={formData.cohorte_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.cohortes.map((cohorte) => (
-              <option key={cohorte.id} value={cohorte.id}>
-                {cohorte.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="centro_id">
-          <Form.Label>Centro</Form.Label>
-          <Form.Control
-            as="select"
-            name="centro_id"
-            value={formData.centro_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.centros.map((centro) => (
-              <option key={centro.id} value={centro.id}>
-                {centro.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="periodo_id">
-          <Form.Label>Periodo</Form.Label>
-          <Form.Control
-            as="select"
-            name="periodo_id"
-            value={formData.periodo_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.periodos.map((periodo) => (
-              <option key={periodo.id} value={periodo.id}>
-                {periodo.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="area_id">
-          <Form.Label>Área</Form.Label>
-          <Form.Control
-            as="select"
-            name="area_id"
-            value={formData.area_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.areas.map((area) => (
-              <option key={area.id} value={area.id}>
-                {area.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="unidad_id">
-          <Form.Label>Unidad</Form.Label>
-          <Form.Control
-            as="select"
-            name="unidad_id"
-            value={formData.unidad_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.unidades.map((unidad) => (
-              <option key={unidad.id} value={unidad.id}>
-                {unidad.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="modalidad_id">
-          <Form.Label>Modalidad</Form.Label>
-          <Form.Control
-            as="select"
-            name="modalidad_id"
-            value={formData.modalidad_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.modalidades.map((modalidad) => (
-              <option key={modalidad.id} value={modalidad.id}>
-                {modalidad.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="nivel_id">
-          <Form.Label>Nivel</Form.Label>
-          <Form.Control
-            as="select"
-            name="nivel_id"
-            value={formData.nivel_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.niveles.map((nivel) => (
-              <option key={nivel.id} value={nivel.id}>
-                {nivel.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="tipo_programa_id">
-          <Form.Label>Tipo de Programa</Form.Label>
-          <Form.Control
-            as="select"
-            name="tipo_programa_id"
-            value={formData.tipo_programa_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione</option>
-            {options.tiposPrograma.map((tipoPrograma) => (
-              <option key={tipoPrograma.id} value={tipoPrograma.id}>
-                {tipoPrograma.descripcion}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
+
+        <SelectComponent
+          endpoint={`${endpoint}/como_entero_superatec`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.como_entero_superatec_id}
+          handleChange={handleChange}
+          controlId="como_entero_superatec_id"
+          label="¿Cómo se enteró de SUPERATEC?"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/cohorte`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.cohorte_id}
+          handleChange={handleChange}
+          controlId="cohorte_id"
+          label="Cohorte"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/centro`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.centro_id}
+          handleChange={handleChange}
+          controlId="centro_id"
+          label="Centro"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/periodo`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.periodo_id}
+          handleChange={handleChange}
+          controlId="periodo_id"
+          label="Periodo"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/area`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.area_id}
+          handleChange={handleChange}
+          controlId="area_id"
+          label="Área"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/unidad`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.unidad_id}
+          handleChange={handleChange}
+          controlId="unidad_id"
+          label="Unidad"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/modalidad`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.modalidad_id}
+          handleChange={handleChange}
+          controlId="modalidad_id"
+          label="Modalidad"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/nivel`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.nivel_id}
+          handleChange={handleChange}
+          controlId="nivel_id"
+          label="Nivel"
+        />
+
+        <SelectComponent
+          endpoint={`${endpoint}/tipo_programa`}
+          nameField="descripcion"
+          valueField="id"
+          selectedValue={formData.tipo_programa_id}
+          handleChange={handleChange}
+          controlId="tipo_programa_id"
+          label="Tipo de Programa"
+        />
+
         <Form.Group controlId="realiza_aporte">
           <Form.Check
             type="checkbox"

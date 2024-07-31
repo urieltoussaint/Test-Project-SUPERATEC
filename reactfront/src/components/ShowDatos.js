@@ -37,7 +37,7 @@ const ShowDatos = () => {
     if (error) {
         return <div>{error}</div>;
     }
-
+    
     return (
         <div className="container mt-5">
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
@@ -53,7 +53,9 @@ const ShowDatos = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {datos.map((dato) => (
+                   
+                    {datos?.data?.map((dato) => (
+
                         <tr key={dato.cedula_identidad}>
                             <td>{dato.cedula_identidad}</td>
                             <td>{dato.nombres}</td>

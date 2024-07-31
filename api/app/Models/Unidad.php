@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+
 
 class Unidad extends Model
 {
     protected $table = 'unidad';
 
-    protected $fillable = ['descripcion'];
+    protected $listable = ['descripcion','id'];
 }

@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+//use Illuminate\Database\Eloquent\Model;
 
 class DatosIdentificacion extends Model
 {
     protected $table = 'datos_identificacion';
     protected $primaryKey = 'cedula_identidad';
-    public $incrementing = false; // No autoincrementable porque es VARCHAR
-    public $timestamps = false; // Desactiva las marcas de tiempo automáticas
+    public $incrementing = false;
+    public $timestamps = false;
 
     protected $fillable = [
         'cedula_identidad',
@@ -32,23 +31,31 @@ class DatosIdentificacion extends Model
         'nivel_instruccion_id',
         'nro_documento'
     ];
-
-    // Usar los eventos del modelo para establecer valores predeterminados
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            // Establecer la fecha actual
-            $model->fecha_actual = now();
-
-            // Obtener el último número de documento y sumarle uno
-            $lastNroDocumento = DB::table('datos_identificacion')->max('nro_documento');
-            $model->nro_documento = $lastNroDocumento ? $lastNroDocumento + 1 : 1;
-        });
-    }
+    protected $listable = [
+        'cedula_identidad',
+        'status_seleccion_id',
+        'nacionalidad_id',
+        'nombres',
+        'apellidos',
+        'fecha_nacimiento',
+        'edad',
+        'genero_id',
+        'grupo_prioritario_id',
+        'direccion',
+        'fecha_actual',
+        'estado_id',
+        'direccion_email',
+        'procedencia_id',
+        'telefono_casa',
+        'telefono_celular',
+        'nivel_instruccion_id',
+        'nro_documento'
+    ];
+    
+    
 
     // Definir relaciones
+    
     public function statusSeleccion()
     {
         return $this->belongsTo(StatusSeleccion::class, 'status_seleccion_id');
@@ -83,4 +90,9 @@ class DatosIdentificacion extends Model
     {
         return $this->belongsTo(NivelInstruccion::class, 'nivel_instruccion_id');
     }
+
+    public function informacionInscripcion()
+{
+    return $this->hasOne(InformacionInscripcion::class, 'cedula_identidad', 'cedula_identidad');
+}
 }

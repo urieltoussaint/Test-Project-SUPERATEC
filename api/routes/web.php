@@ -23,11 +23,11 @@ use App\Models\DatosIdentificacion;
 //Route::delete('/api/datos/{id}', [DatosIdentificacionController::class, 'destroy']);
 
 
-Route::get('/api/datos', [DatosIdentificacionController::class, 'index'])->name('datos.index');
-Route::get('/api/datos/{id}', [DatosIdentificacionController::class, 'show'])->name('datos.show');
-Route::post('/api/datos', [DatosIdentificacionController::class, 'store'])->name('datos.store');
-Route::put('/api/datos/{id}', [DatosIdentificacionController::class, 'update'])->name('datos.update');
-Route::delete('/api/datos/{id}', [DatosIdentificacionController::class, 'destroy'])->name('datos.destroy');
-Route::get('/api/datos/{id}/edit', [DatosIdentificacionController::class, 'edit'])->name('datos.edit');
-Route::get('/api/formulario/create', [DatosIdentificacionController::class, 'create'])->name('formulario.create');
-Route::post('/api/formulario', [DatosIdentificacionController::class, 'store'])->name('formulario.store');
+// Route::get('/api/datos', [DatosIdentificacionController::class, 'index'])->name('datos.index');
+// Route::get('/api/datos/{id}', [DatosIdentificacionController::class, 'show'])->name('datos.show');
+// Route::post('/api/datos', [DatosIdentificacionController::class, 'store'])->name('datos.store');
+// Route::put('/api/datos/{id}', [DatosIdentificacionController::class, 'update'])->name('datos.update');
+// Route::delete('/api/datos/{id}', [DatosIdentificacionController::class, 'destroy'])->name('datos.destroy');
+// Route::get('/api/datos/{id}/edit', [DatosIdentificacionController::class, 'edit'])->name('datos.edit');
+// Route::get('/api/formulario/create', [DatosIdentificacionController::class, 'create'])->name('formulario.create');
+// Route::post('/api/formulario', [DatosIdentificacionController::class, 'store'])->name('formulario.store');
