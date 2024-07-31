@@ -8,6 +8,7 @@ class DatosIdentificacion extends Model
 {
     protected $table = 'datos_identificacion';
     protected $primaryKey = 'cedula_identidad';
+    protected $keyType= 'string';
     public $incrementing = false;
     public $timestamps = false;
 

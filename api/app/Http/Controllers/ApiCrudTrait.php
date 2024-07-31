@@ -24,17 +24,7 @@ trait ApiCrudTrait
         return $model;
     }
 
-    protected function applyRelations($query)
-    {
-        if (property_exists($this, 'with')) {
-            return $query->with($this->with);
-        }
-        return $query;
-    }
-    public function showWithRelations($model, $id, $withRelations = [])
-    {
-        $resource = $model::with($withRelations)->findOrFail($id);
-        return response()->json($resource);
-    }
+    
+    
     
 }

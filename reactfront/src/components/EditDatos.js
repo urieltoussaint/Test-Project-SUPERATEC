@@ -24,15 +24,17 @@ const EditDatos = () => {
     estado_id: '',
     procedencia_id: '',
     nivel_instruccion_id: '',
-    como_entero_superatec_id: '',
-    cohorte_id: '',
-    centro_id: '',
-    periodo_id: '',
-    area_id: '',
-    unidad_id: '',
-    modalidad_id: '',
-    nivel_id: '',
-    tipo_programa_id: '',
+    informacion_inscripcion: {
+      como_entero_superatec_id: '',
+      cohorte_id: '',
+      centro_id: '',
+      periodo_id: '',
+      area_id: '',
+      unidad_id: '',
+      modalidad_id: '',
+      nivel_id: '',
+      tipo_programa_id: '',
+    },
     realiza_aporte: false,
     es_patrocinado: false,
     grupo: '',
@@ -46,7 +48,20 @@ const EditDatos = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`${endpoint}/datos/${id}`);
-        setFormData(response.data);
+        setFormData({
+          ...response.data,
+          informacion_inscripcion: response.data.informacion_inscripcion || {
+            como_entero_superatec_id: '',
+            cohorte_id: '',
+            centro_id: '',
+            periodo_id: '',
+            area_id: '',
+            unidad_id: '',
+            modalidad_id: '',
+            nivel_id: '',
+            tipo_programa_id: '',
+          }
+        });
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -56,27 +71,43 @@ const EditDatos = () => {
   }, [id]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    const { name, value, type, checked } = event.target;
+    const keys = name.split('.');
+
+    if (keys.length > 1) {
+      setFormData(prevState => ({
+        ...prevState,
+        informacion_inscripcion: {
+          ...prevState.informacion_inscripcion,
+          [keys[1]]: type === 'checkbox' ? checked : value
+        }
+      }));
+    } else {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${endpoint}/datos/${id}`, formData);
+      await axios.patch(`${endpoint}/datos/${id}`, formData);
       navigate('/datos');
     } catch (error) {
       console.error('Error updating data:', error);
     }
   };
+  
+  
+  
+  
 
   return (
     <div>
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Agregar Nuevo Registro</h1>
+      <h1>Editar Registro</h1>
       <Form onSubmit={handleSubmit}>
         <script src="{{ mix('js/app.js') }}"></script>
         <Form.Group controlId="cedula_identidad">
@@ -250,29 +281,34 @@ const EditDatos = () => {
           endpoint={`${endpoint}/como_entero_superatec`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.como_entero_superatec_id}
+          selectedValue={formData.informacion_inscripcion?.como_entero_superatec_id}
           handleChange={handleChange}
-          controlId="como_entero_superatec_id"
+          controlId="informacion_inscripcion.como_entero_superatec_id"
+          name="informacion_inscripcion.como_entero_superatec_id"
           label="¿Cómo se enteró de SUPERATEC?"
         />
 
-        <SelectComponent
-          endpoint={`${endpoint}/cohorte`}
-          nameField="descripcion"
-          valueField="id"
-          selectedValue={formData.cohorte_id}
-          handleChange={handleChange}
-          controlId="cohorte_id"
-          label="Cohorte"
-        />
+          <SelectComponent
+            endpoint={`${endpoint}/cohorte`}
+            nameField="descripcion"
+            valueField="id"
+            selectedValue={formData.informacion_inscripcion?.cohorte_id}
+            handleChange={handleChange}
+            controlId="informacion_inscripcion.cohorte_id"
+            label="Cohorte"
+            name="informacion_inscripcion.cohorte_id" // Asegúrate de que el nombre refleje el anidamiento
+          />
+
 
         <SelectComponent
           endpoint={`${endpoint}/centro`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.centro_id}
+          selectedValue={formData.informacion_inscripcion.centro_id}
           handleChange={handleChange}
-          controlId="centro_id"
+          controlId="informacion_inscripcion.centro_id"
+          name="informacion_inscripcion.centro_id"
+
           label="Centro"
         />
 
@@ -280,9 +316,10 @@ const EditDatos = () => {
           endpoint={`${endpoint}/periodo`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.periodo_id}
+          selectedValue={formData.informacion_inscripcion.periodo_id}
           handleChange={handleChange}
-          controlId="periodo_id"
+          controlId="informacion_inscripcion.periodo_id"
+          name="informacion_inscripcion.periodo_id"
           label="Periodo"
         />
 
@@ -290,9 +327,10 @@ const EditDatos = () => {
           endpoint={`${endpoint}/area`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.area_id}
+          selectedValue={formData.informacion_inscripcion.area_id}
           handleChange={handleChange}
-          controlId="area_id"
+          controlId="informacion_inscripcion.area_id"
+          name="informacion_inscripcion.area_id"
           label="Área"
         />
 
@@ -300,9 +338,10 @@ const EditDatos = () => {
           endpoint={`${endpoint}/unidad`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.unidad_id}
+          selectedValue={formData.informacion_inscripcion.unidad_id}
           handleChange={handleChange}
-          controlId="unidad_id"
+          controlId="informacion_inscripcion.unidad_id"
+          name="informacion_inscripcion.unidad_id"
           label="Unidad"
         />
 
@@ -310,9 +349,10 @@ const EditDatos = () => {
           endpoint={`${endpoint}/modalidad`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.modalidad_id}
+          selectedValue={formData.informacion_inscripcion.modalidad_id}
           handleChange={handleChange}
-          controlId="modalidad_id"
+          controlId="informacion_inscripcion.modalidad_id"
+          name="informacion_inscripcion.modalidad_id"
           label="Modalidad"
         />
 
@@ -320,9 +360,10 @@ const EditDatos = () => {
           endpoint={`${endpoint}/nivel`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.nivel_id}
+          selectedValue={formData.informacion_inscripcion.nivel_id}
           handleChange={handleChange}
-          controlId="nivel_id"
+          controlId="informacion_inscripcion.nivel_id"
+          name="informacion_inscripcion.nivel_id"
           label="Nivel"
         />
 
@@ -330,9 +371,10 @@ const EditDatos = () => {
           endpoint={`${endpoint}/tipo_programa`}
           nameField="descripcion"
           valueField="id"
-          selectedValue={formData.tipo_programa_id}
+          selectedValue={formData.informacion_inscripcion.tipo_programa_id}
           handleChange={handleChange}
-          controlId="tipo_programa_id"
+          controlId="informacion_inscripcion.tipo_programa_id"
+          name="informacion_inscripcion.tipo_programa_id"
           label="Tipo de Programa"
         />
 

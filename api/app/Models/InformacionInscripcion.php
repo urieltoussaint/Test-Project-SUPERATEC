@@ -27,7 +27,7 @@ class InformacionInscripcion extends Model
         'cedula_identidad'
     ];
     protected $listable = [
-        'descripcion','id'
+        'descripcion','id','cedula_identidad'
     ];
 
     // Definir relaciones

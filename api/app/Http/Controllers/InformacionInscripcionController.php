@@ -13,8 +13,5 @@ class InformacionInscripcionController extends Controller
     ;
 
     protected $class = InformacionInscripcion::class;
-    public function show($id)
-    {
-        return $this->showWithRelations(InformacionInscripcion::class, $id, ['cohorte','centro','periodo','periodo','area','unidad','modalidad','nivel','tipoPrograma']);
-    }
+    
 }
