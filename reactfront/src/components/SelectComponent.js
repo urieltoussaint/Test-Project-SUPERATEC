@@ -5,8 +5,8 @@ import useFetchOptions from './useFetchOptions';
 const SelectComponent = ({ endpoint, nameField, valueField, selectedValue, handleChange, controlId, label }) => {
   const { options, loading, error } = useFetchOptions(endpoint, nameField, valueField);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  // if (loading) return <p>Loading...</p>;
+  // if (error) return <p>Error: {error.message}</p>;
 
 
   return (

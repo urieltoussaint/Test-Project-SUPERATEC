@@ -1,27 +1,10 @@
 <?php
 
 namespace App\Models;
-
 class Cursos extends Model
 {
-    /**
-     * The primary key of the table.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
+    protected $table = 'cursos';
+    protected $fillable = ['id','descripcion','cantidad_horas','area_id','costo','fecha_inicio'];
+    protected $listable = ['id','descripcion','cantidad_horas','area_id','costo','fecha_inicio'];
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = ['nombre', 'universidad', 'descripcion'];
-
-    /**
-     * The attributes that should be shown in lists.
-     *
-     * @var array
-     */
-    protected $listable = ['nombre', 'universidad', 'descripcion'];
 }

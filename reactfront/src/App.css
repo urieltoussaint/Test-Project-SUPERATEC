@@ -1,13 +1,9 @@
+/* Estilos generales */
 .App {
   text-align: center;
 }
 
 
-.logo{
-  padding: 10px 50px;
-
-
-}
 
 .App-header {
   background-color: #282c34;
@@ -32,19 +28,21 @@
     transform: rotate(360deg);
   }
 }
-/* App.css */
+
+/* Estilos del encabezado */
 .header {
   background-color: #ffffff;
-  color: white;
+  color: rgb(255, 255, 255);
   padding: 10px 20px;
   display: flex;
   align-items: center;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.05);
   height: 60px; /* Altura fija del encabezado */
+  border-radius: 0 0 20px 20px; /* Bordes redondeados en la parte inferior */
+  justify-content: center;
 }
 
-
-/* App.css */
+/* Estilos del botón de menú */
 .menu-button {
   position: fixed; /* Hace que el botón siempre esté visible en la pantalla */
   top: 0px; /* Ajusta la posición desde la parte superior */
@@ -53,41 +51,57 @@
   background: none;
   border: none;
   color: rgb(96, 94, 94);
-  font-size: 30px;
+  font-size: 25px;
   cursor: pointer;
-  padding: 10px 20px;
+  padding: 10px 25px;
+  transition: color 0.3s ease, background-color 0.3s ease; /* Transición para el cambio de color */
 }
 
+/* Estado hover del botón de menú */
+/*.menu-button:hover {
+  /*color: rgb(255, 255, 255); /* Color del texto al pasar el mouse */
+  /*background-color: rgba(96, 94, 94, 0.2); /* Fondo del botón al pasar el mouse */
+  /*border-radius: 50%; /* Bordes redondeados */
+/*}*/
 
-.sidebar a {
-  color: rgb(44, 44, 44); /* Color del texto */
-  text-decoration: none; /* Remover subrayado */
-  display: block; /* Hacer que los enlaces llenen el contenedor */
-  padding: 10px 15px; /* Relleno alrededor del texto */
-  border-radius: 20px; /* Bordes redondeados */
-  transition: background-color 0.3s ease; /* Transición suave del fondo */
-}
-
-.sidebar a:hover {
-  background-color: rgba(57, 57, 57, 0.2); /* Color de fondo al pasar el cursor */
-}
-/* App.css */
+/* Estilos del sidebar */
 .sidebar {
   width: 200px;
   background-color: #ffffffd9;
   height: calc(100vh - 60px); /* Altura ajustada para no superponer el encabezado */
   position: fixed;
   padding: 20px;
-  top: 60px; /* Comienza justo debajo del encabezado */
+  top: 80px; /* Comienza justo debajo del encabezado */
   left: 0;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-
+  border-radius: 0 30px 30px 0; /* Bordes redondeados a la derecha */
 }
 
 .sidebar.open {
   transform: translateX(0);
+}
+
+/* Estilos de los enlaces del sidebar */
+.sidebar a {
+  color: rgb(44, 44, 44); /* Color del texto */
+  text-decoration: none; /* Remover subrayado */
+  display: flex; /* Hacer que el enlace y el icono se alineen horizontalmente */
+  align-items: center; /* Alinear verticalmente el icono y el texto */
+  padding: 10px 5px; /* Relleno alrededor del texto */
+  border-radius: 20px; /* Bordes redondeados */
+  transition: background-color 0.3s ease; /* Transición suave del fondo */
+  font-weight: 600; /* Fuente semibold */
+}
+
+/* Estado hover de los enlaces del sidebar */
+.sidebar a:hover {
+  background-color: rgba(57, 57, 57, 0.2); /* Color de fondo al pasar el cursor */
+}
+
+.sidebar a i {
+  margin-right: 10px; /* Espacio entre el icono y el texto */
 }
 
 .content {
@@ -102,6 +116,7 @@
 .content.closed {
   margin-left: 0; /* Usa todo el ancho de la pantalla */
 }
+
 .sidebar ul {
   list-style-type: none; /* Remueve los marcadores de lista */
   padding: 0; /* Remueve el padding predeterminado */
@@ -112,4 +127,44 @@
   padding: 10px 15px; /* Ajusta el padding para mejor alineamiento */
 }
 
+/* App.css */
 
+
+
+.rounded-table {
+  border-collapse: separate; /* Asegura que los bordes redondeados se apliquen correctamente */
+  border-spacing: 0; /* Remueve el espaciado entre celdas */
+  overflow: hidden; /* Asegura que los bordes redondeados se apliquen correctamente */
+  border-radius: 16px; /* Bordes redondeados para la tabla */
+}
+
+.rounded-table th, .rounded-table td {
+  border: 0.5px solid #dee2e6; /* Bordes internos de las celdas */
+}
+
+.rounded-table thead th {
+  border-top: 0; /* Remueve borde superior de las cabeceras */
+}
+
+.rounded-table thead th:first-child {
+  border-top-left-radius: 16px; /* Bordes redondeados para la primera celda de la cabecera */
+}
+
+.rounded-table thead th:last-child {
+  border-top-right-radius: 16px; /* Bordes redondeados para la última celda de la cabecera */
+}
+
+.rounded-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 16px; /* Bordes redondeados para la primera celda de la última fila */
+}
+
+.rounded-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 16px; /* Bordes redondeados para la última celda de la última fila */
+}
+
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+  

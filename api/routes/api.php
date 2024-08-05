@@ -16,6 +16,7 @@ use App\Http\Controllers\NivelController;
 use App\Http\Controllers\NivelInstruccionController;
 use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\ProcedenciaController;
+
 use App\Http\Controllers\TipoProgramaController;
 use App\Http\Controllers\UnidadController;
 
@@ -23,8 +24,10 @@ use App\Http\Controllers\UnidadController;
 
 Route::apiResources([
     'datos' => \App\Http\Controllers\DatosIdentificacionController::class,
-
-
+    'cursos' => \App\Http\Controllers\CursosController::class,
+    'cursos_inscripcion' => \App\Http\Controllers\InscripcionCursosController::class,
+    'pagos' => \App\Http\Controllers\ReportePagosController::class,
+    
 ]);
 
 Route::get('status_seleccion', [StatusSeleccionController::class, 'index']);
@@ -44,4 +47,7 @@ Route::get('procedencia', [ProcedenciaController::class, 'index']);
 Route::get('tipo_programa', [TipoProgramaController::class, 'index']);
 Route::get('unidad', [UnidadController::class, 'index']);
 Route::get('nivel', [NivelController::class, 'index']);
+Route::get('/identificacion/{cedula}', [DatosIdentificacionController::class, 'show']);
+Route::get('/cedulas', [DatosIdentificacionController::class, 'searchCedulas']);
+
 

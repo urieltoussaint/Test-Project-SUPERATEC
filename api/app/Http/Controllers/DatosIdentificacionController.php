@@ -33,30 +33,54 @@ class DatosIdentificacionController extends Controller
 
     public function update($id, Request $request)
     {
-        \Log::info("pene");
-        // $resource = $this->edit(
-        //     $this->class::findOrFail($id),
-        //     $request
-        
-        // );
-        // $info=InformacionInscripcion::where('cedula_identidad',$id)->first();
-        // return dd($info);
-        // $informacion_inscripcion = $this->edit(
-        //     InformacionInscripcion::findOrFail($id),
-        //     $request
-        //);
+        $resource = $this->edit(
+            $this->class::findOrFail($id),
+            $request
 
-        // return response($resource);
+        );
+
+        $datos = DatosIdentificacion::with('informacionInscripcion')->find($id);
+
+        $informacion_inscripcion = InformacionInscripcion::where('id', $datos->informacionInscripcion->id)->first();
+        $newRequest = new Request($request->informacion_inscripcion);
+        $update_info_desc = $this->edit(
+            $informacion_inscripcion,
+            $newRequest
+        );
+
+
+
+        return response($resource);
+
+    }
+    // public function destroy($id)
+    // {
+    //     $resource = $this->class::findOrFail($id);
+    //     $datos = DatosIdentificacion::with('informacionInscripcion')->find($id);
+    //     $informacion_inscripcion = InformacionInscripcion::where('id', $datos->informacionInscripcion->id)->first();
+
+    //     $resource->delete();
+
+    //     return response([
+    //         'status' => 'deleted',
+    //         'message' => 'The resource was successfully deleted',
+    //     ]);
+    // }
+
+    
+
+    public function searchCedulas(Request $request)
+    {
+        $query = $request->input('query');
+        $cedulas = DatosIdentificacion::where('cedula_identidad', 'LIKE', "%{$query}%")
+            ->limit(10)
+            ->get(['cedula_identidad']);
+
+        return response()->json($cedulas);
     }
     
     
     
-    // public function show($id)
-    // {
-    //     return $this->showWithRelations(DatosIdentificacion::class, $id, ['estado', 'procedencia', 'nivelInstruccion','nacionalidad','genero','grupoPrioritario']);
-    //     //return $this->showWithRelations(InformacionInscripcion::class, $id, ['cohorte','centro','periodo','periodo','area','unidad','modalidad','nivel','tipoPrograma']);
-
-    // }
     
     
 }

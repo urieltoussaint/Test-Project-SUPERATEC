@@ -8,6 +8,7 @@ class InformacionInscripcion extends Model
 {
     protected $table = 'informacion_inscripcion';
     public $timestamps = false; // Desactiva las marcas de tiempo automáticas
+    protected $primaryKey='id';
 
     protected $fillable = [
         'como_entero_superatec_id',

@@ -96,4 +96,17 @@ class DatosIdentificacion extends Model
 {
     return $this->hasOne(InformacionInscripcion::class, 'cedula_identidad', 'cedula_identidad');
 }
+    public function ReportePagos()
+    {
+        return $this->hasOne(ReportePagos::class, 'cedula_identidad_id', 'cedula_identidad');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+        // Al eliminar datos de identificación, también eliminar los relacionados en InformacionInscripcion
+        static::deleting(function ($datosIdentificacion) {
+            $datosIdentificacion->informacionInscripcion()->delete();
+        });
+    }
 }

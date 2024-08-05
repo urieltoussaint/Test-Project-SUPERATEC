@@ -36,11 +36,7 @@ class Model extends LaravelModel
 {
     parent::boot();
 
-    static::deleting(function ($datosIdentificacion) {
-        // Eliminar el objeto relacionado en InformacionInscripcion
-        $datosIdentificacion->informacionInscripcion()->delete();
-    });
+    
 }
 
-    
 }
