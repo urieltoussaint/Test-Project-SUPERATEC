@@ -28,14 +28,12 @@ const ShowDatos = () => {
     };
 
     const deleteDatos = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este Participante?')) {
-            try {
-                await axios.delete(`${endpoint}/datos/${id}`);
-                getAllDatos();
-            } catch (error) {
-                setError('Error deleting data');
-                console.error('Error deleting data:', error);
-            }
+        try {
+            await axios.delete(`${endpoint}/datos/${id}`);
+            getAllDatos();
+        } catch (error) {
+            setError('Error deleting data');
+            console.error('Error deleting data:', error);
         }
     };
 

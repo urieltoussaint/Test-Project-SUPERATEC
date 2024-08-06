@@ -12,9 +12,9 @@ class InscripcionCursos extends Model
 {
     return $this->hasOne(DatosIdentificacion::class, 'cedula_identidad', 'cedula_identidad');
 }
-    public function Cursos()
+    public function curso()
 {
-        return $this->belongsTo(Cursos::class, 'cursos_id');
+        return $this->belongsTo(Cursos::class, 'cursos_id','id');
 }
 }
 

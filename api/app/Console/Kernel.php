@@ -48,4 +48,12 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+    protected $middlewareGroups = [
+        'api' => [
+            \Fruitcake\Cors\HandleCors::class,
+            'throttle:api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ],
+    ];
+    
 }

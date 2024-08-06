@@ -77,12 +77,14 @@ const ShowCursos = () => {
                                 <Button
                                     variant="danger"
                                     onClick={() => deleteCursos(curso.id)}
+                                    className="me-2"
                                 >
                                     Eliminar
                                 </Button>
+
                                 <Button
                                     variant="info"
-                                    onClick={() => navigate(`/cursos/${curso.id}/inscritos`)}
+                                    onClick={() => navigate(`/inscritos/${curso.id}`)}
                                     className="me-2"
                                 >
                                     Inscritos

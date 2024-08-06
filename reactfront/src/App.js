@@ -6,11 +6,13 @@ import ShowDatos from './pages/Participantes/ShowDatos';
 import CreateDatos from './pages/Participantes/CreateDatos';
 import EditDatos from './pages/Participantes/EditDatos';
 import ShowMoreDatos from './pages/Participantes/ShowMoreDatos';
-import ShowReportePagos from './pages/Participantes/ReportePagos/ShowReportePagos';
+import ShowPagos from './pages/Participantes/ReportePagos/ShowPagos';
 import ShowCursos from './pages/Participantes/Cursos/ShowCursos';
 import CreateCursos from './pages/Participantes/Cursos/CreateCursos';
 import EditCursos from './pages/Participantes/Cursos/EditCursos';
 import InscripcionCursos from './pages/Participantes/Cursos/InscripcionCursos';
+import ShowInscritos from './pages/Participantes/Cursos/ShowInscritos';
+import CreatePagos from './pages/Participantes/ReportePagos/CreatePagos';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Comienza oculta
@@ -65,12 +67,12 @@ function App() {
           />
           {/* <Route path="/inscribir/:id" element={<InscripcionCursos />} /> */}
           <Route path="/inscribir/:cursoId" element={<InscripcionCursos />} />
-          <Route path="show/inscripcion/:cursoId" element={<InscripcionCursos />} />
+          <Route path="/inscritos/:cursoId" element={<ShowInscritos />} />
           <Route path="/cursos" element={<ShowCursos />} />
           <Route path="/cursos/create" element={<CreateCursos />} />
           <Route path="/cursos/:id/edit" element={<EditCursos />} />
-          <Route path="/pagos" element={<ShowReportePagos />} />
-          <Route path="/pagos/create" element={<ShowReportePagos />} />
+          <Route path="/pagos" element={<ShowPagos />} />
+          <Route path="/pagos/create" element={<CreatePagos />} />
         </Routes>
       </div>
     </Router>

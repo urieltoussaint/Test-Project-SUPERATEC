@@ -4,6 +4,7 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CentroController;
 use App\Http\Controllers\CohorteController;
 use App\Http\Controllers\ComoEnteroSuperatecController;
+use App\Http\Controllers\CursosController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DatosIdentificacionController;
 use App\Http\Controllers\EstadoController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\NivelController;
 use App\Http\Controllers\NivelInstruccionController;
 use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\ProcedenciaController;
+use App\Http\Controllers\TasaBcvController;
 
 use App\Http\Controllers\TipoProgramaController;
 use App\Http\Controllers\UnidadController;
@@ -27,6 +29,8 @@ Route::apiResources([
     'cursos' => \App\Http\Controllers\CursosController::class,
     'cursos_inscripcion' => \App\Http\Controllers\InscripcionCursosController::class,
     'pagos' => \App\Http\Controllers\ReportePagosController::class,
+    'tasa_bcv' => \App\Http\Controllers\TasaBcvController::class,
+    
     
 ]);
 
@@ -49,5 +53,12 @@ Route::get('unidad', [UnidadController::class, 'index']);
 Route::get('nivel', [NivelController::class, 'index']);
 Route::get('/identificacion/{cedula}', [DatosIdentificacionController::class, 'show']);
 Route::get('/cedulas', [DatosIdentificacionController::class, 'searchCedulas']);
+Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula']);
+Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa']);
+Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [App\Http\Controllers\ReportePagosController::class, 'obtenerUltimoPago']);
+
+
+
+
 
 

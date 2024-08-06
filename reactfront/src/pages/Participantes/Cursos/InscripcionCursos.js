@@ -92,10 +92,20 @@ const InscripcionCursos = () => {
                     <p><strong>Email:</strong> {datos.direccion_email}</p>
                     <p><strong>Edad:</strong> {datos.edad}</p>
                     <Button variant="success" onClick={handleInscripcion}>
-                        Inscribirse
+                        Inscribir
                     </Button>
+                    
+                    
                 </div>
+                
             )}
+            <Button 
+                variant="secondary" 
+                onClick={() => navigate('/cursos')}
+                className="mt-4"
+            >
+                Volver
+            </Button>
         </div>
     );
 };
