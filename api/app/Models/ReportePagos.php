@@ -8,7 +8,7 @@ class ReportePagos extends Model
     protected $listable = ['monto_cancelado','id','monto_total','monto_exonerado','monto_restante','tipo_moneda','comentario_cuota','inscripcion_curso_id','fecha','cedula_identidad','conversion_cancelado','conversion_total','conversion_restante','conversion_exonerado','tasa_bcv_id'];
 
 
-    public function inscripcionCursos()
+    public function InscripcionCursos()
     {
         return $this->belongsTo(InscripcionCursos::class, 'inscripcion_curso_id');
     }

@@ -17,6 +17,7 @@ use App\Http\Controllers\NivelController;
 use App\Http\Controllers\NivelInstruccionController;
 use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\ProcedenciaController;
+use App\Http\Controllers\ReportePagosController;
 use App\Http\Controllers\TasaBcvController;
 
 use App\Http\Controllers\TipoProgramaController;
@@ -56,6 +57,10 @@ Route::get('/cedulas', [DatosIdentificacionController::class, 'searchCedulas']);
 Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula']);
 Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa']);
 Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [App\Http\Controllers\ReportePagosController::class, 'obtenerUltimoPago']);
+Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show']);
+Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago']);
+
+
 
 
 

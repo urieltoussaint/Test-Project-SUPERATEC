@@ -13,6 +13,7 @@ import EditCursos from './pages/Participantes/Cursos/EditCursos';
 import InscripcionCursos from './pages/Participantes/Cursos/InscripcionCursos';
 import ShowInscritos from './pages/Participantes/Cursos/ShowInscritos';
 import CreatePagos from './pages/Participantes/ReportePagos/CreatePagos';
+import ShowMorePagos from './pages/Participantes/ReportePagos/ShowMorePagos';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Comienza oculta
@@ -65,7 +66,6 @@ function App() {
             path="/datos/:id" 
             element={<ShowMoreDatos key={reloadKey} onReload={handleReload} />} 
           />
-          {/* <Route path="/inscribir/:id" element={<InscripcionCursos />} /> */}
           <Route path="/inscribir/:cursoId" element={<InscripcionCursos />} />
           <Route path="/inscritos/:cursoId" element={<ShowInscritos />} />
           <Route path="/cursos" element={<ShowCursos />} />
@@ -73,6 +73,7 @@ function App() {
           <Route path="/cursos/:id/edit" element={<EditCursos />} />
           <Route path="/pagos" element={<ShowPagos />} />
           <Route path="/pagos/create" element={<CreatePagos />} />
+          <Route path="/pagos/:id" element={<ShowMorePagos />} />
         </Routes>
       </div>
     </Router>

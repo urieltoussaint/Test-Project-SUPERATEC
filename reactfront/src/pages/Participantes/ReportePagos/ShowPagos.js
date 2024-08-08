@@ -21,7 +21,9 @@ const ShowPagos = () => {
         try {
             const response = await axios.get(`${endpoint}/pagos`);
             console.log('Datos obtenidos:', response.data);
-            setReportes(response.data.data); // Asegurarse de que `response.data.data` contenga los datos correctamente.
+            // Ordenar los reportes por ID de forma descendente
+            const sortedReportes = response.data.data.sort((a, b) => b.id - a.id);
+            setReportes(sortedReportes);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
@@ -42,7 +44,7 @@ const ShowPagos = () => {
             }
         }
     };
-    
+
     return (
         <div className="container mt-5">
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
@@ -53,10 +55,10 @@ const ShowPagos = () => {
                     <tr>
                         <th>Id</th>
                         <th>Cédula</th>
-                        <th>Monto Cancelado</th>
                         <th>Fecha</th>
+                        <th>Monto Cancelado</th>
+                        <th>Monto Restante</th>
                         <th>Acciones</th>
-                        
                     </tr>
                 </thead>
                 <tbody>
@@ -64,19 +66,13 @@ const ShowPagos = () => {
                         <tr key={reporte.id}>
                             <td>{reporte.id}</td>
                             <td>{reporte.cedula_identidad}</td>
-                            <td>{reporte.monto_cancelado} $</td>
                             <td>{moment(reporte.fecha).format('YYYY-MM-DD')}</td>
+                            <td>{reporte.monto_cancelado} $</td>
+                            <td>{reporte.monto_restante} $</td>
                             <td>
                                 <Button
-                                    variant="warning"
-                                    onClick={() => navigate(`pagos/${reporte.id}/edit`)}
-                                    className="me-2"
-                                >
-                                    Editar
-                                </Button>
-                                <Button
                                     variant="info"
-                                    onClick={() => navigate(`pagos/${reporte.id}/edit`)}
+                                    onClick={() => navigate(`/pagos/${reporte.id}`)}
                                     className="me-2"
                                 >
                                     Ver Detalles
@@ -88,7 +84,6 @@ const ShowPagos = () => {
                                 >
                                     Eliminar
                                 </Button>
-                                
                             </td>
                         </tr>
                     ))}
@@ -102,7 +97,6 @@ const ShowPagos = () => {
                 Agregar Nuevo Pago
             </Button>
         </div>
-        
     );
 };
 

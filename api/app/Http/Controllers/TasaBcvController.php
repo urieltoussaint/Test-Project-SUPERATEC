@@ -71,4 +71,9 @@ class TasaBcvController extends Controller
         }
         return response()->json(['id' => $tasaBcv->id, 'tasa' => $tasaBcv->tasa]);
     }
+    public function show($id)
+    {
+        $tasaBcv = TasaBcv::findOrFail($id);
+        return response()->json($tasaBcv);
+    }
 }
