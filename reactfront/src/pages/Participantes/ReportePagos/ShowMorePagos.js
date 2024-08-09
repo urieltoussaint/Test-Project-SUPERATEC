@@ -27,7 +27,7 @@ const ShowMorePagos = ({ onReload }) => {
 
   return (
     <div className="container">
-      <h1>Reporte de pago Num {data.id} </h1>
+      <h1>Reporte de pago #{data.id} </h1>
       <div className="cards-container">
         <Card>
           <Card.Header>Datos Personales</Card.Header>
