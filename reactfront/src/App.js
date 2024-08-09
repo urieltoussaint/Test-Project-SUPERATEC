@@ -14,6 +14,11 @@ import InscripcionCursos from './pages/Participantes/Cursos/InscripcionCursos';
 import ShowInscritos from './pages/Participantes/Cursos/ShowInscritos';
 import CreatePagos from './pages/Participantes/ReportePagos/CreatePagos';
 import ShowMorePagos from './pages/Participantes/ReportePagos/ShowMorePagos';
+import ShowVoluntariados from './pages/Participantes/Voluntariados/ShowVoluntariados';
+import ShowMoreVoluntariados from './pages/Participantes/Voluntariados/ShowMoreVoluntariados';
+import CreateVoluntariados from './pages/Participantes/Voluntariados/CreateVoluntariados';
+import EditVoluntariados from './pages/Participantes/Voluntariados/EditVoluntariados';
+
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Comienza oculta
@@ -50,9 +55,13 @@ function App() {
               <i className="bi bi-coin"></i> {/* Icono de moneda */}
               Reporte de Pagos
             </Link>
-            <Link to="/pagos">
+            <Link to="/voluntariados">
               <i className="bi bi-person-raised-hand"></i> {/* Icono de moneda */}
               Voluntariados
+            </Link>
+            <Link to="/promocion">
+              <i className="bi bi-mortarboard"></i> {/* Icono de gorro */}
+              Promoción
             </Link>
           </li>
         </ul>
@@ -74,6 +83,10 @@ function App() {
           <Route path="/pagos" element={<ShowPagos />} />
           <Route path="/pagos/create" element={<CreatePagos />} />
           <Route path="/pagos/:id" element={<ShowMorePagos />} />
+          <Route path="/voluntariados" element={<ShowVoluntariados />} />
+          <Route path="/voluntariados/:id" element={<ShowMoreVoluntariados />} />
+          <Route path="/voluntariados/create" element={<CreateVoluntariados />} />
+          <Route path="/voluntariados/:id/edit" element={<EditVoluntariados />} />
         </Routes>
       </div>
     </Router>

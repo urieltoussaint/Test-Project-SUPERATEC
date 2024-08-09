@@ -99,20 +99,22 @@ const CreatePago = () => {
       const response = await axios.get(`${endpoint}/ultimo_pago/${selectedCursoId}/${cedula}`);
       const ultimoPago = response.data;
 
-      const montoTotal = ultimoPago ? ultimoPago.monto_restante : selectedCurso.costo;
+      const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(selectedCurso.costo);
       setFormData((prevState) => ({
         ...prevState,
         inscripcion_curso_id: selectedCursoId,
-        monto_total: montoTotal, // Usar monto_restante del último pago o el costo del curso
+        monto_total: montoTotal,
         monto_restante: montoTotal,
+        conversion_total: calcularConversion(montoTotal)
       }));
     } catch (error) {
       console.error('Error fetching ultimo pago:', error);
       setFormData((prevState) => ({
         ...prevState,
         inscripcion_curso_id: selectedCursoId,
-        monto_total: selectedCurso.costo, // Fallback al costo del curso si hay un error
-        monto_restante: selectedCurso.costo,
+        monto_total: parseFloat(selectedCurso.costo),
+        monto_restante: parseFloat(selectedCurso.costo),
+        conversion_total: calcularConversion(selectedCurso.costo)
       }));
     }
   };
@@ -127,7 +129,7 @@ const CreatePago = () => {
     if (name === 'monto_cancelado' || name === 'monto_exonerado') {
       const montoCancelado = name === 'monto_cancelado' ? parseFloat(value) || 0 : parseFloat(formData.monto_cancelado) || 0;
       const montoExonerado = name === 'monto_exonerado' ? parseFloat(value) || 0 : parseFloat(formData.monto_exonerado) || 0;
-      const nuevoMontoRestante = cursoSeleccionado ? (formData.monto_total - montoCancelado - montoExonerado).toFixed(2) : 0;
+      const nuevoMontoRestante = cursoSeleccionado ? (parseFloat(formData.monto_total) - montoCancelado - montoExonerado).toFixed(2) : 0;
       setFormData((prevState) => ({
         ...prevState,
         monto_restante: nuevoMontoRestante,

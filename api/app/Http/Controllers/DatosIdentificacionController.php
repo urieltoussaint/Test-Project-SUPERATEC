@@ -53,21 +53,6 @@ class DatosIdentificacionController extends Controller
         return response($resource);
 
     }
-    // public function destroy($id)
-    // {
-    //     $resource = $this->class::findOrFail($id);
-    //     $datos = DatosIdentificacion::with('informacionInscripcion')->find($id);
-    //     $informacion_inscripcion = InformacionInscripcion::where('id', $datos->informacionInscripcion->id)->first();
-
-    //     $resource->delete();
-
-    //     return response([
-    //         'status' => 'deleted',
-    //         'message' => 'The resource was successfully deleted',
-    //     ]);
-    // }
-
-    
 
     public function searchCedulas(Request $request)
     {

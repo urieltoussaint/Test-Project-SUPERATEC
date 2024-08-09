@@ -4,6 +4,7 @@ import Table from 'react-bootstrap/Table';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import moment from 'moment';
+import './ShowPagos.css'; // Asegúrate de tener este archivo CSS en tu proyecto
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -11,7 +12,7 @@ const ShowPagos = () => {
     const [reportes, setReportes] = useState([]);
     const [error, setError] = useState(null);
     const { id } = useParams();
-    const navigate = useNavigate(); // Inicializa useNavigate
+    const navigate = useNavigate();
 
     useEffect(() => {
         getAllReportes();
@@ -21,7 +22,6 @@ const ShowPagos = () => {
         try {
             const response = await axios.get(`${endpoint}/pagos`);
             console.log('Datos obtenidos:', response.data);
-            // Ordenar los reportes por ID de forma descendente
             const sortedReportes = response.data.data.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
         } catch (error) {
@@ -33,6 +33,7 @@ const ShowPagos = () => {
     if (error) {
         return <div>{error}</div>;
     }
+
     const deleteReporte = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este reporte de pago?')) {
             try {
@@ -48,54 +49,65 @@ const ShowPagos = () => {
     return (
         <div className="container mt-5">
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
-            <h1>Lista de Reportes de Pagos</h1>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h1>Lista de Reportes de Pagos</h1>
+                <Button
+                    variant="success"
+                    onClick={() => navigate('/pagos/create')}
+                >
+                    Agregar Nuevo Pago
+                </Button>
+            </div>
             <div className="cards-container"></div>
             <Table striped bordered hover className="rounded-table">
                 <thead>
                     <tr>
-                        <th>Id</th>
-                        <th>Cédula</th>
-                        <th>Fecha</th>
-                        <th>Monto Cancelado</th>
-                        <th>Monto Restante</th>
-                        <th>Acciones</th>
+                        <th className="col-id">Id</th>
+                        <th className="col-cedula">Cédula</th>
+                        <th className="col-fecha">Fecha</th>
+                        <th className="col-monto">Monto Cancelado</th>
+                        <th className="col-monto">Monto Restante</th>
+                        <th className="col-comentario">Comentario</th>
+                        <th className="col-acciones">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {reportes.map((reporte) => (
                         <tr key={reporte.id}>
-                            <td>{reporte.id}</td>
-                            <td>{reporte.cedula_identidad}</td>
-                            <td>{moment(reporte.fecha).format('YYYY-MM-DD')}</td>
-                            <td>{reporte.monto_cancelado} $</td>
-                            <td>{reporte.monto_restante} $</td>
-                            <td>
-                                <Button
-                                    variant="info"
-                                    onClick={() => navigate(`/pagos/${reporte.id}`)}
-                                    className="me-2"
-                                >
-                                    Ver Detalles
-                                </Button>
-                                <Button
-                                    variant="danger"
-                                    onClick={() => deleteReporte(reporte.id)}
-                                    className="me-2"
-                                >
-                                    Eliminar
-                                </Button>
+                            <td className="col-id">{reporte.id}</td>
+                            <td className="col-cedula">{reporte.cedula_identidad}</td>
+                            <td className="col-fecha">{moment(reporte.fecha).format('YYYY-MM-DD')}</td>
+                            <td className="col-monto">{reporte.monto_cancelado} $</td>
+                            <td className="col-monto">{reporte.monto_restante} $</td>
+                            <td className="col-comentario">{reporte.comentario_cuota}</td>
+                            <td className="col-acciones">
+                                <div className="d-flex justify-content-around">
+                                    <Button
+                                        variant="warning"
+                                        onClick={() => navigate(`pagos/${reporte.id}/edit`)}
+                                        className="me-2"
+                                    >
+                                        Editar
+                                    </Button>
+                                    <Button
+                                        variant="info"
+                                        onClick={() => navigate(`/pagos/${reporte.id}`)}
+                                        className="me-2"
+                                    >
+                                        Detalles
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        onClick={() => deleteReporte(reporte.id)}
+                                    >
+                                        Eliminar
+                                    </Button>
+                                </div>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </Table>
-            <Button
-                variant="success"
-                onClick={() => navigate('/pagos/create')}
-                className="mt-3"
-            >
-                Agregar Nuevo Pago
-            </Button>
         </div>
     );
 };

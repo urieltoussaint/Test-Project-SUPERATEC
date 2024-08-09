@@ -19,9 +19,12 @@ use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\ProcedenciaController;
 use App\Http\Controllers\ReportePagosController;
 use App\Http\Controllers\TasaBcvController;
-
+use App\Http\Controllers\PersonalesVoluntariadosController;
 use App\Http\Controllers\TipoProgramaController;
+use App\Http\Controllers\TipoVoluntariadoController;
+use App\Http\Controllers\TurnosController;
 use App\Http\Controllers\UnidadController;
+use App\Models\TipoVoluntariado;
 
 // Rutas definidas en routes/api.php
 
@@ -31,6 +34,9 @@ Route::apiResources([
     'cursos_inscripcion' => \App\Http\Controllers\InscripcionCursosController::class,
     'pagos' => \App\Http\Controllers\ReportePagosController::class,
     'tasa_bcv' => \App\Http\Controllers\TasaBcvController::class,
+    'voluntariados' => \App\Http\Controllers\PersonalesVoluntariadosController::class,
+
+
     
     
 ]);
@@ -59,6 +65,8 @@ Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa']);
 Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [App\Http\Controllers\ReportePagosController::class, 'obtenerUltimoPago']);
 Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show']);
 Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago']);
+Route::get('turnos', [TurnosController::class, 'index']);
+Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index']);
 
 
 

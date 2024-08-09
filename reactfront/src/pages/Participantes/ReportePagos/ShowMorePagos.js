@@ -48,7 +48,6 @@ const ShowMorePagos = ({ onReload }) => {
         variant="secondary" 
         onClick={() => {
           navigate('/pagos');
-          onReload();
         }} 
         className="mt-4"
       >

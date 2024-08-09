@@ -70,14 +70,26 @@ class ReportePagosController extends Controller
     }
 
     public function obtenerUltimoPago($inscripcionCursoId, $cedula)
-    {
-        $ultimoPago = ReportePagos::where('inscripcion_curso_id', $inscripcionCursoId)
-                        ->where('cedula_identidad', $cedula)
-                        ->orderBy('id', 'desc')
-                        ->first();
+{
+    $ultimoPago = ReportePagos::where('inscripcion_curso_id', $inscripcionCursoId)
+                    ->where('cedula_identidad', $cedula)
+                    ->orderBy('id', 'desc')
+                    ->first();
 
+    if ($ultimoPago) {
         return response()->json($ultimoPago);
     }
+
+    $curso = InscripcionCursos::where('inscripcion_cursos.id', $inscripcionCursoId)
+                ->join('cursos', 'inscripcion_cursos.curso_id', '=', 'cursos.id')
+                ->select('cursos.costo')
+                ->first();
+
+    return response()->json([
+        'monto_total' => $curso->costo,
+        'monto_restante' => $curso->costo,
+    ]);
+}
 
     public function obtenerDetallePago($id)
     {

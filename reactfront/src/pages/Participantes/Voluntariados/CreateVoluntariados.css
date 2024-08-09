@@ -1,0 +1,17 @@
+.container {
+    padding: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 100px;
+  }
+  
+  .col-md-6 {
+    flex: 1;
+    min-width: 100px;
+  }
+  
