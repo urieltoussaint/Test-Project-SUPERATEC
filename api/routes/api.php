@@ -10,6 +10,7 @@ use App\Http\Controllers\DatosIdentificacionController;
 use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\GeneroController;
 use App\Http\Controllers\GrupoPrioritarioController;
+use App\Http\Controllers\MencionController;
 use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\StatusSeleccionController;
 use App\Http\Controllers\NacionalidadController;
@@ -35,6 +36,8 @@ Route::apiResources([
     'pagos' => \App\Http\Controllers\ReportePagosController::class,
     'tasa_bcv' => \App\Http\Controllers\TasaBcvController::class,
     'voluntariados' => \App\Http\Controllers\PersonalesVoluntariadosController::class,
+    'promocion' => \App\Http\Controllers\PromocionController::class,
+
 
 
     
@@ -67,7 +70,7 @@ Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show']);
 Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago']);
 Route::get('turnos', [TurnosController::class, 'index']);
 Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index']);
-
+Route::get('mencion', [MencionController::class, 'index']);
 
 
 

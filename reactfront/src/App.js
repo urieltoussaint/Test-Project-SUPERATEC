@@ -18,6 +18,9 @@ import ShowVoluntariados from './pages/Participantes/Voluntariados/ShowVoluntari
 import ShowMoreVoluntariados from './pages/Participantes/Voluntariados/ShowMoreVoluntariados';
 import CreateVoluntariados from './pages/Participantes/Voluntariados/CreateVoluntariados';
 import EditVoluntariados from './pages/Participantes/Voluntariados/EditVoluntariados';
+import ShowPromocion from './pages/Promocion/ShowPromocion';
+import ShowMorePromocion from './pages/Promocion/ShowMorePromocion';
+import CreatePromocion from './pages/Promocion/CreatePromocion';
 
 
 function App() {
@@ -87,6 +90,9 @@ function App() {
           <Route path="/voluntariados/:id" element={<ShowMoreVoluntariados />} />
           <Route path="/voluntariados/create" element={<CreateVoluntariados />} />
           <Route path="/voluntariados/:id/edit" element={<EditVoluntariados />} />
+          <Route path="/promocion" element={<ShowPromocion />} />
+          <Route path="/promocion/:id" element={<ShowMorePromocion />} />
+          <Route path="/promocion/create" element={<CreatePromocion />} />
         </Routes>
       </div>
     </Router>

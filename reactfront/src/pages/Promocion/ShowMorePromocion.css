@@ -1,0 +1,17 @@
+.container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .cards-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  
+  .cards-container .card {
+    flex: 1;
+    min-width: 45%;
+    margin: 10px;
+  }
