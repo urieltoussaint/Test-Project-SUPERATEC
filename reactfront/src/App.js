@@ -21,6 +21,7 @@ import EditVoluntariados from './pages/Participantes/Voluntariados/EditVoluntari
 import ShowPromocion from './pages/Promocion/ShowPromocion';
 import ShowMorePromocion from './pages/Promocion/ShowMorePromocion';
 import CreatePromocion from './pages/Promocion/CreatePromocion';
+import EditPromocion from './pages/Promocion/EditPromocion';
 
 
 function App() {
@@ -93,6 +94,7 @@ function App() {
           <Route path="/promocion" element={<ShowPromocion />} />
           <Route path="/promocion/:id" element={<ShowMorePromocion />} />
           <Route path="/promocion/create" element={<CreatePromocion />} />
+          <Route path="/promocion/:id/edit" element={<EditPromocion />} />
         </Routes>
       </div>
     </Router>

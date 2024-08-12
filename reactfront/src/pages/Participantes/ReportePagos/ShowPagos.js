@@ -82,13 +82,7 @@ const ShowPagos = () => {
                             <td className="col-comentario">{reporte.comentario_cuota}</td>
                             <td className="col-acciones">
                                 <div className="d-flex justify-content-around">
-                                    <Button
-                                        variant="warning"
-                                        onClick={() => navigate(`pagos/${reporte.id}/edit`)}
-                                        className="me-2"
-                                    >
-                                        Editar
-                                    </Button>
+                                    
                                     <Button
                                         variant="info"
                                         onClick={() => navigate(`/pagos/${reporte.id}`)}

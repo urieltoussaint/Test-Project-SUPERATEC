@@ -38,10 +38,6 @@ Route::apiResources([
     'voluntariados' => \App\Http\Controllers\PersonalesVoluntariadosController::class,
     'promocion' => \App\Http\Controllers\PromocionController::class,
 
-
-
-    
-    
 ]);
 
 Route::get('status_seleccion', [StatusSeleccionController::class, 'index']);

@@ -207,7 +207,7 @@ const CreatePago = () => {
                 value={formData.monto_total}
                 readOnly
               />
-              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)}</Form.Text>
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)}BsF</Form.Text>
             </Form.Group>
             <Form.Group controlId="monto_cancelado">
               <Form.Label>Monto Cancelado</Form.Label>
@@ -218,7 +218,7 @@ const CreatePago = () => {
                 onChange={handleMontoChange}
                 required
               />
-              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_cancelado)}</Form.Text>
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_cancelado)}BsF</Form.Text>
             </Form.Group>
             <Form.Group controlId="monto_exonerado">
               <Form.Label>Monto Exonerado</Form.Label>
@@ -229,7 +229,7 @@ const CreatePago = () => {
                 onChange={handleMontoChange}
                 required
               />
-              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_exonerado)}</Form.Text>
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_exonerado)}BsF</Form.Text>
             </Form.Group>
             <Form.Group controlId="monto_restante">
               <Form.Label>Monto Restante</Form.Label>
@@ -239,7 +239,7 @@ const CreatePago = () => {
                 value={formData.monto_restante}
                 readOnly
               />
-              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_restante)}</Form.Text>
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_restante)}BsF</Form.Text>
             </Form.Group>
             <Form.Group controlId="tipo_moneda">
               <Form.Label>Tipo de Moneda</Form.Label>
