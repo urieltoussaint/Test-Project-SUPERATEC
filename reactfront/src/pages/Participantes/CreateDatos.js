@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../../axiosConfig';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './CreateDatos.css';
+import { useLoading } from '../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
 const CreateDatos = () => {
+  const { setLoading } = useLoading();
+  
   const [formData, setFormData] = useState({
     cedula_identidad: '',
     nombres: '',
@@ -40,7 +43,42 @@ const CreateDatos = () => {
     observaciones: '',
   });
 
+  const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSelectData = async () => {
+      setLoading(true); // Inicia la animación de carga
+      try {
+        await Promise.all([
+          axios.get(`${endpoint}/status_seleccion`),
+          axios.get(`${endpoint}/nacionalidad_seleccion`),
+          axios.get(`${endpoint}/genero`),
+          axios.get(`${endpoint}/grupo_prioritario`),
+          axios.get(`${endpoint}/estado`),
+          axios.get(`${endpoint}/procedencia`),
+          axios.get(`${endpoint}/nivel_instruccion`),
+          axios.get(`${endpoint}/como_entero_superatec`),
+          axios.get(`${endpoint}/cohorte`),
+          axios.get(`${endpoint}/centro`),
+          axios.get(`${endpoint}/periodo`),
+          axios.get(`${endpoint}/area`),
+          axios.get(`${endpoint}/unidad`),
+          axios.get(`${endpoint}/modalidad`),
+          axios.get(`${endpoint}/nivel`),
+          axios.get(`${endpoint}/tipo_programa`),
+        ]);
+        setSelectDataLoaded(true); // Indica que todos los datos han sido cargados
+      } catch (error) {
+        console.error('Error fetching select data:', error);
+      } finally {
+        setLoading(false); // Detiene la animación de carga
+      }
+    };
+
+    fetchSelectData();
+  }, [setLoading]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -52,13 +90,18 @@ const CreateDatos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Inicia la animación de carga durante el envío del formulario
     try {
       await axios.post(`${endpoint}/datos`, formData);
+      window.alert('El participante ha sido registrado exitosamente.'); // Muestra la ventana de alerta
       navigate('/datos');
     } catch (error) {
       console.error('Error creating data:', error);
+    } finally {
+      setLoading(false); // Detiene la animación de carga después de la respuesta del servidor
     }
   };
+
 
   return (
     <div className="container">
@@ -372,6 +415,7 @@ const CreateDatos = () => {
         <Button variant="primary" type="submit">
           Guardar
         </Button>
+        
         <Button 
           variant="secondary" 
           onClick={() => navigate('/datos')}

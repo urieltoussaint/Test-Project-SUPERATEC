@@ -4,10 +4,13 @@ import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './EditDatos.css'; // Importa la hoja de estilo si es necesario
+import { useLoading } from '../../components/LoadingContext'; // Importa useLoading
+
 
 const endpoint = 'http://localhost:8000/api';
 
 const EditDatos = () => {
+  const { setLoading } = useLoading(); // Usar el contexto de carga
   const [formData, setFormData] = useState({
     cedula_identidad: '',
     nombres: '',
@@ -46,7 +49,9 @@ const EditDatos = () => {
   const { id } = useParams(); // Obtener el ID desde la ruta
 
   useEffect(() => {
+    setLoading(true); // Inicia la animación de carga
     const fetchData = async () => {
+      
       try {
         let relationsArray = ['nacionalidad', 'estado', 'statusSeleccion', 'grupoPrioritario', 'procedencia', 'genero', 'nivelInstruccion', 'informacionInscripcion'];
         const relations = relationsArray.join(',');
@@ -72,11 +77,13 @@ const EditDatos = () => {
         });
       } catch (error) {
         console.error('Error fetching data:', error);
-      }
+      }finally {
+        setLoading(false); // Detiene la animación de carga
+      } 
     };
 
     fetchData();
-  }, [id]);
+  }, [id, setLoading]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;

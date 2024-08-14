@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Alert, Button } from 'react-bootstrap';
 import moment from 'moment';  // Importación correcta de moment
+import { useLoading } from '../../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -12,10 +13,15 @@ const ShowInscritos = () => {
     const [inscripciones, setInscripciones] = useState([]);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { setLoading } = useLoading();
 
     useEffect(() => {
-        getInscritos();
+        setLoading(true);
+        Promise.all([getInscritos()]).finally(() => {
+            setLoading(false);
+        });
     }, [cursoId]);
+
 
     const getInscritos = async () => {
         try {

@@ -21,3 +21,6 @@
 .col-acciones {
     width: 30%;
 }
+.custom-width {
+    width: 200px; /* Ajusta a tu necesidad */
+}

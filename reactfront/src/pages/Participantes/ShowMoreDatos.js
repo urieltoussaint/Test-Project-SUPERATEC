@@ -3,6 +3,7 @@ import axios from '../../axiosConfig';
 import { useParams, useNavigate } from 'react-router-dom'; // Importa useNavigate
 import { Card, ListGroup, Button } from 'react-bootstrap';
 import './ShowMoreDatos.css'; // Importa la hoja de estilo
+import { useLoading } from '../../components/LoadingContext'; // Importa useLoading
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -10,9 +11,11 @@ const ShowMoreDatos = ({ onReload }) => {
   const { id } = useParams();
   const [data, setData] = useState({});
   const navigate = useNavigate(); // Inicializa useNavigate
+  const { setLoading } = useLoading(); // Usar el contexto de carga
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Inicia la animación de carga
       try {
         let relationsArray = [
           'nacionalidad', 'estado', 'statusSeleccion', 'grupoPrioritario', 'procedencia', 'genero', 'nivelInstruccion',
@@ -25,11 +28,13 @@ const ShowMoreDatos = ({ onReload }) => {
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false); // Detiene la animación de carga
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [id, setLoading]);
 
   return (
     <div className="container">
@@ -79,7 +84,6 @@ const ShowMoreDatos = ({ onReload }) => {
         variant="secondary" 
         onClick={() => {
           navigate('/datos');
-          onReload();
         }} 
         className="mt-4"
       >

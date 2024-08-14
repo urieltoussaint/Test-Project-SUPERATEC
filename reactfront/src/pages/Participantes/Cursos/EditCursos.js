@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useLoading } from '../../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -16,12 +17,18 @@ const EditCursos = () => {
   const [areas, setAreas] = useState([]);
   const [error, setError] = useState(null);
   const { id } = useParams(); // Obtener el id del curso de la URL
+  const { setLoading } = useLoading();
   const navigate = useNavigate();
 
+
   useEffect(() => {
-    getAreas();
-    getCurso();
-  }, []);
+    setLoading(true);
+    Promise.all([getAreas(), getCurso()]).finally(() => {
+        setLoading(false);
+    });
+}, []);
+
+ 
 
   const getAreas = async () => {
     try {

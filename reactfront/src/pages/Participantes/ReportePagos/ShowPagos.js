@@ -3,19 +3,27 @@ import axios from 'axios';
 import Table from 'react-bootstrap/Table';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
 import moment from 'moment';
 import './ShowPagos.css'; // Asegúrate de tener este archivo CSS en tu proyecto
+import { useLoading } from '../../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
 const ShowPagos = () => {
     const [reportes, setReportes] = useState([]);
+    const [filteredReportes, setFilteredReportes] = useState([]);
+    const [searchCedula, setSearchCedula] = useState('');
     const [error, setError] = useState(null);
     const { id } = useParams();
     const navigate = useNavigate();
+    const {setLoading} = useLoading();
 
     useEffect(() => {
-        getAllReportes();
+        setLoading(true);
+        Promise.all([getAllReportes()]).finally(() => {
+            setLoading(false);
+        });
     }, []);
 
     const getAllReportes = async () => {
@@ -24,15 +32,12 @@ const ShowPagos = () => {
             console.log('Datos obtenidos:', response.data);
             const sortedReportes = response.data.data.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
+            setFilteredReportes(sortedReportes); // Inicializar con todos los reportes
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
-
-    if (error) {
-        return <div>{error}</div>;
-    }
 
     const deleteReporte = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este Reporte de Pago?')) {
@@ -46,17 +51,39 @@ const ShowPagos = () => {
         }
     };
 
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchCedula(value);
+        const filtered = reportes.filter(reporte =>
+            reporte.cedula_identidad.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredReportes(filtered);
+    };
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
     return (
         <div className="container mt-5">
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Lista de Reportes de Pagos</h1>
-                <Button
-                    variant="success"
-                    onClick={() => navigate('/pagos/create')}
-                >
-                    Agregar Nuevo Pago
-                </Button>
+                <div className="d-flex align-items-center">
+                    <Form.Control
+                        type="text"
+                        placeholder="Buscar por cédula"
+                        value={searchCedula}
+                        onChange={handleSearchChange}
+                        className="me-2"
+                    />
+                    <Button
+                        variant="success"
+                        onClick={() => navigate('/pagos/create')}
+                    >
+                        Agregar Nuevo Pago
+                    </Button>
+                </div>
             </div>
             <div className="cards-container"></div>
             <Table striped bordered hover className="rounded-table">
@@ -72,7 +99,7 @@ const ShowPagos = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {reportes.map((reporte) => (
+                    {filteredReportes.map((reporte) => (
                         <tr key={reporte.id}>
                             <td className="col-id">{reporte.id}</td>
                             <td className="col-cedula">{reporte.cedula_identidad}</td>
@@ -82,7 +109,6 @@ const ShowPagos = () => {
                             <td className="col-comentario">{reporte.comentario_cuota}</td>
                             <td className="col-acciones">
                                 <div className="d-flex justify-content-around">
-                                    
                                     <Button
                                         variant="info"
                                         onClick={() => navigate(`/pagos/${reporte.id}`)}

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Table from 'react-bootstrap/Table';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import './ShowDatos.css'; // Asegúrate de tener este archivo CSS en tu proyecto
+import './ShowDatos.css'; 
+import { useLoading } from '../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -22,8 +23,6 @@ const ShowDatos = () => {
     const [tipoProgramaOptions, setTipoProgramaOptions] = useState([]);
     const [unidadOptions, setUnidadOptions] = useState([]);
     const [cohorteOptions, setCohorteOptions] = useState([]);
-
-    
     const [filters, setFilters] = useState({
         nivel_instruccion_id: '',
         genero_id: '',
@@ -35,23 +34,23 @@ const ShowDatos = () => {
         tipo_programa_id: '',
         unidad_id: '',
         cohorte_id: '',
-
     });
-
+    const { setLoading } = useLoading();
     const [error, setError] = useState(null);
-    const { id } = useParams();
     const navigate = useNavigate();
 
     useEffect(() => {
-        getAllDatos();
-        fetchFilterOptions();
-    }, [id]);
+        setLoading(true);
+        Promise.all([getAllDatos(), fetchFilterOptions()]).finally(() => {
+            setLoading(false);
+        });
+    }, []);
 
     const getAllDatos = async () => {
         try {
             const response = await axios.get(`${endpoint}/datos?with=statusSeleccion,informacionInscripcion,NivelInstruccion,genero,estado`);
             console.log('Datos obtenidos:', response.data);
-            setDatos(response.data.data); // Asegurarse de que `response.data.data` contenga los datos correctamente.
+            setDatos(response.data.data);
             setFilteredDatos(response.data.data);
         } catch (error) {
             setError('Error fetching data');
@@ -61,7 +60,7 @@ const ShowDatos = () => {
 
     const fetchFilterOptions = async () => {
         try {
-            const [nivelRes, generoRes, centroRes, areaRes, periodoRes,estadoRes,modalidadRes,tipoProgramaRes,unidadRes,cohorteRes] = await Promise.all([
+            const [nivelRes, generoRes, centroRes, areaRes, periodoRes, estadoRes, modalidadRes, tipoProgramaRes, unidadRes, cohorteRes] = await Promise.all([
                 axios.get(`${endpoint}/nivel_instruccion`),
                 axios.get(`${endpoint}/genero`),
                 axios.get(`${endpoint}/centro`),
@@ -72,8 +71,6 @@ const ShowDatos = () => {
                 axios.get(`${endpoint}/tipo_programa`),
                 axios.get(`${endpoint}/unidad`),
                 axios.get(`${endpoint}/cohorte`),
-                
-
             ]);
             setNivelInstruccionOptions(nivelRes.data.data);
             setGeneroOptions(generoRes.data.data);
@@ -85,8 +82,6 @@ const ShowDatos = () => {
             setTipoProgramaOptions(tipoProgramaRes.data.data);
             setUnidadOptions(unidadRes.data.data);
             setCohorteOptions(cohorteRes.data.data);
-
-
         } catch (error) {
             setError('Error fetching filter options');
             console.error('Error fetching filter options:', error);
@@ -141,19 +136,19 @@ const ShowDatos = () => {
 
         if (filters.centro_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion.centro_id === parseInt(filters.centro_id)
+                dato.informacion_inscripcion?.centro_id === parseInt(filters.centro_id)
             );
         }
 
         if (filters.area_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion.area_id === parseInt(filters.area_id)
+                dato.informacion_inscripcion?.area_id === parseInt(filters.area_id)
             );
         }
 
         if (filters.periodo_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion.periodo_id === parseInt(filters.periodo_id)
+                dato.informacion_inscripcion?.periodo_id === parseInt(filters.periodo_id)
             );
         }
         if (filters.estado_id) {
@@ -163,22 +158,22 @@ const ShowDatos = () => {
         }
         if (filters.modalidad_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion.modalidad_id === parseInt(filters.modalidad_id)
+                dato.informacion_inscripcion?.modalidad_id === parseInt(filters.modalidad_id)
             );
         }
         if (filters.tipo_programa_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion.tipo_programa_id === parseInt(filters.tipo_programa_id)
+                dato.informacion_inscripcion?.tipo_programa_id === parseInt(filters.tipo_programa_id)
             );
         }
         if (filters.unidad_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion.unidad_id === parseInt(filters.unidad_id)
+                dato.informacion_inscripcion?.unidad_id === parseInt(filters.unidad_id)
             );
         }
         if (filters.cohorte_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion.cohorte_id === parseInt(filters.cohorte_id)
+                dato.informacion_inscripcion?.cohorte_id === parseInt(filters.cohorte_id)
             );
         }
 
@@ -188,7 +183,7 @@ const ShowDatos = () => {
     if (error) {
         return <div>{error}</div>;
     }
-    
+
     return (
         <div className="container mt-5">
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
@@ -313,7 +308,7 @@ const ShowDatos = () => {
                     onChange={handleFilterChange}
                     className="me-2"
                 >
-                    <option value="">Unidad</option>s
+                    <option value="">Unidad</option>
                     {unidadOptions.map(option => (
                         <option key={option.id} value={option.id}>{option.descripcion}</option>
                     ))}
@@ -324,7 +319,7 @@ const ShowDatos = () => {
                     onChange={handleFilterChange}
                     className="me-2"
                 >
-                    <option value="">Cohorte</option>s
+                    <option value="">Cohorte</option>
                     {cohorteOptions.map(option => (
                         <option key={option.id} value={option.id}>{option.descripcion}</option>
                     ))}

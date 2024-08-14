@@ -88,7 +88,7 @@ const ShowPromocion = () => {
                                         onClick={() => navigate(`/promocion/${dato.id}/edit`)}
                                         className="me-2"
                                     >
-                                        Editar
+                                        Actualizar
                                     </Button>
                                     <Button
                                         variant="danger"

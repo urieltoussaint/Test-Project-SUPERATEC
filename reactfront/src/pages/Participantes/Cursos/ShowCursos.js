@@ -3,27 +3,50 @@ import axios from 'axios';
 import Table from 'react-bootstrap/Table';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
 import './ShowCursos.css'; // Asegúrate de tener este archivo CSS en tu proyecto
+import { useLoading } from '../../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
 const ShowCursos = () => {
     const [cursos, setCursos] = useState([]);
+    const [filteredCursos, setFilteredCursos] = useState([]);
+    const [searchCurso, setSearchCurso] = useState('');
+    const [areaOptions, setAreaOptions] = useState([]);
+    const [selectedArea, setSelectedArea] = useState('');
     const [error, setError] = useState(null);
+    const { setLoading } = useLoading();
     const navigate = useNavigate();
-
+    
     useEffect(() => {
-        getAllCursos();
+        setLoading(true);
+        Promise.all([getAllCursos(), fetchAreaOptions()]).finally(() => {
+            setLoading(false);
+        });
     }, []);
+
+    
 
     const getAllCursos = async () => {
         try {
-            const response = await axios.get(`${endpoint}/cursos`);
+            const response = await axios.get(`${endpoint}/cursos?with=area`);
             console.log('Datos obtenidos:', response.data);
-            setCursos(response.data.data); // Asegurarse de que `response.data.data` contenga los datos correctamente.
+            setCursos(response.data.data);
+            setFilteredCursos(response.data.data);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
+        }
+    };
+
+    const fetchAreaOptions = async () => {
+        try {
+            const response = await axios.get(`${endpoint}/area`);
+            setAreaOptions(response.data.data);
+        } catch (error) {
+            setError('Error fetching area options');
+            console.error('Error fetching area options:', error);
         }
     };
 
@@ -39,6 +62,36 @@ const ShowCursos = () => {
         }
     };
 
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchCurso(value);
+        applyFilters(value, selectedArea);
+    };
+
+    const handleAreaChange = (e) => {
+        const value = e.target.value;
+        setSelectedArea(value);
+        applyFilters(searchCurso, value);
+    };
+
+    const applyFilters = (searchValue, areaValue) => {
+        let filtered = cursos;
+
+        if (searchValue) {
+            filtered = filtered.filter(curso =>
+                curso.descripcion.toLowerCase().includes(searchValue.toLowerCase())
+            );
+        }
+
+        if (areaValue) {
+            filtered = filtered.filter(curso =>
+                curso.area_id === parseInt(areaValue)
+            );
+        }
+
+        setFilteredCursos(filtered);
+    };
+
     if (error) {
         return <div>{error}</div>;
     }
@@ -48,13 +101,37 @@ const ShowCursos = () => {
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Lista de Cursos</h1>
-                <Button
-                    variant="success"
-                    onClick={() => navigate('/cursos/create')}
-                >
-                    Agregar Nuevo Curso
-                </Button>
+                <div className="d-flex align-items-center">
+                    <Form.Control
+                        type="text"
+                        placeholder="Buscar por nombre de curso"
+                        value={searchCurso}
+                        onChange={handleSearchChange}
+                        className="me-2"
+                    />
+                    <Button
+                        variant="success"
+                        onClick={() => navigate('/cursos/create')}
+                    >
+                        Agregar Nuevo Curso
+                    </Button>
+                </div>
             </div>
+
+            {/* Mover el filtro de área a una nueva línea */}
+            <div className="d-flex mb-3 custom-width">
+                <Form.Select
+                    value={selectedArea}
+                    onChange={handleAreaChange}
+                    className="me-2"
+                >
+                    <option value="">Filtrar por Área</option>
+                    {areaOptions.map(option => (
+                        <option key={option.id} value={option.id}>{option.descripcion}</option>
+                    ))}
+                </Form.Select>
+            </div>
+
             <div className="cards-container"></div>
             <Table striped bordered hover className="rounded-table">
                 <thead>
@@ -68,7 +145,7 @@ const ShowCursos = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {cursos.map((curso) => (
+                    {filteredCursos.map((curso) => (
                         <tr key={curso.id}>
                             <td className="col-id">{curso.id}</td>
                             <td className="col-descripcion">{curso.descripcion}</td>
@@ -82,7 +159,7 @@ const ShowCursos = () => {
                                         onClick={() => navigate(`/cursos/${curso.id}/edit`)}
                                         className="me-2"
                                     >
-                                        Editar
+                                        Actualizar
                                     </Button>
                                     <Button
                                         variant="danger"

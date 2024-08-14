@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
+import { useLoading } from '../../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -12,11 +13,19 @@ const InscripcionCursos = () => {
     const [datos, setDatos] = useState(null);
     const [curso, setCurso] = useState(null);
     const [error, setError] = useState('');
-    const navigate = useNavigate();
+    const { setLoading } = useLoading();
 
+    const navigate = useNavigate();
+    
+    
     useEffect(() => {
-        fetchCurso();
+        setLoading(true);
+        Promise.all([fetchCurso()]).finally(() => {
+            setLoading(false);
+        });
     }, [cursoId]);
+
+
 
     const fetchCurso = async () => {
         try {
