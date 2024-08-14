@@ -1,8 +1,7 @@
-// App.js
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { LoadingProvider, useLoading } from './components/LoadingContext'; // Importa el contexto de carga
-import Loader from './components/Loader'; // Importa el Loader
+import { LoadingProvider, useLoading } from './components/LoadingContext'; 
+import Loader from './components/Loader'; 
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
 import ShowDatos from './pages/Participantes/ShowDatos';
@@ -25,12 +24,19 @@ import ShowPromocion from './pages/Promocion/ShowPromocion';
 import ShowMorePromocion from './pages/Promocion/ShowMorePromocion';
 import CreatePromocion from './pages/Promocion/CreatePromocion';
 import EditPromocion from './pages/Promocion/EditPromocion';
+import InscribirCedula from './pages/Participantes/Cursos/InscribirCedula';
+import CreatePagosCedula from './pages/Participantes/ReportePagos/CreatePagosCedula';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Comienza oculta
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen); // Cambia el estado
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   return (
@@ -46,21 +52,17 @@ function App() {
           <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
             <ul>
               <li>
-                <Link to="/datos">
-                  <i className="bi bi-person-circle"></i> Participantes
-                </Link>
-                <Link to="/cursos">
-                  <i className="bi bi-book-half"></i> Cursos
-                </Link>
-                <Link to="/pagos">
-                  <i className="bi bi-coin"></i> Reporte de Pagos
-                </Link>
-                <Link to="/voluntariados">
-                  <i className="bi bi-person-raised-hand"></i> Voluntariados
-                </Link>
-                <Link to="/promocion">
-                  <i className="bi bi-mortarboard"></i> Promoción
-                </Link>
+              <div className="dropdown-button" onClick={toggleDropdown}>
+                <i className="bi bi-bookmark-fill"></i> Part1
+                <i className={`bi ${isDropdownOpen ? "bi-caret-up-fill" : "bi-caret-down-fill"}`}></i>
+              </div>
+
+                <ul className={`dropdown-menu ${isDropdownOpen ? "show" : ""}`}>
+                  <li><Link to="/datos"><i className="bi bi-person-circle"></i> Participantes</Link></li>
+                  <li><Link to="/cursos"><i className="bi bi-book-half"></i> Cursos</Link></li>
+                  <li><Link to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</Link></li>
+                  <li><Link to="/promocion"><i className="bi bi-star-fill"></i> Promoción</Link></li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -69,17 +71,16 @@ function App() {
               <Route path="/datos" element={<ShowDatos />} />
               <Route path="/formulario/create" element={<CreateDatos />} />
               <Route path="/datos/:id/edit" element={<EditDatos />} />
-              <Route 
-                path="/datos/:id" 
-                element={<ShowMoreDatos />} 
-              />
+              <Route path="/datos/:id" element={<ShowMoreDatos />} />
               <Route path="/inscribir/:cursoId" element={<InscripcionCursos />} />
+              <Route path="/inscribir-cursos/:cedula" element={<InscribirCedula />} />
               <Route path="/inscritos/:cursoId" element={<ShowInscritos />} />
               <Route path="/cursos" element={<ShowCursos />} />
               <Route path="/cursos/create" element={<CreateCursos />} />
               <Route path="/cursos/:id/edit" element={<EditCursos />} />
               <Route path="/pagos" element={<ShowPagos />} />
               <Route path="/pagos/create" element={<CreatePagos />} />
+              <Route path="/pagos/:cedula/:cursoId" element={<CreatePagosCedula />} />
               <Route path="/pagos/:id" element={<ShowMorePagos />} />
               <Route path="/voluntariados" element={<ShowVoluntariados />} />
               <Route path="/voluntariados/:id" element={<ShowMoreVoluntariados />} />

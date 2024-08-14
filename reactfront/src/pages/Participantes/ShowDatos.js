@@ -89,7 +89,7 @@ const ShowDatos = () => {
     };
 
     const deleteDatos = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este Participante?')) {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este Participante y todos los datos relacionados a el?')) {
             try {
                 await axios.delete(`${endpoint}/datos/${id}`);
                 getAllDatos();

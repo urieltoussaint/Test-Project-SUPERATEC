@@ -16,6 +16,10 @@ class InscripcionCursos extends Model
 {
         return $this->belongsTo(Cursos::class, 'cursos_id','id');
 }
+public function ReportePagos()
+    {
+        return $this->hasMany(ReportePagos::class, 'inscripcion_curso_id');
+    }
 }
 
    

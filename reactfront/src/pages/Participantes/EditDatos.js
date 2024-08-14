@@ -118,7 +118,7 @@ const EditDatos = () => {
   return (
     <div className="container">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Editar Datos de Participante</h1>
+      <h1>Actualizar Datos de Participante</h1>
       <Form onSubmit={handleSubmit}>
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">

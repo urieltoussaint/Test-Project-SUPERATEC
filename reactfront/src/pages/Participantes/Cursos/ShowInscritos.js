@@ -57,7 +57,7 @@ const ShowInscritos = () => {
 
     return (
         <div className="container">
-            <h1>Inscripciones del Curso</h1>
+            <h1>Inscritos del Curso {cursoId}</h1>
             {error && <Alert variant="danger">{error}</Alert>}
             <Table striped bordered hover>
                 <thead>

@@ -4,23 +4,31 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, ListGroup, Button } from 'react-bootstrap';
 import './ShowMorePagos.css';
 import moment from 'moment';
+import { useLoading } from '../../../components/LoadingContext';
+
 
 const endpoint = 'http://localhost:8000/api';
 
 const ShowMorePagos = ({ onReload }) => {
+  const { setLoading } = useLoading();
   const { id } = useParams();
   const [data, setData] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
+    
+
     const fetchData = async () => {
       try {
+        setLoading(true);
         const response = await axios.get(`${endpoint}/reporte_pagos_detalle/${id}`);
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
-      }
+      }    setLoading(false);
+
     };
+
 
     fetchData();
   }, [id]);

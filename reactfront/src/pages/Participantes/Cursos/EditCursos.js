@@ -79,7 +79,7 @@ const EditCursos = () => {
   return (
     <div className="container">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Editar Curso</h1>
+      <h1>Actualizar Curso</h1>
       {error && <div className="alert alert-danger">{error}</div>}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="descripcion">

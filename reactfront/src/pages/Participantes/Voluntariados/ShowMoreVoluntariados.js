@@ -3,6 +3,8 @@ import axios from 'axios'
 import { useParams, useNavigate } from 'react-router-dom'; // Importa useNavigate
 import { Card, ListGroup, Button } from 'react-bootstrap';
 import './ShowMoreVoluntariados.css'; // Importa la hoja de estilo
+import { useLoading } from '../../../components/LoadingContext';   
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -10,10 +12,14 @@ const ShowMoreVoluntariados = ({  }) => {
   const { id } = useParams();
   const [data, setData] = useState({});
   const navigate = useNavigate(); // Inicializa useNavigate
+  const { setLoading } = useLoading();
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+
         let relationsArray = [
           'cedula_identidad','nombres','apellidos','fecha_nacimiento','genero','telefonos_casa','telefono_celular','email','direccion',
           'ocupacion','nivelInstruccion','procedencia','ComoEnteroSuperatec','fecha_registro','InformacionVoluntariados.TipoVoluntariado',
@@ -25,7 +31,8 @@ const ShowMoreVoluntariados = ({  }) => {
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
-      }
+      }        setLoading(false);
+
     };
 
     fetchData();

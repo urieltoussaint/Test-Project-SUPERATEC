@@ -1,28 +1,54 @@
-import React, { useState } from 'react';
-import axios from 'axios'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './CreatePromocion.css';
+import { useLoading } from '../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
 const CreatePromocion = () => {
+  const { setLoading } = useLoading();
   const [formData, setFormData] = useState({
     centro_id: '',
-    cohorte_id:'',
-    periodo_id:'',
-    fecha_promocion:'',
-    procedencia_id:'',
-    mencion_id:'',
-    estudiantes_asistentes:'',
-    estudiantes_interesados:'',
-    status_id:'',
-    comentarios:'',
-    
+    cohorte_id: '',
+    periodo_id: '',
+    fecha_promocion: '',
+    procedencia_id: '',
+    mencion_id: '',
+    estudiantes_asistentes: '',
+    estudiantes_interesados: '',
+    status_id: '',
+    comentarios: '',
   });
 
+  const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSelectData = async () => {
+      setLoading(true); // Inicia la animación de carga
+      try {
+        // Realiza las solicitudes necesarias para cargar los selectores
+        await Promise.all([
+          axios.get(`${endpoint}/centro`),
+          axios.get(`${endpoint}/cohorte`),
+          axios.get(`${endpoint}/periodo`),
+          axios.get(`${endpoint}/procedencia`),
+          axios.get(`${endpoint}/mencion`),
+          axios.get(`${endpoint}/status_seleccion`),
+        ]);
+        setSelectDataLoaded(true); // Indica que los datos han sido cargados
+      } catch (error) {
+        console.error('Error fetching select data:', error);
+      } finally {
+        setLoading(false); // Detiene la animación de carga
+      }
+    };
+
+    fetchSelectData();
+  }, [setLoading]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -34,11 +60,15 @@ const CreatePromocion = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Inicia la animación de carga durante el envío del formulario
     try {
       await axios.post(`${endpoint}/promocion`, formData);
+      window.alert('La promoción ha sido registrada exitosamente.'); // Muestra la ventana de alerta
       navigate('/promocion');
     } catch (error) {
       console.error('Error creating data:', error);
+    } finally {
+      setLoading(false); // Detiene la animación de carga después de la respuesta del servidor
     }
   };
 
@@ -51,35 +81,67 @@ const CreatePromocion = () => {
         <div className="row">
           <div className="col-md-6">
 
-          <SelectComponent
-              endpoint={`${endpoint}/centro`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.centro_id}
-              handleChange={handleChange}
-              controlId="centro_id"
-              label="Centro"
-            />
-            <SelectComponent
-              endpoint={`${endpoint}/cohorte`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.cohorte_id}
-              handleChange={handleChange}
-              controlId="cohorte_id"
-              label="Cohorte"
-            />
-            <SelectComponent
-              endpoint={`${endpoint}/periodo`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.periodo_id}
-              handleChange={handleChange}
-              controlId="periodo_id"
-              label="Periodo"
-            />
-             <Form.Group controlId="fecha_promocion">
-              <Form.Label>Fecha de Promocion</Form.Label>
+            {selectDataLoaded && (
+              <>
+                <SelectComponent
+                  endpoint={`${endpoint}/centro`}
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.centro_id}
+                  handleChange={handleChange}
+                  controlId="centro_id"
+                  label="Centro"
+                />
+                <SelectComponent
+                  endpoint={`${endpoint}/cohorte`}
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.cohorte_id}
+                  handleChange={handleChange}
+                  controlId="cohorte_id"
+                  label="Cohorte"
+                />
+                <SelectComponent
+                  endpoint={`${endpoint}/periodo`}
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.periodo_id}
+                  handleChange={handleChange}
+                  controlId="periodo_id"
+                  label="Periodo"
+                />
+                <SelectComponent
+                  endpoint={`${endpoint}/procedencia`}
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.procedencia_id}
+                  handleChange={handleChange}
+                  controlId="procedencia_id"
+                  label="Procedencia"
+                />
+                <SelectComponent
+                  endpoint={`${endpoint}/mencion`}
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.mencion_id}
+                  handleChange={handleChange}
+                  controlId="mencion_id"
+                  label="Mención"
+                />
+                <SelectComponent
+                  endpoint={`${endpoint}/status_seleccion`}
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.status_id}
+                  handleChange={handleChange}
+                  controlId="status_id"
+                  label="Status"
+                />
+              </>
+            )}
+
+            <Form.Group controlId="fecha_promocion">
+              <Form.Label>Fecha de Promoción</Form.Label>
               <Form.Control
                 type="date"
                 name="fecha_promocion"
@@ -88,27 +150,8 @@ const CreatePromocion = () => {
                 required
               />
             </Form.Group>
-            
-            <SelectComponent
-              endpoint={`${endpoint}/procedencia`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.procedencia_id}
-              handleChange={handleChange}
-              controlId="procedencia_id"
-              label="Procedencia"
-            /> 
-            <SelectComponent
-              endpoint={`${endpoint}/mencion`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.mencion_id}
-              handleChange={handleChange}
-              controlId="mencion_id"
-              label="Mención"
-            /> 
 
-             <Form.Group controlId="estudiantes_asistentes">
+            <Form.Group controlId="estudiantes_asistentes">
               <Form.Label>Estudiantes Asistentes</Form.Label>
               <Form.Control
                 type="number"
@@ -129,16 +172,6 @@ const CreatePromocion = () => {
               />
             </Form.Group>
 
-            <SelectComponent
-              endpoint={`${endpoint}/status_seleccion`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.status_id}
-              handleChange={handleChange}
-              controlId="status_id"
-              label="Status"
-            />
-
             <Form.Group controlId="comentarios">
               <Form.Label>Comentarios</Form.Label>
               <Form.Control
@@ -155,8 +188,8 @@ const CreatePromocion = () => {
         <Button variant="primary" type="submit">
           Guardar
         </Button>
-        <Button 
-          variant="secondary" 
+        <Button
+          variant="secondary"
           onClick={() => navigate('/promocion')}
           className="ms-2"
         >

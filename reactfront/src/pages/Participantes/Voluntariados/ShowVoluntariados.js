@@ -5,6 +5,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import './ShowVoluntariados.css'; // Asegúrate de tener este archivo CSS en tu proyecto
+import { useLoading } from '../../../components/LoadingContext';   
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -20,12 +22,17 @@ const ShowVoluntariados = () => {
     const [selectedGenero, setSelectedGenero] = useState('');
     const [error, setError] = useState(null);
     const { id } = useParams();
+    const { setLoading } = useLoading();
+
     const navigate = useNavigate();
 
     useEffect(() => {
-        getAllVoluntariados();
-        fetchFilterOptions();
+        setLoading(true);
+        Promise.all([getAllVoluntariados(), fetchFilterOptions()]).finally(() => {
+            setLoading(false);
+        });
     }, [id]);
+
 
     const getAllVoluntariados = async () => {
         try {

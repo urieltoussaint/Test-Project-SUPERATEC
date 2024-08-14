@@ -4,15 +4,18 @@ import { useParams, useNavigate } from 'react-router-dom'; // Importa useNavigat
 import { Card, ListGroup, Button } from 'react-bootstrap';
 import './ShowMorePromocion.css'; // Importa la hoja de estilo
 import moment from 'moment';
+import { useLoading } from '../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 
 const ShowMorePromocion = ({  }) => {
   const { id } = useParams();
   const [data, setData] = useState({});
+  const { setLoading } = useLoading();
   const navigate = useNavigate(); // Inicializa useNavigate
 
   useEffect(() => {
+    setLoading(true);
     const fetchData = async () => {
       try {
         let relationsArray = [
@@ -23,7 +26,7 @@ const ShowMorePromocion = ({  }) => {
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
-      }
+      }setLoading(false);
     };
 
     fetchData();

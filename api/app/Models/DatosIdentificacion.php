@@ -100,13 +100,28 @@ class DatosIdentificacion extends Model
     {
         return $this->hasOne(ReportePagos::class, 'cedula_identidad_id', 'cedula_identidad');
     }
+    public function InscripcionCursos()
+{
+    return $this->hasOne(InscripcionCursos::class, 'cedula_identidad', 'cedula_identidad');
+}
 
     protected static function boot()
     {
         parent::boot();
-        // Al eliminar datos de identificación, también eliminar los relacionados en InformacionInscripcion
+    
         static::deleting(function ($datosIdentificacion) {
+            // Recorrer cada inscripción relacionada y eliminar sus pagos antes de eliminar la inscripción
+            $datosIdentificacion->InscripcionCursos()->each(function ($inscripcionCurso) {
+                // Eliminar todos los pagos relacionados con esta inscripción
+                $inscripcionCurso->ReportePagos()->delete();
+    
+                // Luego eliminar la inscripción
+                $inscripcionCurso->delete();
+            });
+    
+            // Ahora puedes eliminar cualquier otra relación directa (por ejemplo, InformacionInscripcion)
             $datosIdentificacion->informacionInscripcion()->delete();
         });
     }
+    
 }

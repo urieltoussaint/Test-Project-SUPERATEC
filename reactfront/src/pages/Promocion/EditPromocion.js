@@ -4,6 +4,7 @@ import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './EditPromocion.css'; // Importa la hoja de estilo si es necesario
+import { useLoading } from '../../components/LoadingContext'; 
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -24,10 +25,12 @@ const EditPromocion = () => {
 
   const navigate = useNavigate();
   const { id } = useParams(); // Obtener el ID desde la ruta
+  const {setLoading}=useLoading();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         let relationsArray = ['centro', 'cohorte', 'periodo', 'procedencia', 'mencion', 'statusSeleccion'];
         const relations = relationsArray.join(',');
         const response = await axios.get(`${endpoint}/promocion/${id}?with=${relations}`);
@@ -52,6 +55,8 @@ const EditPromocion = () => {
       } catch (error) {
         console.error('Error fetching data:', error);
       }
+
+      setLoading(false);
     };
 
     fetchData();
@@ -78,7 +83,7 @@ const EditPromocion = () => {
   return (
     <div className="container">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Agregar Nueva Promoción</h1>
+      <h1>Actualizar Promoción</h1>
       <Form onSubmit={handleSubmit}>
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">

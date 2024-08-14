@@ -43,13 +43,11 @@ const CreateDatos = () => {
     observaciones: '',
   });
 
-  const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
-
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSelectData = async () => {
-      setLoading(true); // Inicia la animación de carga
+      setLoading(true);
       try {
         await Promise.all([
           axios.get(`${endpoint}/status_seleccion`),
@@ -69,11 +67,10 @@ const CreateDatos = () => {
           axios.get(`${endpoint}/nivel`),
           axios.get(`${endpoint}/tipo_programa`),
         ]);
-        setSelectDataLoaded(true); // Indica que todos los datos han sido cargados
       } catch (error) {
         console.error('Error fetching select data:', error);
       } finally {
-        setLoading(false); // Detiene la animación de carga
+        setLoading(false);
       }
     };
 
@@ -88,26 +85,29 @@ const CreateDatos = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, redirectToCursos) => {
     e.preventDefault();
-    setLoading(true); // Inicia la animación de carga durante el envío del formulario
+    setLoading(true);
     try {
       await axios.post(`${endpoint}/datos`, formData);
-      window.alert('El participante ha sido registrado exitosamente.'); // Muestra la ventana de alerta
-      navigate('/datos');
+      window.alert('El participante ha sido registrado exitosamente.');
+      if (redirectToCursos) {
+        navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
+      } else {
+        navigate('/datos');
+      }
     } catch (error) {
       console.error('Error creating data:', error);
     } finally {
-      setLoading(false); // Detiene la animación de carga después de la respuesta del servidor
+      setLoading(false);
     }
   };
-
 
   return (
     <div className="container">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
       <h1>Agregar Nuevo Participante</h1>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={(e) => handleSubmit(e, false)}>
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
@@ -415,7 +415,7 @@ const CreateDatos = () => {
         <Button variant="primary" type="submit">
           Guardar
         </Button>
-        
+
         <Button 
           variant="secondary" 
           onClick={() => navigate('/datos')}
@@ -423,6 +423,15 @@ const CreateDatos = () => {
         >
           Volver
         </Button>
+
+        <Button 
+          variant="success" 
+          onClick={(e) => handleSubmit(e, true)}
+          className="ms-2"
+        >
+          Siguiente
+        </Button>
+        
       </Form>
     </div>
   );

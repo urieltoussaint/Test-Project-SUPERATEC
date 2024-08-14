@@ -4,6 +4,7 @@ import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import './EditVoluntariados.css';
+import { useLoading } from '../../../components/LoadingContext';	
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -34,10 +35,13 @@ const EditVoluntariados = () => {
 
   const navigate = useNavigate();
   const { id } = useParams();
+  const { setLoading } = useLoading();
+
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
+      try { 
+        setLoading(true);
         let relationsArray = [
           'nacionalidad',
           'estado',
@@ -67,7 +71,7 @@ const EditVoluntariados = () => {
         });
       } catch (error) {
         console.error('Error fetching data:', error);
-      }
+      }setLoading(false);
     };
 
     fetchData();
@@ -106,7 +110,7 @@ const EditVoluntariados = () => {
   return (
     <div className="container">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Editar Datos del Voluntario</h1>
+      <h1>Actualizar Datos del Voluntario</h1>
       <Form onSubmit={handleSubmit}>
         <div className="row">
           <div className="col-md-6">
