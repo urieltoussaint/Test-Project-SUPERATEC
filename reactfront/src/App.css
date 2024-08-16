@@ -168,6 +168,7 @@
   margin-top: 1rem;
 }
 /* Estilo del botón del menú desplegable */
+/* Estilo del botón del menú desplegable */
 .dropdown-button {
   background: none;
   border: none;
@@ -181,35 +182,38 @@
   align-items: center;
   justify-content: space-between;
   transition: background-color 0.3s ease, color 0.3s ease, border-radius 0.3s ease;
-  border-radius: 20px; /* Mantén el borde redondeado siempre */
-}
-
-.dropdown-button:hover {
-  background-color: rgba(57, 57, 57, 0.2);
+  border-radius: 20px;
 }
 
 /* Estilo del menú desplegable */
 .dropdown-menu {
   list-style-type: none;
   padding: 0;
-  margin: 0; /* Elimina el margen que genera el recuadro */
-  display: none;
+  margin: 0;
+  overflow: hidden;
+  max-height: 0; /* Altura inicial 0 */
   opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  background-color: transparent; /* Fondo transparente */
-  box-shadow: none; /* Sin sombras */
+  transition: max-height 0.4s ease, opacity 0.3s ease;
 }
 
 /* Mostrar menú desplegable con animación */
 .dropdown-menu.show {
-  display: block;
+  max-height: 500px; /* Altura suficiente para mostrar contenido */
   opacity: 1;
-  transform: translateY(0);
 }
 
+/* Transición y espacio para li que contiene el dropdown */
+.sidebar li {
+  transition: margin-bottom 0.4s ease;
+}
+
+.sidebar li.expanded {
+  margin-bottom: 200px; /* Ajusta el espacio entre módulos cuando está expandido */
+}
+
+
 .dropdown-menu li {
-  margin: 5px 0;
+  margin: 2px 0;
 }
 
 .dropdown-menu li a {
@@ -217,7 +221,7 @@
   text-decoration: none;
   display: flex;
   align-items: center;
-  padding: 5px 0;
+  padding: 0.01px 0;
   font-weight: 500;
 }
 
@@ -231,18 +235,17 @@
   padding-left: 5px;
 }
 
-/* Eliminar el borde y el recuadro */
 .dropdown-menu {
   border: none;
-  background-color: transparent; /* Sin fondo */
+  background-color: transparent;
   box-shadow: none;
 }
 
 .dropdown-menu.show {
-  padding: 0; /* Elimina el padding del menú */
-  margin: 0; /* Elimina el margen alrededor del menú */
-  box-shadow: none; /* Sin sombra */
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
-
-
-  
+.dropdown-button:hover {
+  background-color: rgba(57, 57, 57, 0.2);
+}

@@ -7,7 +7,8 @@ import Form from 'react-bootstrap/Form';
 import './ShowPromocion.css'; 
 import moment from 'moment';
 import { useLoading } from '../../components/LoadingContext';
-
+import { ToastContainer,toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const endpoint = 'http://localhost:8000/api';
 
 const ShowPromocion = () => {
@@ -69,9 +70,13 @@ const ShowPromocion = () => {
         if (window.confirm('¿Estás seguro de que deseas eliminar esta Promoción?')) {
             try {
                 await axios.delete(`${endpoint}/promocion/${id}`);
+                toast.success('Éxito al eliminar Promoción');
                 getAllPromociones();
+                
+                
             } catch (error) {
                 setError('Error deleting data');
+                toast.error('Error al eliminar Promoción');
                 console.error('Error deleting data:', error);
             }
         }
@@ -246,6 +251,7 @@ const ShowPromocion = () => {
                     ))}
                 </tbody>
             </Table>
+            <ToastContainer />
         </div>
     );
 };

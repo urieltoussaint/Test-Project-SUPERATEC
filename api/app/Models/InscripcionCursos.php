@@ -20,6 +20,16 @@ public function ReportePagos()
     {
         return $this->hasMany(ReportePagos::class, 'inscripcion_curso_id');
     }
+
+
+    protected static function boot()
+    {
+        parent::boot();
+        // Al eliminar datos de inscritos, también eliminar los relacionados en reporte de pagos
+        static::deleting(function ($cursos) {
+            $cursos->ReportePagos()->delete();
+        });
+    }
 }
 
    

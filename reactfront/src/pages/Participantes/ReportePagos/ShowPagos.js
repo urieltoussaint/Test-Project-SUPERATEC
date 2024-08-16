@@ -5,8 +5,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import moment from 'moment';
-import './ShowPagos.css'; // Asegúrate de tener este archivo CSS en tu proyecto
+import './ShowPagos.css';
 import { useLoading } from '../../../components/LoadingContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -17,7 +19,7 @@ const ShowPagos = () => {
     const [error, setError] = useState(null);
     const { id } = useParams();
     const navigate = useNavigate();
-    const {setLoading} = useLoading();
+    const { setLoading } = useLoading();
 
     useEffect(() => {
         setLoading(true);
@@ -32,7 +34,7 @@ const ShowPagos = () => {
             console.log('Datos obtenidos:', response.data);
             const sortedReportes = response.data.data.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
-            setFilteredReportes(sortedReportes); // Inicializar con todos los reportes
+            setFilteredReportes(sortedReportes);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
@@ -44,9 +46,11 @@ const ShowPagos = () => {
             try {
                 await axios.delete(`${endpoint}/pagos/${id}`);
                 getAllReportes();
+                toast.success('Reporte eliminado con éxito');
             } catch (error) {
                 setError('Error deleting data');
                 console.error('Error deleting data:', error);
+                toast.error('Error al eliminar el reporte');
             }
         }
     };
@@ -128,6 +132,7 @@ const ShowPagos = () => {
                     ))}
                 </tbody>
             </Table>
+            <ToastContainer />
         </div>
     );
 };

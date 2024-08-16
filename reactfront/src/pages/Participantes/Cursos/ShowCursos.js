@@ -6,6 +6,8 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import './ShowCursos.css'; // Asegúrate de tener este archivo CSS en tu proyecto
 import { useLoading } from '../../../components/LoadingContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -25,8 +27,6 @@ const ShowCursos = () => {
             setLoading(false);
         });
     }, []);
-
-    
 
     const getAllCursos = async () => {
         try {
@@ -55,9 +55,11 @@ const ShowCursos = () => {
             try {
                 await axios.delete(`${endpoint}/cursos/${id}`);
                 getAllCursos();
+                toast.success('Eliminado con éxito');
             } catch (error) {
                 setError('Error deleting data');
                 console.error('Error deleting data:', error);
+                toast.error('Error al eliminar el curso');
             }
         }
     };
@@ -118,7 +120,6 @@ const ShowCursos = () => {
                 </div>
             </div>
 
-            {/* Mover el filtro de área a una nueva línea */}
             <div className="d-flex mb-3 custom-width">
                 <Form.Select
                     value={selectedArea}
@@ -188,6 +189,7 @@ const ShowCursos = () => {
                     ))}
                 </tbody>
             </Table>
+            <ToastContainer />
         </div>
     );
 };

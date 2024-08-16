@@ -5,6 +5,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useLoading } from '../../../components/LoadingContext'; 
+import { ToastContainer,toast } from 'react-toastify';
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -85,10 +87,11 @@ const InscribirCedula = () => {
                 curso_id: cursoId
             });
             const inscripcionCursoId = response.data.id; // Suponiendo que el servidor devuelve el ID de inscripción
-            window.alert('Participante inscrito exitosamente.');
+            toast.success('Inscripción Exitosa');
             navigate(`/pagos/${cedula}/${inscripcionCursoId}`); // Redirige a la página de creación de pago con inscripcion_curso_id
         } catch (error) {
-            setError('Error inscribiendo al participante');
+
+            toast.error('Inscripción Fallida');
             console.error('Error inscribiendo al participante:', error);
         } finally {
             setLoading(false);
@@ -160,6 +163,7 @@ const InscribirCedula = () => {
                     ))}
                 </tbody>
             </Table>
+            
         </div>
     );
 };

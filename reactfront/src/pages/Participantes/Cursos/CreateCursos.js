@@ -4,6 +4,8 @@ import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import { useLoading } from '../../../components/LoadingContext';
+import { ToastContainer,toast } from 'react-toastify';
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -50,10 +52,10 @@ const CreateCursos = () => {
     setLoading(true); // Inicia la animación de carga durante el envío del formulario
     try {
       await axios.post(`${endpoint}/cursos`, formData);
-      window.alert('El curso ha sido registrado exitosamente.'); // Muestra la ventana de alerta
+      toast.success('Curso Creado con Éxito');
       navigate('/cursos');
     } catch (error) {
-      console.error('Error creating data:', error);
+      toast.error('Error al crear Curso');
     } finally {
       setLoading(false); // Detiene la animación de carga después de la respuesta del servidor
     }

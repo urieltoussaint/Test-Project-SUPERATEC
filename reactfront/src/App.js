@@ -29,14 +29,16 @@ import CreatePagosCedula from './pages/Participantes/ReportePagos/CreatePagosCed
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+ 
+  const toggleDropdown = (index) => {
+    setOpenDropdown(openDropdown === index ? null : index);
   };
 
   return (
@@ -51,17 +53,25 @@ function App() {
           </div>
           <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
             <ul>
-              <li>
-              <div className="dropdown-button" onClick={toggleDropdown}>
-                <i className="bi bi-bookmark-fill"></i> Part1
-                <i className={`bi ${isDropdownOpen ? "bi-caret-up-fill" : "bi-caret-down-fill"}`}></i>
-              </div>
-
-                <ul className={`dropdown-menu ${isDropdownOpen ? "show" : ""}`}>
+                <li className={openDropdown === 1 ? 'expanded' : ''}>
+                <div className="dropdown-button" onClick={() => toggleDropdown(1)}>
+                  <i className="bi bi-bookmark-fill"></i> Módulo 1
+                  <i className={`bi ${openDropdown === 1 ? "bi-caret-up-fill" : "bi-caret-down-fill"}`}></i>
+                </div>
+                <ul className={`dropdown-menu ${openDropdown === 1 ? "show" : ""}`}>
                   <li><Link to="/datos"><i className="bi bi-person-circle"></i> Participantes</Link></li>
                   <li><Link to="/cursos"><i className="bi bi-book-half"></i> Cursos</Link></li>
                   <li><Link to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</Link></li>
                   <li><Link to="/promocion"><i className="bi bi-star-fill"></i> Promoción</Link></li>
+                </ul>
+              </li>
+              <li className={openDropdown === 2 ? 'expanded' : ''}>
+                <div className="dropdown-button" onClick={() => toggleDropdown(2)}>
+                  <i className="bi bi-bookmark-fill"></i> Módulo 2
+                  <i className={`bi ${openDropdown === 2 ? "bi-caret-up-fill" : "bi-caret-down-fill"}`}></i>
+                </div>
+                <ul className={`dropdown-menu ${openDropdown === 2 ? "show" : ""}`}>
+                  <li><Link to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</Link></li>
                 </ul>
               </li>
             </ul>

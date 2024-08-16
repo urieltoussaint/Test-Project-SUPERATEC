@@ -5,6 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './CreatePromocion.css';
 import { useLoading } from '../../components/LoadingContext';
+import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -63,9 +66,10 @@ const CreatePromocion = () => {
     setLoading(true); // Inicia la animación de carga durante el envío del formulario
     try {
       await axios.post(`${endpoint}/promocion`, formData);
-      window.alert('La promoción ha sido registrada exitosamente.'); // Muestra la ventana de alerta
+      toast.success('Promoción creada con Éxito');
       navigate('/promocion');
     } catch (error) {
+      toast.error('Error al crear Promoción');
       console.error('Error creating data:', error);
     } finally {
       setLoading(false); // Detiene la animación de carga después de la respuesta del servidor

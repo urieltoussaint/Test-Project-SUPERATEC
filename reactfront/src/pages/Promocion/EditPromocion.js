@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './EditPromocion.css'; // Importa la hoja de estilo si es necesario
 import { useLoading } from '../../components/LoadingContext'; 
+import { ToastContainer,toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -74,9 +75,11 @@ const EditPromocion = () => {
     e.preventDefault();
     try {
       await axios.patch(`${endpoint}/promocion/${id}`, formData);
+      toast.success('Actualización con Éxito');
       navigate('/promocion');
     } catch (error) {
       console.error('Error updating data:', error);
+      toast.success('Error al Actualizar');
     }
   };
 

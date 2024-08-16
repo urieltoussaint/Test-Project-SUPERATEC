@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './EditDatos.css'; // Importa la hoja de estilo si es necesario
 import { useLoading } from '../../components/LoadingContext'; // Importa useLoading
+import { ToastContainer,toast } from 'react-toastify';
 
 
 const endpoint = 'http://localhost:8000/api';
@@ -12,7 +13,7 @@ const endpoint = 'http://localhost:8000/api';
 const EditDatos = () => {
   const { setLoading } = useLoading(); // Usar el contexto de carga
   const [formData, setFormData] = useState({
-    cedula_identidad: '',
+    // cedula_identidad: '',
     nombres: '',
     apellidos: '',
     fecha_nacimiento: '',
@@ -109,8 +110,10 @@ const EditDatos = () => {
     e.preventDefault();
     try {
       await axios.patch(`${endpoint}/datos/${id}`, formData);
+      toast.success('Actualización con Éxito');
       navigate('/datos');
     } catch (error) {
+      toast.success('Error al actualizar Participante')
       console.error('Error updating data:', error);
     }
   };
@@ -128,8 +131,8 @@ const EditDatos = () => {
               <Form.Control
                 type="text"
                 name="cedula_identidad"
-                value={formData.cedula_identidad}
-                onChange={handleChange}
+                value={formData.cedula_identidad ? `V-${formData.cedula_identidad}` : ''}
+                readOnly
                 required
               />
             </Form.Group>

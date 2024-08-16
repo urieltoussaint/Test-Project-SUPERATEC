@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLoading } from '../../../components/LoadingContext';
+import { ToastContainer,toast } from 'react-toastify';
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -70,9 +72,12 @@ const EditCursos = () => {
     try {
       await axios.put(`${endpoint}/cursos/${id}`, formData);
       navigate('/cursos');
+      toast.success('Actualización con Éxito');
     } catch (error) {
       setError('Error updating course');
       console.error('Error updating course:', error);
+      toast.error('Actualización con fallida');
+
     }
   };
 

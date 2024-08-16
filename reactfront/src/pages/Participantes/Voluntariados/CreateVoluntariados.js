@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button,Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import './CreateVoluntariados.css';
+import { toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
 
 const CreateVoluntariados = () => {
+  const [cedulaError, setCedulaError] = useState(''); // Estado para almacenar el mensaje de validación
+  const [isCedulaValid, setIsCedulaValid] = useState(false);
   const [formData, setFormData] = useState({
     cedula_identidad: '',
     nombres: '',
@@ -34,19 +37,52 @@ const CreateVoluntariados = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+
+    if (name === 'cedula_identidad') {
+      // Permitir solo números y agregar prefijo "V-"
+      const numericValue = value.replace(/\D/g, ''); // Eliminar todo lo que no sea un número
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: numericValue,
+      }));
+    } else {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post(`${endpoint}/voluntariados`, formData);
+      toast.success('Voluntariado creado con Éxito');
       navigate('/voluntariados');
     } catch (error) {
+      toast.error('Error al crear Voluntariado');
       console.error('Error creating data:', error);
+    }
+  };
+
+  const handleBlur = async () => {
+    if (formData.cedula_identidad) {
+      try {
+        const response = await axios.get(`${endpoint}/datos/${formData.cedula_identidad}`);
+        // Si la cédula está registrada, mostramos el error y no es válida
+        setCedulaError('La cédula ya está registrada.');
+        setIsCedulaValid(false);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // La cédula no está registrada, por lo que es válida
+          setCedulaError('');
+          setIsCedulaValid(true);
+        } else {
+          console.error('Error checking cedula:', error);
+          setCedulaError('Error verificando la cédula.');
+          setIsCedulaValid(false);
+        }
+      }
     }
   };
 
@@ -58,15 +94,25 @@ const CreateVoluntariados = () => {
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
-            <Form.Group controlId="cedula_identidad">
+          <Form.Group controlId="cedula_identidad">
               <Form.Label>Cédula de Identidad</Form.Label>
               <Form.Control
                 type="text"
                 name="cedula_identidad"
-                value={formData.cedula_identidad}
+                value={formData.cedula_identidad ? `V-${formData.cedula_identidad}` : ''}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="V-123321123"
+                maxLength={10}
                 required
+                className={cedulaError ? 'is-invalid' : isCedulaValid ? 'is-valid' : ''}
               />
+              {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
+              {!cedulaError && isCedulaValid && (
+                <Form.Control.Feedback type="valid">
+                  Cédula disponible.
+                </Form.Control.Feedback>
+              )}
             </Form.Group>
 
             <Form.Group controlId="nombres">

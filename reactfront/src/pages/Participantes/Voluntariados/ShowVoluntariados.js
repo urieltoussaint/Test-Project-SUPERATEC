@@ -6,6 +6,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import './ShowVoluntariados.css'; // Asegúrate de tener este archivo CSS en tu proyecto
 import { useLoading } from '../../../components/LoadingContext';   
+import { toast, ToastContainer } from 'react-toastify';
 
 
 const endpoint = 'http://localhost:8000/api';
@@ -66,9 +67,14 @@ const ShowVoluntariados = () => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este Voluntariado?')) {
             try {
                 await axios.delete(`${endpoint}/voluntariados/${id}`);
-                getAllVoluntariados();
+                toast.success('Voluntariado eliminado con Éxito');
+                setTimeout(() => {
+                    getAllVoluntariados();
+                }, 500);
+                
             } catch (error) {
                 setError('Error deleting data');
+                toast.error('Error al eliminar Voluntariado');
                 console.error('Error deleting data:', error);
             }
         }
@@ -235,6 +241,7 @@ const ShowVoluntariados = () => {
                     ))}
                 </tbody>
             </Table>
+            <ToastContainer />
         </div>
     );
 };

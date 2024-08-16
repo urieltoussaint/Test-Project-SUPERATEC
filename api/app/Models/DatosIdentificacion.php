@@ -98,7 +98,7 @@ class DatosIdentificacion extends Model
 }
     public function ReportePagos()
     {
-        return $this->hasOne(ReportePagos::class, 'cedula_identidad_id', 'cedula_identidad');
+        return $this->hasOne(ReportePagos::class, 'cedula_identidad', 'cedula_identidad');
     }
     public function InscripcionCursos()
 {

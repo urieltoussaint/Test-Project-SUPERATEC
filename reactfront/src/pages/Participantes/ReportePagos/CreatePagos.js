@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
+import { ToastContainer,toast } from 'react-toastify';
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -151,8 +153,10 @@ const CreatePago = () => {
         cedula_identidad: cedula, 
         conversion_total: calcularConversion(formData.monto_total) 
       });
+      toast.success('Reporte de pago creado con Éxito')
       navigate('/pagos');
     } catch (error) {
+      toast.error('Reporte de pago fallido')
       console.error('Error creando el pago:', error);
     } finally {
       setIsSubmitting(false);

@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import './EditVoluntariados.css';
 import { useLoading } from '../../../components/LoadingContext';	
+import { toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -101,8 +102,10 @@ const EditVoluntariados = () => {
     e.preventDefault();
     try {
       await axios.patch(`${endpoint}/voluntariados/${id}`, formData);
+      toast.success('Actualización con Éxito');
       navigate('/voluntariados');
     } catch (error) {
+      toast.error('Error al actualizar Voluntariado');
       console.error('Error updating data:', error);
     }
   };

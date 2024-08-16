@@ -4,6 +4,7 @@ import { Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
 import { useLoading } from '../../../components/LoadingContext';
+import { ToastContainer,toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -71,10 +72,10 @@ const InscripcionCursos = () => {
                 cedula_identidad: cedula,
                 curso_id: cursoId
             });
-            alert('Inscripción exitosa');
+            toast.success('Inscripción Exitosa')
             navigate('/cursos');
         } catch (error) {
-            alert('Error en la inscripción');
+            toast.error('Inscripción Fallida')
         }
     };
 

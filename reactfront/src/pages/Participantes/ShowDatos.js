@@ -4,8 +4,10 @@ import Table from 'react-bootstrap/Table';
 import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import './ShowDatos.css'; 
 import { useLoading } from '../../components/LoadingContext';
+import './ShowDatos.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -89,13 +91,16 @@ const ShowDatos = () => {
     };
 
     const deleteDatos = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este Participante y todos los datos relacionados a el?')) {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este Participante y todos los datos relacionados a él?')) {
             try {
                 await axios.delete(`${endpoint}/datos/${id}`);
-                getAllDatos();
+                toast.success('Participante eliminado con Éxito');             
+                    getAllDatos();
+               
             } catch (error) {
                 setError('Error deleting data');
                 console.error('Error deleting data:', error);
+                toast.error('Error al eliminar Participante');
             }
         }
     };
@@ -369,6 +374,7 @@ const ShowDatos = () => {
                     ))}
                 </tbody>
             </Table>
+            <ToastContainer />
         </div>
     );
 };

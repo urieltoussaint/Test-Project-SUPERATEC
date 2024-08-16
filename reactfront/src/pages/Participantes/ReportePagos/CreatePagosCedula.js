@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ToastContainer,toast } from 'react-toastify';
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -95,9 +97,11 @@ const CreatePagosCedula = () => {
         cedula_identidad: cedula, 
         conversion_total: calcularConversion(formData.monto_total) 
       });
+      toast.success('Reporte de Pago creado con Éxito');
       navigate('/pagos');
     } catch (error) {
       console.error('Error creando el pago:', error);
+      toast.error('Error al crear el Reporte de Pago')
       setError('Error creando el pago');
     } finally {
       setIsSubmitting(false);
@@ -180,7 +184,7 @@ const CreatePagosCedula = () => {
         <Button variant="primary" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Registrando...' : 'Registrar Pago'}
         </Button>
-        <Button variant="secondary" onClick={() => navigate('/pagos')} className="ms-2">
+        <Button variant="secondary" onClick={() => navigate('/datos')} className="ms-2">
           Volver
         </Button>
       </Form>
@@ -190,6 +194,7 @@ const CreatePagosCedula = () => {
         </div>
       )}
     </div>
+    
   );
 };
 
