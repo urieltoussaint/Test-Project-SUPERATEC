@@ -50,29 +50,40 @@ const ShowDatos = () => {
 
     const getAllDatos = async () => {
         try {
-            const response = await axios.get(`${endpoint}/datos?with=statusSeleccion,informacionInscripcion,NivelInstruccion,genero,estado`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/datos?with=statusSeleccion,informacionInscripcion,NivelInstruccion,genero,estado`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
             console.log('Datos obtenidos:', response.data);
             setDatos(response.data.data);
             setFilteredDatos(response.data.data);
         } catch (error) {
-            setError('Error fetching data');
-            console.error('Error fetching data:', error);
+            if (error.response && error.response.status === 401) {
+                setError('No estás autenticado. Por favor, inicia sesión.');
+                navigate('/'); // Redirige al login si no está autenticado
+            } else {
+                setError('Error fetching data');
+                console.error('Error fetching data:', error);
+            }
         }
     };
 
     const fetchFilterOptions = async () => {
         try {
+            const token = localStorage.getItem('token');
             const [nivelRes, generoRes, centroRes, areaRes, periodoRes, estadoRes, modalidadRes, tipoProgramaRes, unidadRes, cohorteRes] = await Promise.all([
-                axios.get(`${endpoint}/nivel_instruccion`),
-                axios.get(`${endpoint}/genero`),
-                axios.get(`${endpoint}/centro`),
-                axios.get(`${endpoint}/area`),
-                axios.get(`${endpoint}/periodo`),
-                axios.get(`${endpoint}/estado`),
-                axios.get(`${endpoint}/modalidad`),
-                axios.get(`${endpoint}/tipo_programa`),
-                axios.get(`${endpoint}/unidad`),
-                axios.get(`${endpoint}/cohorte`),
+                axios.get(`${endpoint}/nivel_instruccion`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/genero`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/centro`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/periodo`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/estado`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/modalidad`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/tipo_programa`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/unidad`, { headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${endpoint}/cohorte`, { headers: { Authorization: `Bearer ${token}` } }),
             ]);
             setNivelInstruccionOptions(nivelRes.data.data);
             setGeneroOptions(generoRes.data.data);
@@ -91,12 +102,16 @@ const ShowDatos = () => {
     };
 
     const deleteDatos = async (id) => {
+        const token = localStorage.getItem('token');
         if (window.confirm('¿Estás seguro de que deseas eliminar este Participante y todos los datos relacionados a él?')) {
             try {
-                await axios.delete(`${endpoint}/datos/${id}`);
+                await axios.delete(`${endpoint}/datos/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 toast.success('Participante eliminado con Éxito');             
-                    getAllDatos();
-               
+                getAllDatos();
             } catch (error) {
                 setError('Error deleting data');
                 console.error('Error deleting data:', error);
@@ -191,7 +206,6 @@ const ShowDatos = () => {
 
     return (
         <div className="container mt-5">
-            <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Lista de Participantes</h1>
                 <div className="d-flex align-items-center">

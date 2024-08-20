@@ -13,8 +13,43 @@
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
+  text-decoration-color: #282c34;
   color: white;
+
 }
+/* src/App.css */
+
+
+.user-info {
+  display: flex;
+  align-items: center;
+  color: #333;
+
+}
+
+.username {
+  margin-right: 15px;
+  font-weight: bold;
+  color: #333;
+  background-color: yellow; /* Para asegurarte de que se vea */
+}
+
+.logout-button {
+  background-color: #f44336;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 16px;
+  position: relative;
+  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
+}
+
+.logout-button:hover {
+  background-color: #d32f2f;
+}
+
 
 .App-link {
   color: #61dafb;
@@ -248,4 +283,15 @@
 }
 .dropdown-button:hover {
   background-color: rgba(57, 57, 57, 0.2);
+}
+
+/* src/App.css */
+.login-container {
+  width: 300px;
+  margin: 100px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
