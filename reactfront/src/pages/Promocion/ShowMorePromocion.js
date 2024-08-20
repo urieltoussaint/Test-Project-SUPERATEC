@@ -22,7 +22,12 @@ const ShowMorePromocion = ({  }) => {
            'Centro', 'statusSeleccion', 'Cohorte', 'Periodo', 'Procedencia','Mencion'
         ];
         const relations = relationsArray.join(',');
-        const response = await axios.get(`${endpoint}/promocion/${id}?with=${relations}`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/promocion/${id}?with=${relations}`,{
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+      });
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);

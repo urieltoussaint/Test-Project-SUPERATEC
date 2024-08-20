@@ -21,6 +21,9 @@ const ShowVoluntariados = () => {
     const [selectedNivel, setSelectedNivel] = useState('');
     const [generoOptions, setGeneroOptions] = useState([]);
     const [selectedGenero, setSelectedGenero] = useState('');
+    const [centroOptions, setCentroOptions] = useState([]);
+    const [selectedCentro, setSelectedCentro] = useState('');
+    
     const [error, setError] = useState(null);
     const { id } = useParams();
     const { setLoading } = useLoading();
@@ -37,7 +40,13 @@ const ShowVoluntariados = () => {
 
     const getAllVoluntariados = async () => {
         try {
-            const response = await axios.get(`${endpoint}/voluntariados?with=area,nivelInstruccion,genero`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/voluntariados?with=informacionVoluntariados,nivelInstruccion,genero`,{
+                
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             console.log('Voluntariados obtenidos:', response.data);
             setVoluntariados(response.data.data);
             setFilteredVoluntariados(response.data.data);
@@ -47,26 +56,63 @@ const ShowVoluntariados = () => {
         }
     };
 
+    
     const fetchFilterOptions = async () => {
+        const token = localStorage.getItem('token');
         try {
-            const areaResponse = await axios.get(`${endpoint}/area`);
+            
+            const areaResponse = await axios.get(`${endpoint}/area`,{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             setAreaOptions(areaResponse.data.data);
+            
 
-            const nivelResponse = await axios.get(`${endpoint}/nivel_instruccion`);
+            const nivelResponse = await axios.get(`${endpoint}/nivel_instruccion`,{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             setNivelOptions(nivelResponse.data.data);
 
-            const generoResponse = await axios.get(`${endpoint}/genero`);
+            const generoResponse = await axios.get(`${endpoint}/genero`,{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
             setGeneroOptions(generoResponse.data.data);
+
+            const centroResponse = await axios.get(`${endpoint}/centro`,{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            setCentroOptions(centroResponse.data.data);
+            
         } catch (error) {
             setError('Error fetching filter options');
             console.error('Error fetching filter options:', error);
         }
+        
+        
+
+        
+        
+        
     };
 
     const deleteVoluntariados = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este Voluntariado?')) {
             try {
-                await axios.delete(`${endpoint}/voluntariados/${id}`);
+                const token = localStorage.getItem('token');
+                await axios.delete(`${endpoint}/voluntariados/${id}`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 toast.success('Voluntariado eliminado con Éxito');
                 setTimeout(() => {
                     getAllVoluntariados();
@@ -83,28 +129,33 @@ const ShowVoluntariados = () => {
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchCedula(value);
-        applyFilters(value, selectedArea, selectedNivel, selectedGenero);
+        applyFilters(value, selectedArea, selectedNivel, selectedGenero,selectedCentro);
     };
 
     const handleAreaChange = (e) => {
         const value = e.target.value;
         setSelectedArea(value);
-        applyFilters(searchCedula, value, selectedNivel, selectedGenero);
+        applyFilters(searchCedula, value, selectedNivel, selectedGenero,selectedCentro);
     };
 
     const handleNivelChange = (e) => {
         const value = e.target.value;
         setSelectedNivel(value);
-        applyFilters(searchCedula, selectedArea, value, selectedGenero);
+        applyFilters(searchCedula, selectedArea, value, selectedGenero,selectedCentro);
     };
 
     const handleGeneroChange = (e) => {
         const value = e.target.value;
         setSelectedGenero(value);
-        applyFilters(searchCedula, selectedArea, selectedNivel, value);
+        applyFilters(searchCedula, selectedArea, selectedNivel, value,selectedCentro);
+    };
+    const handleCentroChange = (e) => {
+        const value = e.target.value;
+        setSelectedCentro(value);
+        applyFilters(searchCedula, selectedArea, selectedNivel,selectedGenero, value);
     };
 
-    const applyFilters = (cedulaValue, areaValue, nivelValue, generoValue) => {
+    const applyFilters = (cedulaValue, areaValue, nivelValue, generoValue,centroValue) => {
         let filtered = voluntariados;
 
         if (cedulaValue) {
@@ -115,7 +166,7 @@ const ShowVoluntariados = () => {
 
         if (areaValue) {
             filtered = filtered.filter(voluntario =>
-                voluntario.informacion_voluntariados.area_id === parseInt(areaValue)
+                voluntario.informacion_voluntariados.area_voluntariado_id === parseInt(areaValue)
             );
         }
 
@@ -128,6 +179,11 @@ const ShowVoluntariados = () => {
         if (generoValue) {
             filtered = filtered.filter(voluntario =>
                 voluntario.genero_id === parseInt(generoValue)
+            );
+        }
+        if (centroValue) {
+            filtered = filtered.filter(voluntario =>
+                voluntario.informacion_voluntariados.centro_id === parseInt(centroValue)
             );
         }
 
@@ -193,6 +249,17 @@ const ShowVoluntariados = () => {
                 >
                     <option value="">Género</option>
                     {generoOptions.map(option => (
+                        <option key={option.id} value={option.id}>{option.descripcion}</option>
+                    ))}
+                </Form.Select>
+                <Form.Select
+                    value={selectedCentro}
+                    onChange={handleCentroChange}
+                    className="me-2"
+                    style={{ width: '150px' }}
+                >
+                    <option value="">Centro</option>
+                    {centroOptions.map(option => (
                         <option key={option.id} value={option.id}>{option.descripcion}</option>
                     ))}
                 </Form.Select>

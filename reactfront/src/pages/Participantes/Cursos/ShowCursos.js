@@ -30,7 +30,11 @@ const ShowCursos = () => {
 
     const getAllCursos = async () => {
         try {
-            const response = await axios.get(`${endpoint}/cursos?with=area`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/cursos?with=area`,{
+                headers: {
+                Authorization: `Bearer ${token}`,
+            },});
             console.log('Datos obtenidos:', response.data);
             setCursos(response.data.data);
             setFilteredCursos(response.data.data);
@@ -42,7 +46,10 @@ const ShowCursos = () => {
 
     const fetchAreaOptions = async () => {
         try {
-            const response = await axios.get(`${endpoint}/area`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/area`,{headers: {
+                Authorization: `Bearer ${token}`,
+            }});
             setAreaOptions(response.data.data);
         } catch (error) {
             setError('Error fetching area options');
@@ -53,7 +60,12 @@ const ShowCursos = () => {
     const deleteCursos = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este curso?')) {
             try {
-                await axios.delete(`${endpoint}/cursos/${id}`);
+                const token = localStorage.getItem('token');
+                await axios.delete(`${endpoint}/cursos/${id}`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 getAllCursos();
                 toast.success('Eliminado con éxito');
             } catch (error) {

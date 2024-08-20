@@ -38,7 +38,12 @@ const ShowPromocion = () => {
 
     const getAllPromociones = async () => {
         try {
-            const response = await axios.get(`${endpoint}/promocion`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/promocion`,{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             const sortedPromociones = response.data.data.sort((a, b) => b.id - a.id);
             setPromociones(sortedPromociones);
             setFilteredPromociones(sortedPromociones);
@@ -50,11 +55,28 @@ const ShowPromocion = () => {
 
     const fetchFilterOptions = async () => {
         try {
+            const token = localStorage.getItem('token');
             const [centroRes, periodoRes, cohorteRes, mencionRes] = await Promise.all([
-                axios.get(`${endpoint}/centro`),
-                axios.get(`${endpoint}/periodo`),
-                axios.get(`${endpoint}/cohorte`),
-                axios.get(`${endpoint}/mencion`),
+                axios.get(`${endpoint}/centro`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }),
+                axios.get(`${endpoint}/periodo`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }),
+                axios.get(`${endpoint}/cohorte`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }),
+                axios.get(`${endpoint}/mencion`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }),
             ]);
             setCentroOptions(centroRes.data.data);
             setPeriodoOptions(periodoRes.data.data);
@@ -69,7 +91,12 @@ const ShowPromocion = () => {
     const deletePromocion = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar esta Promoción?')) {
             try {
-                await axios.delete(`${endpoint}/promocion/${id}`);
+                const token = localStorage.getItem('token');
+                await axios.delete(`${endpoint}/promocion/${id}`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 toast.success('Éxito al eliminar Promoción');
                 getAllPromociones();
                 

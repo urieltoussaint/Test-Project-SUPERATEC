@@ -34,7 +34,10 @@ const EditCursos = () => {
 
   const getAreas = async () => {
     try {
-      const response = await axios.get(`${endpoint}/area`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/area`,{headers: {
+        Authorization: `Bearer ${token}`,
+    }});
       setAreas(response.data.data);
     } catch (error) {
       setError('Error fetching areas');
@@ -44,7 +47,10 @@ const EditCursos = () => {
 
   const getCurso = async () => {
     try {
-      const response = await axios.get(`${endpoint}/cursos/${id}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/cursos/${id}`,{headers: {
+        Authorization: `Bearer ${token}`,
+    }});
       const curso = response.data;
       setFormData({
         descripcion: curso.descripcion || '',
@@ -70,7 +76,10 @@ const EditCursos = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${endpoint}/cursos/${id}`, formData);
+      const token = localStorage.getItem('token');
+      await axios.put(`${endpoint}/cursos/${id}`, formData,{headers: {
+        Authorization: `Bearer ${token}`,
+    }});
       navigate('/cursos');
       toast.success('Actualización con Éxito');
     } catch (error) {
@@ -94,6 +103,7 @@ const EditCursos = () => {
             name="descripcion"
             value={formData.descripcion}
             onChange={handleChange}
+            maxLength={40}
             required
           />
         </Form.Group>

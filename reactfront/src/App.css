@@ -5,49 +5,66 @@
 
 
 
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   font-size: calc(10px + 2vmin);
-  text-decoration-color: #282c34;
   color: white;
-
 }
-/* src/App.css */
 
+.header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+}
+
+.header-content {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
 .user-info {
   display: flex;
   align-items: center;
-  color: #333;
-
+  margin-left: auto;
 }
 
 .username {
   margin-right: 15px;
   font-weight: bold;
-  color: #333;
-  background-color: yellow; /* Para asegurarte de que se vea */
+  color: #444444; /* Cambiado a blanco para mayor contraste */
 }
 
 .logout-button {
-  background-color: #f44336;
+  background-color: #3d3d3d;
   color: #fff;
   border: none;
   padding: 10px 20px;
   cursor: pointer;
-  border-radius: 3px;
-  font-size: 16px;
+  border-radius: 12px;
+  font-size: 14px;
   position: relative;
   z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
 }
 
 .logout-button:hover {
-  background-color: #d32f2f;
+  background-color: #4d4d4d;
 }
 
 
@@ -286,12 +303,4 @@
 }
 
 /* src/App.css */
-.login-container {
-  width: 300px;
-  margin: 100px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-}
+

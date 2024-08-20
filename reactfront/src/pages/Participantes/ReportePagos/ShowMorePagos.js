@@ -21,7 +21,12 @@ const ShowMorePagos = ({ onReload }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${endpoint}/reporte_pagos_detalle/${id}`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/reporte_pagos_detalle/${id}`,{
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+      });
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);

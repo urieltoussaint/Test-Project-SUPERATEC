@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../axiosConfig';
-import { Form, Button,Alert } from 'react-bootstrap';
+import axios from 'axios';
+import { Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import './CreateDatos.css';
 import { useLoading } from '../../components/LoadingContext';
-import { ToastContainer,toast } from 'react-toastify';
-
+import { ToastContainer, toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
 
 const CreateDatos = () => {
-  const [cedulaError, setCedulaError] = useState(''); // Estado para almacenar el mensaje de validación
+  const [cedulaError, setCedulaError] = useState(''); 
   const [isCedulaValid, setIsCedulaValid] = useState(false);
 
   const { setLoading } = useLoading();
-  
   const [formData, setFormData] = useState({
     cedula_identidad: '',
     nombres: '',
@@ -50,70 +48,79 @@ const CreateDatos = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchSelectData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([
-          axios.get(`${endpoint}/status_seleccion`),
-          axios.get(`${endpoint}/nacionalidad_seleccion`),
-          axios.get(`${endpoint}/genero`),
-          axios.get(`${endpoint}/grupo_prioritario`),
-          axios.get(`${endpoint}/estado`),
-          axios.get(`${endpoint}/procedencia`),
-          axios.get(`${endpoint}/nivel_instruccion`),
-          axios.get(`${endpoint}/como_entero_superatec`),
-          axios.get(`${endpoint}/cohorte`),
-          axios.get(`${endpoint}/centro`),
-          axios.get(`${endpoint}/periodo`),
-          axios.get(`${endpoint}/area`),
-          axios.get(`${endpoint}/unidad`),
-          axios.get(`${endpoint}/modalidad`),
-          axios.get(`${endpoint}/nivel`),
-          axios.get(`${endpoint}/tipo_programa`),
-        ]);
-      } catch (error) {
-        console.error('Error fetching select data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchSelectData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const token = localStorage.getItem('token'); 
 
-    fetchSelectData();
-  }, [setLoading]);
+  //       await Promise.all([
+  //         axios.get(`${endpoint}/status_seleccion`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/nacionalidad_seleccion`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/genero`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/grupo_prioritario`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/estado`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/procedencia`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/nivel_instruccion`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/como_entero_superatec`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/cohorte`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/centro`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/periodo`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/unidad`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/modalidad`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/nivel`, { headers: { Authorization: `Bearer ${token}` } }),
+  //         axios.get(`${endpoint}/tipo_programa`, { headers: { Authorization: `Bearer ${token}` } }),
+  //       ]);
+  //     } catch (error) {
+  //       console.error('Error fetching select data:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchSelectData();
+  // }, [setLoading]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
+    const keys = name.split('.');
 
-    if (name === 'cedula_identidad') {
-      // Permitir solo números y agregar prefijo "V-"
-      const numericValue = value.replace(/\D/g, ''); // Eliminar todo lo que no sea un número
+    if (keys.length > 1) {
       setFormData(prevState => ({
         ...prevState,
-        [name]: numericValue,
+        informacion_inscripcion: {
+          ...prevState.informacion_inscripcion,
+          [keys[1]]: type === 'checkbox' ? checked : value,
+        },
       }));
     } else {
       setFormData(prevState => ({
         ...prevState,
-        [name]: value
+        [name]: type === 'checkbox' ? checked : value,
       }));
     }
-  }
+  };
 
   const handleSubmit = async (e, redirectToCursos) => {
     e.preventDefault();
     
     try {
-      await axios.post(`${endpoint}/datos`, formData);
+      const token = localStorage.getItem('token'); 
+
+      await axios.post(`${endpoint}/datos`, formData, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+      });
       toast.success('Nuevo Participante agregado con Éxito');
       if (redirectToCursos) {
-        
         navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
       } else {
         navigate('/datos');
       }
     } catch (error) {
-      toast.success('Error al crear Participante');
+      toast.error('Error al crear Participante');
       console.error('Error creating data:', error);
     } 
   };
@@ -121,13 +128,17 @@ const CreateDatos = () => {
   const handleBlur = async () => {
     if (formData.cedula_identidad) {
       try {
-        const response = await axios.get(`${endpoint}/datos/${formData.cedula_identidad}`);
-        // Si la cédula está registrada, mostramos el error y no es válida
+        const token = localStorage.getItem('token'); 
+
+        const response = await axios.get(`${endpoint}/datos/${formData.cedula_identidad}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setCedulaError('La cédula ya está registrada.');
         setIsCedulaValid(false);
       } catch (error) {
         if (error.response && error.response.status === 404) {
-          // La cédula no está registrada, por lo que es válida
           setCedulaError('');
           setIsCedulaValid(true);
         } else {
@@ -144,10 +155,9 @@ const CreateDatos = () => {
       <meta name="csrf-token" content="{{ csrf_token() }}" />
       <h1>Agregar Nuevo Participante</h1>
       <Form onSubmit={(e) => handleSubmit(e, false)}>
-        <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
-          <Form.Group controlId="cedula_identidad">
+            <Form.Group controlId="cedula_identidad">
               <Form.Label>Cédula de Identidad</Form.Label>
               <Form.Control
                 type="text"
@@ -195,6 +205,7 @@ const CreateDatos = () => {
                 name="nombres"
                 value={formData.nombres}
                 onChange={handleChange}
+                maxLength={20}
                 required
               />
             </Form.Group>
@@ -206,6 +217,7 @@ const CreateDatos = () => {
                 name="apellidos"
                 value={formData.apellidos}
                 onChange={handleChange}
+                maxLength={20}
                 required
               />
             </Form.Group>
@@ -229,6 +241,7 @@ const CreateDatos = () => {
                 value={formData.edad}
                 onChange={handleChange}
                 required
+                maxLength={2}
               />
             </Form.Group>
 
@@ -259,6 +272,7 @@ const CreateDatos = () => {
                 name="direccion"
                 value={formData.direccion}
                 onChange={handleChange}
+                maxLength={20}
                 required
               />
             </Form.Group>
@@ -301,6 +315,7 @@ const CreateDatos = () => {
                 name="telefono_casa"
                 value={formData.telefono_casa}
                 onChange={handleChange}
+                maxLength={10}
               />
             </Form.Group>
 
@@ -311,6 +326,7 @@ const CreateDatos = () => {
                 name="telefono_celular"
                 value={formData.telefono_celular}
                 onChange={handleChange}
+                maxLength={10}
               />
             </Form.Group>
 
@@ -479,6 +495,7 @@ const CreateDatos = () => {
         </Button>
         
       </Form>
+      
     </div>
   );
 };

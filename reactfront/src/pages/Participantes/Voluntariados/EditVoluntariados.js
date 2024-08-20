@@ -55,7 +55,10 @@ const EditVoluntariados = () => {
           'informacionVoluntariados.turnos',
         ];
         const relations = relationsArray.join(',');
-        const response = await axios.get(`${endpoint}/voluntariados/${id}?with=${relations}`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/voluntariados/${id}?with=${relations}`,{headers: {
+          Authorization: `Bearer ${token}`,
+      },});
         console.log(response.data);
 
         setFormData({
@@ -101,7 +104,10 @@ const EditVoluntariados = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.patch(`${endpoint}/voluntariados/${id}`, formData);
+      const token = localStorage.getItem('token');
+      await axios.patch(`${endpoint}/voluntariados/${id}`, formData,{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       toast.success('Actualización con Éxito');
       navigate('/voluntariados');
     } catch (error) {

@@ -27,7 +27,10 @@ const ShowMoreVoluntariados = ({  }) => {
           'InformacionVoluntariados.Turnos'
         ];
         const relations = relationsArray.join(',');
-        const response = await axios.get(`${endpoint}/voluntariados/${id}?with=${relations}`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/voluntariados/${id}?with=${relations}`,{headers: {
+          Authorization: `Bearer ${token}`,
+      }});
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -66,7 +69,7 @@ const ShowMoreVoluntariados = ({  }) => {
           <ListGroup variant="flush">
             <ListGroup.Item>Tipo de Voluntariado : {data.informacion_voluntariados?.tipo_voluntariado?.descripcion || 'N/A'}</ListGroup.Item>
             <ListGroup.Item>Area de Voluntariado : {data.informacion_voluntariados?.area?.descripcion || 'N/A'}</ListGroup.Item>          
-            <ListGroup.Item>Centro : {data.informacion_voluntariados?.area?.descripcion || 'N/A'}</ListGroup.Item>           
+            <ListGroup.Item>Centro : {data.informacion_voluntariados?.centro?.descripcion || 'N/A'}</ListGroup.Item>           
             <ListGroup.Item>Actividades a Realizar : {data.informacion_voluntariados?.actividades_realizar || 'N/A'}</ListGroup.Item>
             <ListGroup.Item>Turnos: {data.informacion_voluntariados?.turnos?.descripcion || 'N/A'}</ListGroup.Item>            
             <ListGroup.Item>Horas Totales : {data.informacion_voluntariados?.horas_totales || 'N/A'}</ListGroup.Item>           

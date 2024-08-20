@@ -34,13 +34,39 @@ const CreatePromocion = () => {
       setLoading(true); // Inicia la animación de carga
       try {
         // Realiza las solicitudes necesarias para cargar los selectores
+        const token = localStorage.getItem('token');
         await Promise.all([
-          axios.get(`${endpoint}/centro`),
-          axios.get(`${endpoint}/cohorte`),
-          axios.get(`${endpoint}/periodo`),
-          axios.get(`${endpoint}/procedencia`),
-          axios.get(`${endpoint}/mencion`),
-          axios.get(`${endpoint}/status_seleccion`),
+
+          axios.get(`${endpoint}/centro`,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }),
+          axios.get(`${endpoint}/cohorte`,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }),
+          axios.get(`${endpoint}/periodo`,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }),
+          axios.get(`${endpoint}/procedencia`,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }),
+          axios.get(`${endpoint}/mencion`,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }),
+          axios.get(`${endpoint}/status_seleccion`,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }),
         ]);
         setSelectDataLoaded(true); // Indica que los datos han sido cargados
       } catch (error) {
@@ -65,7 +91,12 @@ const CreatePromocion = () => {
     e.preventDefault();
     setLoading(true); // Inicia la animación de carga durante el envío del formulario
     try {
-      await axios.post(`${endpoint}/promocion`, formData);
+      const token = localStorage.getItem('token');
+      await axios.post(`${endpoint}/promocion`, formData,{
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
       toast.success('Promoción creada con Éxito');
       navigate('/promocion');
     } catch (error) {

@@ -54,9 +54,15 @@ const EditDatos = () => {
     const fetchData = async () => {
       
       try {
+        const token = localStorage.getItem('token'); 
         let relationsArray = ['nacionalidad', 'estado', 'statusSeleccion', 'grupoPrioritario', 'procedencia', 'genero', 'nivelInstruccion', 'informacionInscripcion'];
         const relations = relationsArray.join(',');
-        const response = await axios.get(`${endpoint}/datos/${id}?with=${relations}`);
+        const response = await axios.get(`${endpoint}/datos/${id}?with=${relations}`,{
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+        });
+        
         console.log(response.data);
         setFormData({
           ...response.data,
@@ -109,7 +115,12 @@ const EditDatos = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.patch(`${endpoint}/datos/${id}`, formData);
+      const token = localStorage.getItem('token');
+      await axios.patch(`${endpoint}/datos/${id}`, formData,{
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+        });
       toast.success('Actualización con Éxito');
       navigate('/datos');
     } catch (error) {
@@ -121,7 +132,7 @@ const EditDatos = () => {
   return (
     <div className="container">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Actualizar Datos de Participante</h1>
+      <h1>Actualizar Datos de Participante V{formData.cedula_identidad}	</h1>
       <Form onSubmit={handleSubmit}>
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">

@@ -37,7 +37,10 @@ const CreatePago = () => {
 
   const fetchTasaBcv = async () => {
     try {
-      const response = await axios.get(`${endpoint}/tasa_bcv`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/tasa_bcv`,{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       setTasaBcv(response.data.tasa);
       setFormData((prevState) => ({
         ...prevState,
@@ -50,7 +53,10 @@ const CreatePago = () => {
 
   const fetchOptions = async (inputValue) => {
     try {
-      const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`,{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       return response.data.map((cedula) => ({ value: cedula.cedula_identidad, label: cedula.cedula_identidad }));
     } catch (error) {
       console.error('Error fetching cedulas:', error);
@@ -64,7 +70,10 @@ const CreatePago = () => {
 
     if (selectedCedula) {
       try {
-        const response = await axios.get(`${endpoint}/cursos_por_cedula/${selectedCedula}`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/cursos_por_cedula/${selectedCedula}`,{headers: {
+          Authorization: `Bearer ${token}`,
+      }});
         setCursos(response.data);
         setCursoSeleccionado(null);
         setFormData({
@@ -98,7 +107,10 @@ const CreatePago = () => {
     setCursoSeleccionado(selectedCurso);
 
     try {
-      const response = await axios.get(`${endpoint}/ultimo_pago/${selectedCursoId}/${cedula}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/ultimo_pago/${selectedCursoId}/${cedula}`,{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       const ultimoPago = response.data;
 
       const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(selectedCurso.costo);
@@ -148,11 +160,14 @@ const CreatePago = () => {
 
     setIsSubmitting(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.post(`${endpoint}/pagos`, { 
         ...formData, 
         cedula_identidad: cedula, 
         conversion_total: calcularConversion(formData.monto_total) 
-      });
+      },{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       toast.success('Reporte de pago creado con Éxito')
       navigate('/pagos');
     } catch (error) {

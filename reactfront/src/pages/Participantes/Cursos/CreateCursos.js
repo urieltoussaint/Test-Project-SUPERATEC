@@ -27,7 +27,8 @@ const CreateCursos = () => {
       setLoading(true); // Inicia la animación de carga
       try {
         // Realiza las solicitudes necesarias para cargar los selectores
-        await axios.get(`${endpoint}/area`);
+        const token = localStorage.getItem('token');
+        await axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } });
         setSelectDataLoaded(true); // Indica que los datos han sido cargados
       } catch (error) {
         console.error('Error fetching select data:', error);
@@ -51,7 +52,8 @@ const CreateCursos = () => {
     e.preventDefault();
     setLoading(true); // Inicia la animación de carga durante el envío del formulario
     try {
-      await axios.post(`${endpoint}/cursos`, formData);
+      const token = localStorage.getItem('token');
+      await axios.post(`${endpoint}/cursos`, formData, { headers: { Authorization: `Bearer ${token}` } });
       toast.success('Curso Creado con Éxito');
       navigate('/cursos');
     } catch (error) {
@@ -76,16 +78,18 @@ const CreateCursos = () => {
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleChange}
+                maxLength={40}
                 required
               />
             </Form.Group>
             <Form.Group controlId="cantidad_horas">
               <Form.Label>Cantidad de Horas</Form.Label>
               <Form.Control
-                type="text"
+                type="number"
                 name="cantidad_horas"
                 value={formData.cantidad_horas}
                 onChange={handleChange}
+                maxLength={4}
                 required
               />
             </Form.Group>
@@ -115,10 +119,11 @@ const CreateCursos = () => {
             <Form.Group controlId="costo">
               <Form.Label>Costo del curso ($)</Form.Label>
               <Form.Control
-                type="text"
+                type="number"
                 name="costo"
                 value={formData.costo}
                 onChange={handleChange}
+                maxLength={20}
                 required
               />
             </Form.Group>

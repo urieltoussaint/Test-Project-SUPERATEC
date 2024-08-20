@@ -56,7 +56,10 @@ const CreateVoluntariados = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${endpoint}/voluntariados`, formData);
+      const token = localStorage.getItem('token');
+      await axios.post(`${endpoint}/voluntariados`, formData,{headers: {
+        Authorization: `Bearer ${token}`,
+    }});
       toast.success('Voluntariado creado con Éxito');
       navigate('/voluntariados');
     } catch (error) {
@@ -68,7 +71,10 @@ const CreateVoluntariados = () => {
   const handleBlur = async () => {
     if (formData.cedula_identidad) {
       try {
-        const response = await axios.get(`${endpoint}/datos/${formData.cedula_identidad}`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/datos/${formData.cedula_identidad}`,{headers: {
+          Authorization: `Bearer ${token}`,
+      }});
         // Si la cédula está registrada, mostramos el error y no es válida
         setCedulaError('La cédula ya está registrada.');
         setIsCedulaValid(false);

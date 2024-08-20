@@ -34,7 +34,12 @@ const EditPromocion = () => {
         setLoading(true);
         let relationsArray = ['centro', 'cohorte', 'periodo', 'procedencia', 'mencion', 'statusSeleccion'];
         const relations = relationsArray.join(',');
-        const response = await axios.get(`${endpoint}/promocion/${id}?with=${relations}`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/promocion/${id}?with=${relations}`,{
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+      });
         console.log(response.data);
         setFormData({
           ...response.data,
@@ -74,7 +79,12 @@ const EditPromocion = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.patch(`${endpoint}/promocion/${id}`, formData);
+      const token = localStorage.getItem('token');
+      await axios.patch(`${endpoint}/promocion/${id}`, formData,{
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
       toast.success('Actualización con Éxito');
       navigate('/promocion');
     } catch (error) {

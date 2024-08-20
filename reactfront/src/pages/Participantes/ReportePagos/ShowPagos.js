@@ -30,7 +30,12 @@ const ShowPagos = () => {
 
     const getAllReportes = async () => {
         try {
-            const response = await axios.get(`${endpoint}/pagos`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/pagos`,{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             console.log('Datos obtenidos:', response.data);
             const sortedReportes = response.data.data.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
@@ -44,7 +49,12 @@ const ShowPagos = () => {
     const deleteReporte = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este Reporte de Pago?')) {
             try {
-                await axios.delete(`${endpoint}/pagos/${id}`);
+                const token = localStorage.getItem('token');
+                await axios.delete(`${endpoint}/pagos/${id}`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 getAllReportes();
                 toast.success('Reporte eliminado con éxito');
             } catch (error) {

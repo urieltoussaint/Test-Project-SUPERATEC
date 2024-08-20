@@ -30,7 +30,10 @@ const InscripcionCursos = () => {
 
     const fetchCurso = async () => {
         try {
-            const response = await axios.get(`${endpoint}/cursos/${cursoId}`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/cursos/${cursoId}`,{headers: {
+                Authorization: `Bearer ${token}`,
+            },});
             setCurso(response.data);
         } catch (error) {
             console.error('Error fetching curso:', error);
@@ -40,7 +43,10 @@ const InscripcionCursos = () => {
 
     const fetchOptions = async (inputValue) => {
         try {
-            const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`,{headers: {
+                Authorization: `Bearer ${token}`,
+            },});
             return response.data.map(cedula => ({ value: cedula.cedula_identidad, label: cedula.cedula_identidad }));
         } catch (error) {
             console.error('Error fetching cedulas:', error);
@@ -54,7 +60,10 @@ const InscripcionCursos = () => {
 
         if (selectedCedula) {
             try {
-                const response = await axios.get(`${endpoint}/identificacion/${selectedCedula}`);
+                const token = localStorage.getItem('token');
+                const response = await axios.get(`${endpoint}/identificacion/${selectedCedula}`,{headers: {
+                    Authorization: `Bearer ${token}`,
+                },});
                 setDatos(response.data);
                 setError('');
             } catch (error) {
@@ -68,10 +77,13 @@ const InscripcionCursos = () => {
 
     const handleInscripcion = async () => {
         try {
+            const token = localStorage.getItem('token');
             await axios.post(`${endpoint}/cursos_inscripcion`, {
                 cedula_identidad: cedula,
                 curso_id: cursoId
-            });
+            },{headers: {
+                Authorization: `Bearer ${token}`,
+            },});
             toast.success('Inscripción Exitosa')
             navigate('/cursos');
         } catch (error) {

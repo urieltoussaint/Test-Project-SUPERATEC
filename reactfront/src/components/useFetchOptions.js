@@ -9,7 +9,15 @@ const useFetchOptions = (endpoint, nameField, valueField) => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const response = await axios.get(endpoint);
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        // const response = await axios.get(endpoint);
+        const response = await axios.get(`${endpoint}`, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+          }
+      });
+      setLoading(false);
         
         const formattedOptions = response.data.data.map(item => ({
           name: item[nameField],

@@ -35,7 +35,10 @@ const CreatePagosCedula = () => {
 
   const fetchTasaBcv = async () => {
     try {
-      const response = await axios.get(`${endpoint}/tasa_bcv`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/tasa_bcv`,{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       setTasaBcv(response.data.tasa);
       setFormData((prevState) => ({
         ...prevState,
@@ -48,7 +51,10 @@ const CreatePagosCedula = () => {
 
   const fetchCursoInfo = async () => {
     try {
-      const response = await axios.get(`${endpoint}/ultimo_pago/${cursoId}/${cedula}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/ultimo_pago/${cursoId}/${cedula}`,{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       const ultimoPago = response.data;
 
       const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : 0; // Asume 0 si no hay último pago
@@ -92,11 +98,15 @@ const CreatePagosCedula = () => {
 
     setIsSubmitting(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.post(`${endpoint}/pagos`, { 
         ...formData, 
         cedula_identidad: cedula, 
-        conversion_total: calcularConversion(formData.monto_total) 
-      });
+        conversion_total: calcularConversion(formData.monto_total),
+        
+      },{headers: {
+        Authorization: `Bearer ${token}`,
+    },});
       toast.success('Reporte de Pago creado con Éxito');
       navigate('/pagos');
     } catch (error) {

@@ -1,0 +1,71 @@
+/* General styles for full-screen centering */
+
+  /* Wrapper to centralize everything */
+  .register-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  /* Container for the register box */
+  .register-container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 400px; /* Adjusted width */
+    text-align: center;
+  }
+  
+  /* Logo styling */
+  .register-logo {
+    height: 60px;
+    margin-bottom: 20px;
+  }
+  
+  /* Title styling */
+  .register-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+  }
+  
+  /* Form control styling */
+  .form-signin .form-control {
+    margin-bottom: 15px;
+    padding: 10px;
+    font-size: 16px;
+  }
+  
+  /* Button styling */
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    width: 100%;
+  }
+  
+  /* Register text and link styling */
+  .register-text {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .register-link {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .register-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Error message styling */
+  .text-danger {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  

@@ -30,7 +30,11 @@ const InscribirCedula = () => {
 
     const getAllCursos = async () => {
         try {
-            const response = await axios.get(`${endpoint}/cursos?with=area`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/cursos?with=area`,{
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                },});
             setCursos(response.data.data);
             setFilteredCursos(response.data.data);
         } catch (error) {
@@ -41,7 +45,10 @@ const InscribirCedula = () => {
 
     const fetchAreaOptions = async () => {
         try {
-            const response = await axios.get(`${endpoint}/area`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/area`,{headers: {
+                Authorization: `Bearer ${token}`,
+            },});
             setAreaOptions(response.data.data);
         } catch (error) {
             setError('Error fetching area options');
@@ -82,10 +89,13 @@ const InscribirCedula = () => {
     const handleInscribir = async (cursoId) => {
         setLoading(true);
         try {
+            const token = localStorage.getItem('token');
             const response = await axios.post(`${endpoint}/cursos_inscripcion`, {
                 cedula_identidad: cedula,
                 curso_id: cursoId
-            });
+            },{headers: {
+                Authorization: `Bearer ${token}`,
+            }});
             const inscripcionCursoId = response.data.id; // Suponiendo que el servidor devuelve el ID de inscripción
             toast.success('Inscripción Exitosa');
             navigate(`/pagos/${cedula}/${inscripcionCursoId}`); // Redirige a la página de creación de pago con inscripcion_curso_id
