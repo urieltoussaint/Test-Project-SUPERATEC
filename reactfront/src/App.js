@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { LoadingProvider, useLoading } from './components/LoadingContext'; 
 import Loader from './components/Loader'; 
 import axios from 'axios';
@@ -8,6 +8,7 @@ import './App.css';
 
 // Importa los componentes de las páginas
 import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 import ShowDatos from './pages/Participantes/ShowDatos';
 import CreateDatos from './pages/Participantes/CreateDatos';
 import EditDatos from './pages/Participantes/EditDatos';
@@ -30,7 +31,6 @@ import ShowPromocion from './pages/Promocion/ShowPromocion';
 import ShowMorePromocion from './pages/Promocion/ShowMorePromocion';
 import CreatePromocion from './pages/Promocion/CreatePromocion';
 import EditPromocion from './pages/Promocion/EditPromocion';
-import Register from './pages/Auth/Register';
 
 function App() {
   return (
@@ -154,10 +154,10 @@ const AuthenticatedLayout = ({ children }) => {
               <i className={`bi ${openDropdown === 1 ? "bi-caret-up-fill" : "bi-caret-down-fill"}`}></i>
             </div>
             <ul className={`dropdown-menu ${openDropdown === 1 ? "show" : ""}`}>
-              <li><a href="/datos"><i className="bi bi-person-circle"></i> Participantes</a></li>
-              <li><a href="/cursos"><i className="bi bi-book-half"></i> Cursos</a></li>
-              <li><a href="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</a></li>
-              <li><a href="/promocion"><i className="bi bi-star-fill"></i> Promoción</a></li>
+              <li><Link to="/datos"><i className="bi bi-person-circle"></i> Participantes</Link></li>
+              <li><Link to="/cursos"><i className="bi bi-book-half"></i> Cursos</Link></li>
+              <li><Link to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</Link></li>
+              <li><Link to="/promocion"><i className="bi bi-star-fill"></i> Promoción</Link></li>
             </ul>
           </li>
           <li className={openDropdown === 2 ? 'expanded' : ''}>
@@ -166,7 +166,7 @@ const AuthenticatedLayout = ({ children }) => {
               <i className={`bi ${openDropdown === 2 ? "bi-caret-up-fill" : "bi-caret-down-fill"}`}></i>
             </div>
             <ul className={`dropdown-menu ${openDropdown === 2 ? "show" : ""}`}>
-              <li><a href="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</a></li>
+              <li><Link to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</Link></li>
             </ul>
           </li>
         </ul>
@@ -176,7 +176,6 @@ const AuthenticatedLayout = ({ children }) => {
       </div>
     </div>
   );
-  
 };
 
 const LoadingOverlay = ({ children }) => {
