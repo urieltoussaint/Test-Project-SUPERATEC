@@ -69,3 +69,27 @@
     font-size: 14px;
   }
   
+
+  .password-wrapper {
+    position: relative;
+  }
+  
+  .password-wrapper input {
+    width: 100%;
+    padding-right: 40px; /* Deja espacio para el ícono */
+    box-sizing: border-box;
+  }
+  
+  .password-toggle-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d; /* Color del ícono */
+    font-size: 1.2em; /* Tamaño del ícono */
+  }
+  
+  .password-toggle-icon:hover {
+    color: #495057; /* Cambia el color al pasar el ratón por encima */
+  }

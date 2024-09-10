@@ -14,7 +14,10 @@ class User extends Authenticatable
 
     // Campos que pueden ser llenados mediante asignación masiva
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password','role_id'
+    ];
+    protected $listable = [
+        'name', 'email','role_id'
     ];
 
     // Campos que deben estar ocultos cuando el modelo se convierte a JSON
@@ -27,6 +30,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
    
+    public function role()
+{
+    return $this->belongsTo(Role::class);
+}
 
 
     // Si estás usando el remember_token para autenticación API, no necesitas más ajustes.

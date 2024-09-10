@@ -17,12 +17,14 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed', // Valida la confirmación de contraseña
+            
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role_id' => 3, // Asigna el rol de "invitado" (rol con ID 3) por defecto
         ]);
 
         // Genera y almacena el token en la columna remember_token
@@ -47,7 +49,7 @@ class AuthController extends Controller
         // Genera y almacena el token en la columna remember_token
         $token = $this->generateToken($user);
 
-        return response()->json(['access_token' => $token, 'token_type' => 'Bearer'], 200);
+        return response()->json(['access_token' => $token, 'token_type' => 'Bearer','role' => $user->role->name ], 200);
     }
 
     protected function generateToken(User $user)

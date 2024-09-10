@@ -27,61 +27,99 @@ use App\Http\Controllers\TurnosController;
 use App\Http\Controllers\UnidadController;
 use App\Models\TipoVoluntariado;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\InscripcionCursosController;
+use App\Http\Controllers\PromocionController;
 
 // Rutas definidas en routes/api.php
-
-
-
-
-
-
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 
 Route::middleware('auth.token')->group(function () {
+    // Autenticación
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'index']);
-    Route::apiResources([
-        'datos' => \App\Http\Controllers\DatosIdentificacionController::class,
-        'cursos' => \App\Http\Controllers\CursosController::class,
-        'cursos_inscripcion' => \App\Http\Controllers\InscripcionCursosController::class,
-        'pagos' => \App\Http\Controllers\ReportePagosController::class,
-        'tasa_bcv' => \App\Http\Controllers\TasaBcvController::class,
-        'voluntariados' => \App\Http\Controllers\PersonalesVoluntariadosController::class,
-        'promocion' => \App\Http\Controllers\PromocionController::class,
-    
-    ]);
-    
-    Route::get('status_seleccion', [StatusSeleccionController::class, 'index']);
-    Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index']);
-    Route::get('area', [AreaController::class, 'index']);
-    Route::get('centro', [CentroController::class, 'index']);
-    Route::get('cohorte', [CohorteController::class, 'index']);
-    Route::get('como_entero_superatec', [ComoEnteroSuperatecController::class, 'index']);
-    Route::get('estado', [EstadoController::class, 'index']);
-    Route::get('genero', [GeneroController::class, 'index']);
-    Route::get('grupo_prioritario', [GrupoPrioritarioController::class, 'index']);
-    Route::get('modalidad', [ModalidadController::class, 'index']);
-    Route::get('nacionalidad', [NacionalidadController::class, 'index']);
-    Route::get('nivel_instruccion', [NivelInstruccionController::class, 'index']);
-    Route::get('periodo', [PeriodoController::class, 'index']);
-    Route::get('procedencia', [ProcedenciaController::class, 'index']);
-    Route::get('tipo_programa', [TipoProgramaController::class, 'index']);
-    Route::get('unidad', [UnidadController::class, 'index']);
-    Route::get('nivel', [NivelController::class, 'index']);
-    Route::get('/identificacion/{cedula}', [DatosIdentificacionController::class, 'show']);
-    Route::get('/cedulas', [DatosIdentificacionController::class, 'searchCedulas']);
-    Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula']);
-    Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa']);
-    Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [App\Http\Controllers\ReportePagosController::class, 'obtenerUltimoPago']);
-    Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show']);
-    Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago']);
-    Route::get('turnos', [TurnosController::class, 'index']);
-    Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index']);
-    Route::get('mencion', [MencionController::class, 'index']);
-});
 
+    // Rutas protegidas por rol - Admin tiene todos los permisos, superuser puede crear/editar/ver, invitado solo puede ver.
+    
+    // Datos Identificación
+    Route::get('datos', [DatosIdentificacionController::class, 'index'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
+    Route::post('datos', [DatosIdentificacionController::class, 'store'])->middleware('role:admin,superuser'); // Solo admin y superuser pueden crear
+    Route::get('datos/{id}', [DatosIdentificacionController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
+    Route::put('datos/{id}', [DatosIdentificacionController::class, 'update'])->middleware('role:admin,superuser'); // Solo admin y superuser pueden editar
+    Route::delete('datos/{id}', [DatosIdentificacionController::class, 'destroy'])->middleware('role:admin'); // Solo admin puede eliminar
+
+    // Cursos
+    Route::get('cursos', [CursosController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('cursos', [CursosController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('cursos/{id}', [CursosController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::put('cursos/{id}', [CursosController::class, 'update'])->middleware('role:admin,superuser');
+    Route::delete('cursos/{id}', [CursosController::class, 'destroy'])->middleware('role:admin');
+
+    // Inscripción Cursos
+    Route::get('cursos_inscripcion', [InscripcionCursosController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('cursos_inscripcion', [InscripcionCursosController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::put('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'update'])->middleware('role:admin,superuser');
+    Route::delete('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'destroy'])->middleware('role:admin');
+
+    // Reporte Pagos
+    Route::get('pagos', [ReportePagosController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('pagos', [ReportePagosController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('pagos/{id}', [ReportePagosController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::put('pagos/{id}', [ReportePagosController::class, 'update'])->middleware('role:admin,superuser');
+    Route::delete('pagos/{id}', [ReportePagosController::class, 'destroy'])->middleware('role:admin');
+
+    // Tasa BCV
+    Route::get('tasa_bcv', [TasaBcvController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('tasa_bcv', [TasaBcvController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::put('tasa_bcv/{id}', [TasaBcvController::class, 'update'])->middleware('role:admin,superuser');
+    Route::delete('tasa_bcv/{id}', [TasaBcvController::class, 'destroy'])->middleware('role:admin');
+
+    // Voluntariados
+    Route::get('voluntariados', [PersonalesVoluntariadosController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('voluntariados', [PersonalesVoluntariadosController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::put('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'update'])->middleware('role:admin,superuser');
+    Route::delete('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'destroy'])->middleware('role:admin');
+
+    // Promoción
+    Route::get('promocion', [PromocionController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('promocion', [PromocionController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('promocion/{id}', [PromocionController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::put('promocion/{id}', [PromocionController::class, 'update'])->middleware('role:admin,superuser');
+    Route::delete('promocion/{id}', [PromocionController::class, 'destroy'])->middleware('role:admin');
+
+    // Rutas solo para ver (invitado, superuser y admin)
+    Route::get('status_seleccion', [StatusSeleccionController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('area', [AreaController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('centro', [CentroController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('cohorte', [CohorteController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('como_entero_superatec', [ComoEnteroSuperatecController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('estado', [EstadoController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('genero', [GeneroController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('grupo_prioritario', [GrupoPrioritarioController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('modalidad', [ModalidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('nacionalidad', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('nivel_instruccion', [NivelInstruccionController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('periodo', [PeriodoController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('tipo_programa', [TipoProgramaController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('unidad', [UnidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('nivel', [NivelController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('/identificacion/{cedula}', [DatosIdentificacionController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::get('/cedulas', [DatosIdentificacionController::class, 'searchCedulas'])->middleware('role:admin,superuser,invitado');
+    Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula'])->middleware('role:admin,superuser,invitado');
+    Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [ReportePagosController::class, 'obtenerUltimoPago'])->middleware('role:admin,superuser,invitado');
+    Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa'])->middleware('role:admin,superuser,invitado');
+    Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago'])->middleware('role:admin,superuser,invitado');
+    Route::get('turnos', [TurnosController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado');
+});
 
 
