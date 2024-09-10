@@ -7,6 +7,7 @@ import Form from 'react-bootstrap/Form';
 import './ShowVoluntariados.css'; // Asegúrate de tener este archivo CSS en tu proyecto
 import { useLoading } from '../../../components/LoadingContext';   
 import { toast, ToastContainer } from 'react-toastify';
+import PaginationTable from '../../../components/PaginationTable';
 
 
 const endpoint = 'http://localhost:8000/api';
@@ -23,10 +24,11 @@ const ShowVoluntariados = () => {
     const [selectedGenero, setSelectedGenero] = useState('');
     const [centroOptions, setCentroOptions] = useState([]);
     const [selectedCentro, setSelectedCentro] = useState('');
-    
     const [error, setError] = useState(null);
     const { id } = useParams();
     const { setLoading } = useLoading();
+    const userRole = localStorage.getItem('userRole');
+    const itemsPerPage = 4;
 
     const navigate = useNavigate();
 
@@ -193,6 +195,42 @@ const ShowVoluntariados = () => {
     if (error) {
         return <div>{error}</div>;
     }
+    const columns = [ "Cédula", "Nombres", "Apellidos","Acciones"];
+
+    const renderItem = (dato) => (
+        <tr key={dato.cedula_identidad}>
+        <td >{dato.cedula_identidad}</td>
+        <td >{dato.nombres}</td>
+        <td >{dato.apellidos}</td>
+        <td >
+            <div className="d-flex justify-content-around">
+                <Button
+                    variant="info"
+                    onClick={() => navigate(`/Voluntariados/${dato.cedula_identidad}`)}
+                    className="me-2"
+                >
+                    Ver más
+                </Button>
+                {userRole === 'admin' || userRole === 'superuser' ? (
+                    <Button
+                    variant="warning"
+                    onClick={() => navigate(`/voluntariados/${dato.cedula_identidad}/edit`)}
+                    className="me-2"
+                    >
+                    Actualizar
+                    </Button>
+                ): null} {userRole === 'admin' && (
+                <Button
+                    variant="danger"
+                    onClick={() => deleteVoluntariados(dato.cedula_identidad)}
+                >
+                    Eliminar
+                </Button>
+                )}
+            </div>
+        </td>
+    </tr>
+    );
     
     return (
         <div className="container mt-5">
@@ -207,6 +245,7 @@ const ShowVoluntariados = () => {
                         onChange={handleSearchChange}
                         className="me-2"
                     />
+                    {userRole === 'admin' || userRole === 'superuser' ? (
                     <Button
                         variant="success"
                         onClick={() => navigate('create')}
@@ -214,6 +253,7 @@ const ShowVoluntariados = () => {
                     >
                         Agregar Nuevo Voluntario
                     </Button>
+                    ): null}
                 </div>
             </div>
             <div className="d-flex mb-3">
@@ -265,49 +305,12 @@ const ShowVoluntariados = () => {
                 </Form.Select>
             </div>
             <div className="cards-container"></div>
-            <Table striped bordered hover className="rounded-table">
-                <thead>
-                    <tr>
-                        <th className="col-cedula">Cédula</th>
-                        <th className="col-nombres">Nombres</th>
-                        <th className="col-apellidos">Apellidos</th>
-                        <th className="col-acciones">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredVoluntariados.map((dato) => (
-                        <tr key={dato.cedula_identidad}>
-                            <td className="col-cedula">{dato.cedula_identidad}</td>
-                            <td className="col-nombres">{dato.nombres}</td>
-                            <td className="col-apellidos">{dato.apellidos}</td>
-                            <td className="col-acciones">
-                                <div className="d-flex justify-content-around">
-                                    <Button
-                                        variant="info"
-                                        onClick={() => navigate(`/Voluntariados/${dato.cedula_identidad}`)}
-                                        className="me-2"
-                                    >
-                                        Ver más
-                                    </Button>
-                                    <Button
-                                        variant="warning"
-                                        onClick={() => navigate(`/Voluntariados/${dato.cedula_identidad}/edit`)}
-                                        className="me-2"
-                                    >
-                                        Actualizar
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => deleteVoluntariados(dato.cedula_identidad)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
+            <PaginationTable
+                data={filteredVoluntariados}
+                itemsPerPage={itemsPerPage}
+                columns={columns}
+                renderItem={renderItem}
+            />
             <ToastContainer />
         </div>
     );

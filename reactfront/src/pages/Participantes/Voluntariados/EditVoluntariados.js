@@ -105,7 +105,7 @@ const EditVoluntariados = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${endpoint}/voluntariados/${id}`, formData,{headers: {
+      await axios.put(`${endpoint}/voluntariados/${id}`, formData,{headers: {
         Authorization: `Bearer ${token}`,
     },});
       toast.success('Actualización con Éxito');

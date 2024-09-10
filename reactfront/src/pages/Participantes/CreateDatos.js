@@ -48,59 +48,33 @@ const CreateDatos = () => {
 
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const fetchSelectData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const token = localStorage.getItem('token'); 
-
-  //       await Promise.all([
-  //         axios.get(`${endpoint}/status_seleccion`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/nacionalidad_seleccion`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/genero`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/grupo_prioritario`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/estado`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/procedencia`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/nivel_instruccion`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/como_entero_superatec`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/cohorte`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/centro`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/periodo`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/unidad`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/modalidad`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/nivel`, { headers: { Authorization: `Bearer ${token}` } }),
-  //         axios.get(`${endpoint}/tipo_programa`, { headers: { Authorization: `Bearer ${token}` } }),
-  //       ]);
-  //     } catch (error) {
-  //       console.error('Error fetching select data:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchSelectData();
-  // }, [setLoading]);
-
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     const keys = name.split('.');
+    const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
 
     if (keys.length > 1) {
-      setFormData(prevState => ({
-        ...prevState,
-        informacion_inscripcion: {
-          ...prevState.informacion_inscripcion,
-          [keys[1]]: type === 'checkbox' ? checked : value,
-        },
-      }));
+        setFormData(prevState => ({
+            ...prevState,
+            informacion_inscripcion: {
+                ...prevState.informacion_inscripcion,
+                [keys[1]]: type === 'checkbox' ? checked : value,
+            },
+        }));
     } else {
-      setFormData(prevState => ({
-        ...prevState,
-        [name]: type === 'checkbox' ? checked : value,
-      }));
+        let updatedValue = value;
+        
+        // Si estamos actualizando la cédula de identidad, remover el prefijo 'V-' si está presente
+        if (name === 'cedula_identidad') {
+            updatedValue = value.replace(/^V-/, '');  // Remover 'V-' si está presente
+        }
+
+        setFormData(prevState => ({
+            ...prevState,
+            [name]: type === 'checkbox' ? checked : updatedValue,
+        }));
     }
-  };
+};
 
   const handleSubmit = async (e, redirectToCursos) => {
     e.preventDefault();
@@ -151,6 +125,7 @@ const CreateDatos = () => {
   };
 
   return (
+    
     <div className="container">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
       <h1>Agregar Nuevo Participante</h1>
@@ -474,25 +449,32 @@ const CreateDatos = () => {
           </div>
         </div>
 
-        <Button variant="primary" type="submit">
-          Guardar
-        </Button>
+        <div className="button-container">
+    <Button 
+        variant="info"
+        type="submit"
+        className="ms-2"
+    >
+        Guardar
+    </Button>
 
-        <Button 
-          variant="secondary" 
-          onClick={() => navigate('/datos')}
-          className="ms-2"
-        >
-          Volver
-        </Button>
+    <Button 
+        variant="secondary" 
+        onClick={() => navigate('/datos')}
+        className="ms-2"
+    >
+        Volver
+    </Button>
 
-        <Button 
-          variant="success" 
-          onClick={(e) => handleSubmit(e, true)}
-          className="ms-2"
-        >
-          Siguiente
-        </Button>
+    <Button 
+        variant="success" 
+        onClick={(e) => handleSubmit(e, true)}
+        className="ms-2"
+    >
+        Siguiente
+    </Button>
+</div>
+
         
       </Form>
       

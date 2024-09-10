@@ -9,6 +9,7 @@ import moment from 'moment';
 import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer,toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PaginationTable from '../../components/PaginationTable';
 const endpoint = 'http://localhost:8000/api';
 
 const ShowPromocion = () => {
@@ -19,6 +20,8 @@ const ShowPromocion = () => {
     const [periodoOptions, setPeriodoOptions] = useState([]);
     const [cohorteOptions, setCohorteOptions] = useState([]);
     const [mencionOptions, setMencionOptions] = useState([]);
+    const userRole = localStorage.getItem('role');
+    const itemsPerPage = 4;
     const [filters, setFilters] = useState({
         centro_id: '',
         periodo_id: '',
@@ -160,7 +163,45 @@ const ShowPromocion = () => {
 
     if (error) {
         return <div>{error}</div>;
-    }
+    };
+    const columns = [ "id", "Fecha de Registro", "Comentarios", "Acciones"];
+
+    const renderItem = (dato) => (
+        <tr key={dato.id}>
+        <td >{dato.id}</td>
+        <td >{moment(dato.fecha_registro).format('YYYY-MM-DD')}</td>
+        <td >{dato.comentarios}</td>
+        <td >
+            <div className="d-flex justify-content-around">
+                <Button
+                    variant="info"
+                    onClick={() => navigate(`/promocion/${dato.id}`)}
+                    className="me-2"
+                >
+                    Ver más
+                </Button>
+                    {userRole === 'admin' || userRole === 'superuser' ? (
+                        
+                        <Button
+                            variant="warning"
+                            onClick={() => navigate(`/promocion/${dato.id}/edit`)}
+                            className="me-2"
+                        >
+                            Actualizar
+                        </Button>
+                    ):null} {userRole === 'admin' && (
+                        
+                    <Button
+                        variant="danger"
+                        onClick={() => deletePromocion(dato.id)}
+                    >
+                        Eliminar
+                    </Button>
+                    )}
+            </div>
+        </td>
+    </tr>
+    );
 
     return (
         <div className="container mt-5">
@@ -175,6 +216,7 @@ const ShowPromocion = () => {
                         onChange={handleSearchChange}
                         className="me-2"
                     />
+                    {userRole === 'admin' || userRole === 'superuser' ? (
                     <Button
                         variant="success"
                         onClick={() => navigate('create')}
@@ -182,6 +224,7 @@ const ShowPromocion = () => {
                     >
                         Agregar Nueva Promoción
                     </Button>
+                    ):null}
                 </div>
             </div>
 
@@ -235,49 +278,12 @@ const ShowPromocion = () => {
                 </Form.Select>
             </div>
 
-            <Table striped bordered hover className="rounded-table">
-                <thead>
-                    <tr>
-                        <th className="col-cedula">ID</th>
-                        <th className="col-nombres">Fecha de Registro</th>
-                        <th className="col-apellidos">Comentario</th>
-                        <th className="col-acciones">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredPromociones.map((dato) => (
-                        <tr key={dato.id}>
-                            <td className="col-cedula">{dato.id}</td>
-                            <td className="col-nombres">{moment(dato.fecha_registro).format('YYYY-MM-DD')}</td>
-                            <td className="col-apellidos">{dato.comentarios}</td>
-                            <td className="col-acciones">
-                                <div className="d-flex justify-content-around">
-                                    <Button
-                                        variant="info"
-                                        onClick={() => navigate(`/promocion/${dato.id}`)}
-                                        className="me-2"
-                                    >
-                                        Ver más
-                                    </Button>
-                                    <Button
-                                        variant="warning"
-                                        onClick={() => navigate(`/promocion/${dato.id}/edit`)}
-                                        className="me-2"
-                                    >
-                                        Actualizar
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => deletePromocion(dato.id)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
+            <PaginationTable
+                data={filteredPromociones}
+                itemsPerPage={itemsPerPage}
+                columns={columns}
+                renderItem={renderItem}
+            />
             <ToastContainer />
         </div>
     );

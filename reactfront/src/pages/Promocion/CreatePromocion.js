@@ -220,7 +220,7 @@ const CreatePromocion = () => {
           </div>
         </div>
 
-        <Button variant="primary" type="submit">
+        <Button variant="success" type="submit">
           Guardar
         </Button>
         <Button

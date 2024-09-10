@@ -31,6 +31,7 @@ import ShowPromocion from './pages/Promocion/ShowPromocion';
 import ShowMorePromocion from './pages/Promocion/ShowMorePromocion';
 import CreatePromocion from './pages/Promocion/CreatePromocion';
 import EditPromocion from './pages/Promocion/EditPromocion';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -40,29 +41,29 @@ function App() {
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            {/* Envuelve todas las rutas protegidas con AuthenticatedLayout */}
+            {/* Envuelve todas las rutas protegidas con AuthenticatedLayout y ProtectedRoute */}
             <Route path="/datos" element={<AuthenticatedLayout><ShowDatos /></AuthenticatedLayout>} />
-            <Route path="/formulario/create" element={<AuthenticatedLayout><CreateDatos /></AuthenticatedLayout>} />
-            <Route path="/datos/:id/edit" element={<AuthenticatedLayout><EditDatos /></AuthenticatedLayout>} />
+            <Route path="/formulario/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateDatos /></AuthenticatedLayout></ProtectedRoute>} />
+            <Route path="/datos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditDatos /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos/:id" element={<AuthenticatedLayout><ShowMoreDatos /></AuthenticatedLayout>} />
-            <Route path="/inscribir/:cursoId" element={<AuthenticatedLayout><InscripcionCursos /></AuthenticatedLayout>} />
-            <Route path="/inscribir-cursos/:cedula" element={<AuthenticatedLayout><InscribirCedula /></AuthenticatedLayout>} />
+            <Route path="/inscribir/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscripcionCursos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/inscribir-cursos/:cedula" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscribirCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/inscritos/:cursoId" element={<AuthenticatedLayout><ShowInscritos /></AuthenticatedLayout>} />
             <Route path="/cursos" element={<AuthenticatedLayout><ShowCursos /></AuthenticatedLayout>} />
-            <Route path="/cursos/create" element={<AuthenticatedLayout><CreateCursos /></AuthenticatedLayout>} />
-            <Route path="/cursos/:id/edit" element={<AuthenticatedLayout><EditCursos /></AuthenticatedLayout>} />
+            <Route path="/cursos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateCursos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/cursos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos" element={<AuthenticatedLayout><ShowPagos /></AuthenticatedLayout>} />
-            <Route path="/pagos/create" element={<AuthenticatedLayout><CreatePagos /></AuthenticatedLayout>} />
-            <Route path="/pagos/:cedula/:cursoId" element={<AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout>} />
+            <Route path="/pagos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreatePagos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/pagos/:cedula/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:id" element={<AuthenticatedLayout><ShowMorePagos /></AuthenticatedLayout>} />
             <Route path="/voluntariados" element={<AuthenticatedLayout><ShowVoluntariados /></AuthenticatedLayout>} />
             <Route path="/voluntariados/:id" element={<AuthenticatedLayout><ShowMoreVoluntariados /></AuthenticatedLayout>} />
-            <Route path="/voluntariados/create" element={<AuthenticatedLayout><CreateVoluntariados /></AuthenticatedLayout>} />
-            <Route path="/voluntariados/:id/edit" element={<AuthenticatedLayout><EditVoluntariados /></AuthenticatedLayout>} />
+            <Route path="/voluntariados/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateVoluntariados /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/voluntariados/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditVoluntariados /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/promocion" element={<AuthenticatedLayout><ShowPromocion /></AuthenticatedLayout>} />
             <Route path="/promocion/:id" element={<AuthenticatedLayout><ShowMorePromocion /></AuthenticatedLayout>} />
-            <Route path="/promocion/create" element={<AuthenticatedLayout><CreatePromocion /></AuthenticatedLayout>} />
-            <Route path="/promocion/:id/edit" element={<AuthenticatedLayout><EditPromocion /></AuthenticatedLayout>} />
+            <Route path="/promocion/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreatePromocion /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/promocion/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditPromocion /></AuthenticatedLayout></ProtectedRoute>}  />
           </Routes>
         </Router>
       </LoadingOverlay>
@@ -75,6 +76,7 @@ const AuthenticatedLayout = ({ children }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const userRole = localStorage.getItem('role');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -137,7 +139,7 @@ const AuthenticatedLayout = ({ children }) => {
           <div className="user-info">
             {user ? (
               <>
-                <span className="username">User: {user.name}</span>
+                <span className="username">{userRole}: {user.name}</span>
                 <button onClick={handleLogout} className="logout-button">Logout</button>
               </>
             ) : (

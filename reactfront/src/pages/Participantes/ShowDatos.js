@@ -8,6 +8,7 @@ import { useLoading } from '../../components/LoadingContext';
 import './ShowDatos.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PaginationTable from '../../components/PaginationTable';  // Importa el componente de paginación
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -37,6 +38,7 @@ const ShowDatos = () => {
         unidad_id: '',
         cohorte_id: '',
     });
+    const itemsPerPage = 4; // Número de elementos por página
     const { setLoading } = useLoading();
     const [error, setError] = useState(null);
     const navigate = useNavigate();
@@ -208,24 +210,65 @@ const ShowDatos = () => {
         return <div>{error}</div>;
     }
 
+    const columns = ["Cédula", "Nombres", "Apellidos", "Acciones"];
+
+    const renderItem = (dato) => (
+        <tr key={dato.cedula_identidad}>
+            <td>{dato.cedula_identidad}</td>
+            <td>{dato.nombres}</td>
+            <td>{dato.apellidos}</td>
+            <td>
+            <div className="d-flex justify-content-around">
+                    <Button variant="info" onClick={() => navigate(`/datos/${dato.cedula_identidad}`)}>
+                        Ver más
+                    </Button>
+                    {/* Mostrar el botón de Actualizar solo para 'admin' o 'superuser' */}
+                    {userRole === 'admin' || userRole === 'superuser' ? (
+                    <>
+                    <Button variant="warning" onClick={() => navigate(`/datos/${dato.cedula_identidad}/edit`)}>
+                    Actualizar
+                    </Button>
+                    {userRole === 'admin' && (
+                    <Button variant="danger" onClick={() => deleteDatos(dato.cedula_identidad)}>
+                        Eliminar
+                    </Button>
+                        )}
+                            </>
+                        ) : (
+                            <></>
+                        )}
+                    
+                    
+                </div>
+            </td>
+        </tr>
+    );
+
     return (
         <div className="container mt-5">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Lista de Participantes</h1>
-                {userRole !== 'invitado' && ( // Solo 'admin' o 'superuser' pueden ver este botón
-                    <div className="d-flex align-items-center">
-                        <Button
-                            variant="success"
-                            onClick={() => navigate('/formulario/create')}
-                            className="mt-3"
-                        >
-                            Agregar Nuevo Participante
-                        </Button>
-                    </div>
+                <div className="d-flex align-items-center">
+                <Form.Control
+                        type="text"
+                        placeholder="Buscar por Cedula"
+                        value={searchCedula}
+                        onChange={handleSearchChange}
+                        className="me-2"
+                    />
+                {userRole === 'admin' || userRole === 'superuser' ? (
+                    <Button variant="success" onClick={() => navigate('/formulario/create')}>
+                        Agregar Nuevo Participante
+                    </Button>
+                ):(
+                    <></>
                 )}
             </div>
+            </div>
+
+            {/* Filtros */}
             <div className="d-flex mb-3">
-                <Form.Select
+            <Form.Select
                     name="nivel_instruccion_id"
                     value={filters.nivel_instruccion_id}
                     onChange={handleFilterChange}
@@ -343,55 +386,14 @@ const ShowDatos = () => {
                 </Form.Select>
             </div>
 
-            <Table striped bordered hover className="rounded-table">
-                <thead>
-                    <tr>
-                        <th className="col-cedula">Cédula</th>
-                        <th className="col-nombres">Nombres</th>
-                        <th className="col-apellidos">Apellidos</th>
-                        <th className="col-acciones">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredDatos.map((dato) => (
-                        <tr key={dato.cedula_identidad}>
-                            <td className="col-cedula">{dato.cedula_identidad}</td>
-                            <td className="col-nombres">{dato.nombres}</td>
-                            <td className="col-apellidos">{dato.apellidos}</td>
-                            <td className="col-acciones">
-                                <div className="d-flex justify-content-around">
-                                    <Button
-                                        variant="info"
-                                        onClick={() => navigate(`/datos/${dato.cedula_identidad}`)}
-                                        className="me-2"
-                                    >
-                                        Ver más
-                                    </Button>
+            {/* Tabla paginada */}
+            <PaginationTable
+                data={filteredDatos}
+                itemsPerPage={itemsPerPage}
+                columns={columns}
+                renderItem={renderItem}
+            />
 
-                                    {/* Solo 'admin' o 'superuser' pueden ver los botones de Actualizar y Eliminar */}
-                                    {userRole !== 'invitado' && (
-                                        <>
-                                            <Button
-                                                variant="warning"
-                                                onClick={() => navigate(`/datos/${dato.cedula_identidad}/edit`)}
-                                                className="me-2"
-                                            >
-                                                Actualizar
-                                            </Button>
-                                            <Button
-                                                variant="danger"
-                                                onClick={() => deleteDatos(dato.cedula_identidad)}
-                                            >
-                                                Eliminar
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
             <ToastContainer />
         </div>
     );

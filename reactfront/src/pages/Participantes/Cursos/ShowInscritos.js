@@ -6,6 +6,7 @@ import { Table, Alert, Button, Form } from 'react-bootstrap';
 import moment from 'moment';
 import { useLoading } from '../../../components/LoadingContext';
 import { toast, ToastContainer } from 'react-toastify';
+import PaginationTable from '../../../components/PaginationTable';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -17,6 +18,8 @@ const ShowInscritos = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const { setLoading } = useLoading();
+    const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
+    const itemsPerPage = 5; // Número de elementos por página
 
     useEffect(() => {
         setLoading(true);
@@ -82,11 +85,36 @@ const ShowInscritos = () => {
         setFilteredInscripciones(filtered);
     };
 
+    const columns = ["Cédula", "Fecha de Inscripción", "Nombres", "Apellidos", "Acciones"];
+
+    const renderItem = (inscripcion) => (
+        <tr key={inscripcion.id}>
+            <td>{inscripcion.cedula_identidad}</td>
+            <td>{moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD')}</td>
+            <td>{inscripcion.nombres}</td>
+            <td>{inscripcion.apellidos}</td>
+                <td>
+                <div className="d-flex justify-content-around">
+                    {userRole === 'admin' && (
+                    <Button
+                     variant="danger"
+                    onClick={() => handleDelete(inscripcion.id)}
+                     >
+                    Eliminar
+                     </Button>
+                     )}
+                     </div>
+                 </td>
+        </tr>
+           
+    );
+
     return (
         <div className="container">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Inscritos del Curso {cursoId}</h1>
                 <div>
+                    {userRole === 'admin' || userRole === 'superuser' && (
                     <Button
                         variant="success"
                         onClick={() => navigate(`/inscribir/${cursoId}`)}
@@ -94,6 +122,7 @@ const ShowInscritos = () => {
                     >
                         Inscribir
                     </Button>
+                    )}
                     <Button
                         variant="secondary"
                         onClick={() => navigate('/cursos')}
@@ -113,37 +142,13 @@ const ShowInscritos = () => {
 
             {error && <Alert variant="danger">{error}</Alert>}
 
-            <Table striped bordered hover>
-                <thead>
-                    <tr>
-                        <th>Cédula</th>
-                        <th>Fecha de Inscripción</th>
-                        <th>Nombres</th>
-                        <th>Apellidos</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredInscripciones.map(inscripcion => (
-                        <tr key={inscripcion.id}>
-                            <td>{inscripcion.cedula_identidad}</td>
-                            <td>{moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD')}</td>
-                            <td>{inscripcion.nombres}</td>
-                            <td>{inscripcion.apellidos}</td>
-                            <td>
-                                <div className="d-flex justify-content-around">
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => handleDelete(inscripcion.id)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
+            {/* Tabla paginada */}
+            <PaginationTable
+                data={filteredInscripciones}
+                itemsPerPage={itemsPerPage}
+                columns={columns}
+                renderItem={renderItem}
+            />
             <ToastContainer />
         </div>
     );

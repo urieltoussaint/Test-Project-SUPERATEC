@@ -80,7 +80,7 @@ const EditPromocion = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${endpoint}/promocion/${id}`, formData,{
+      await axios.put(`${endpoint}/promocion/${id}`, formData,{
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -203,7 +203,7 @@ const EditPromocion = () => {
           </div>
         </div>
 
-        <Button variant="primary" type="submit">
+        <Button variant="success" type="submit">
           Guardar
         </Button>
         <Button 

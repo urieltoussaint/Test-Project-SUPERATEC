@@ -302,5 +302,44 @@
   background-color: rgba(57, 57, 57, 0.2);
 }
 
-/* src/App.css */
+/* paginacion */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination .page-item {
+  margin: 0 5px;
+}
+
+.pagination .page-link {
+  color: #007bff;
+  background-color: white;
+  border: 1px solid #3798ff;
+  padding: 5ypx 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.pagination .active .page-link {
+  background-color: #088dda;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination .disabled .page-link {
+  color: #6f7479;
+  pointer-events: none;
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
 

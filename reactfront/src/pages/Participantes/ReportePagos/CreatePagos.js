@@ -284,7 +284,7 @@ const CreatePago = () => {
             </Form.Group>
           </>
         )}
-        <Button variant="primary" type="submit" disabled={isSubmitting}>
+        <Button variant="success" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Registrando...' : 'Registrar Pago'}
         </Button>
         <Button variant="secondary" onClick={() => navigate('/pagos')} className="ms-2">

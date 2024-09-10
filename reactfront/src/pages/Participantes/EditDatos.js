@@ -116,7 +116,7 @@ const EditDatos = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${endpoint}/datos/${id}`, formData,{
+      await axios.put(`${endpoint}/datos/${id}`, formData,{
           headers: {
               Authorization: `Bearer ${token}`,
           },
