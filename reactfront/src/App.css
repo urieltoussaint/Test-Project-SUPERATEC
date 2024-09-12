@@ -343,3 +343,8 @@
   border-color: #dee2e6;
 }
 
+.user-icon {
+  color: #1c1c1c; /* Cambia este color al que desees */
+  cursor: pointer;
+  margin-left: 10px;
+}

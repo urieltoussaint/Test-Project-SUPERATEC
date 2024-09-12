@@ -218,31 +218,38 @@ const ShowDatos = () => {
             <td>{dato.nombres}</td>
             <td>{dato.apellidos}</td>
             <td>
-            <div className="d-flex justify-content-around">
-                    <Button variant="info" onClick={() => navigate(`/datos/${dato.cedula_identidad}`)}>
+                <div className="d-flex justify-content-around">
+                    <Button 
+                        variant="info" 
+                        onClick={() => navigate(`/datos/${dato.cedula_identidad}`)}
+                    >
                         Ver más
                     </Button>
-                    {/* Mostrar el botón de Actualizar solo para 'admin' o 'superuser' */}
+                    
                     {userRole === 'admin' || userRole === 'superuser' ? (
-                    <>
-                    <Button variant="warning" onClick={() => navigate(`/datos/${dato.cedula_identidad}/edit`)}>
-                    Actualizar
-                    </Button>
-                    {userRole === 'admin' && (
-                    <Button variant="danger" onClick={() => deleteDatos(dato.cedula_identidad)}>
-                        Eliminar
-                    </Button>
-                        )}
-                            </>
-                        ) : (
-                            <></>
-                        )}
-                    
-                    
+                        <>
+                            <Button 
+                                variant="warning" 
+                                onClick={() => navigate(`/datos/${dato.cedula_identidad}/edit`)}
+                            >
+                                Actualizar
+                            </Button>
+    
+                            {userRole === 'admin' && (
+                                <Button 
+                                    variant="danger" 
+                                    onClick={() => deleteDatos(dato.cedula_identidad)}
+                                >
+                                    Eliminar
+                                </Button>
+                            )}
+                        </>
+                    ) : null}
                 </div>
             </td>
         </tr>
     );
+    
 
     return (
         <div className="container mt-5">
@@ -257,9 +264,15 @@ const ShowDatos = () => {
                         className="me-2"
                     />
                 {userRole === 'admin' || userRole === 'superuser' ? (
-                    <Button variant="success" onClick={() => navigate('/formulario/create')}>
-                        Agregar Nuevo Participante
-                    </Button>
+                    <Button 
+                    variant="success" 
+                    onClick={() => navigate('/formulario/create')}
+                    className="ms-2"
+                >
+                    Agregar Nuevo Participante
+                </Button>
+                
+                
                 ):(
                     <></>
                 )}

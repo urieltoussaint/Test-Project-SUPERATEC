@@ -191,7 +191,7 @@ const CreatePagosCedula = () => {
             onChange={handleMontoChange}
           />
         </Form.Group>
-        <Button variant="primary" type="submit" disabled={isSubmitting}>
+        <Button variant="success" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Registrando...' : 'Registrar Pago'}
         </Button>
         <Button variant="secondary" onClick={() => navigate('/datos')} className="ms-2">

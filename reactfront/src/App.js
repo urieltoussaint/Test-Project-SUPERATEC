@@ -32,6 +32,8 @@ import ShowMorePromocion from './pages/Promocion/ShowMorePromocion';
 import CreatePromocion from './pages/Promocion/CreatePromocion';
 import EditPromocion from './pages/Promocion/EditPromocion';
 import ProtectedRoute from './components/ProtectedRoute';
+import ShowUsers from './pages/Users/ShowUsers';
+import EditUsers from './pages/Users/EditUsers';
 
 function App() {
   return (
@@ -42,6 +44,8 @@ function App() {
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
             {/* Envuelve todas las rutas protegidas con AuthenticatedLayout y ProtectedRoute */}
+            <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><ShowUsers /></AuthenticatedLayout></ProtectedRoute>} />
+            <Route path="users/:id" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><EditUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos" element={<AuthenticatedLayout><ShowDatos /></AuthenticatedLayout>} />
             <Route path="/formulario/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateDatos /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditDatos /></AuthenticatedLayout></ProtectedRoute>} />
@@ -131,11 +135,12 @@ const AuthenticatedLayout = ({ children }) => {
     <div>
       <div className="header">
         <button className="menu-button" onClick={toggleSidebar}>☰</button>
-        
+
         <div className="header-content">
           <div className="logo">
             <img src="/IMG/cropped-PNG-7.png" alt="Logo" style={{ height: '45px' }} />
           </div>
+
           <div className="user-info">
             {user ? (
               <>
@@ -144,6 +149,13 @@ const AuthenticatedLayout = ({ children }) => {
               </>
             ) : (
               <span>Cargando usuario...</span>
+            )}
+
+            {/* Muestra el ícono de usuario solo si el rol es 'admin' */}
+            {userRole === 'admin' && (
+              <div className="user-icon" onClick={() => navigate('/users')}>
+                <i className="bi bi-person-fill-gear" style={{ fontSize: '1.5rem', cursor: 'pointer' }}></i>
+              </div>
             )}
           </div>
         </div>

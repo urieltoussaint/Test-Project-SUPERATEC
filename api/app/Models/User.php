@@ -36,5 +36,7 @@ class User extends Authenticatable
 }
 
 
+
+
     // Si estás usando el remember_token para autenticación API, no necesitas más ajustes.
 }

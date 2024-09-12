@@ -27,7 +27,10 @@ const ShowVoluntariados = () => {
     const [error, setError] = useState(null);
     const { id } = useParams();
     const { setLoading } = useLoading();
-    const userRole = localStorage.getItem('userRole');
+    const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
+
+    
+
     const itemsPerPage = 4;
 
     const navigate = useNavigate();
@@ -36,6 +39,7 @@ const ShowVoluntariados = () => {
         setLoading(true);
         Promise.all([getAllVoluntariados(), fetchFilterOptions()]).finally(() => {
             setLoading(false);
+            
         });
     }, [id]);
 
@@ -199,38 +203,40 @@ const ShowVoluntariados = () => {
 
     const renderItem = (dato) => (
         <tr key={dato.cedula_identidad}>
-        <td >{dato.cedula_identidad}</td>
-        <td >{dato.nombres}</td>
-        <td >{dato.apellidos}</td>
-        <td >
-            <div className="d-flex justify-content-around">
-                <Button
-                    variant="info"
-                    onClick={() => navigate(`/Voluntariados/${dato.cedula_identidad}`)}
-                    className="me-2"
-                >
-                    Ver más
-                </Button>
-                {userRole === 'admin' || userRole === 'superuser' ? (
+            <td >{dato.cedula_identidad}</td>
+            <td >{dato.nombres}</td>
+            <td >{dato.apellidos}</td>
+            <td >
+                <div className="d-flex justify-content-around">
                     <Button
-                    variant="warning"
-                    onClick={() => navigate(`/voluntariados/${dato.cedula_identidad}/edit`)}
-                    className="me-2"
+                        variant="info"
+                        onClick={() => navigate(`/Voluntariados/${dato.cedula_identidad}`)}
+                        className="me-2"
                     >
-                    Actualizar
+                        Ver más
                     </Button>
-                ): null} {userRole === 'admin' && (
-                <Button
-                    variant="danger"
-                    onClick={() => deleteVoluntariados(dato.cedula_identidad)}
-                >
-                    Eliminar
-                </Button>
-                )}
-            </div>
-        </td>
-    </tr>
+                    {userRole && (userRole === 'admin' || userRole === 'superuser') && (
+                        <Button
+                        variant="warning"
+                        onClick={() => navigate(`/voluntariados/${dato.cedula_identidad}/edit`)}
+                        className="me-2"
+                        >
+                        Actualizar
+                        </Button>
+                    )}
+                    {userRole === 'admin' && (
+                    <Button
+                        variant="danger"
+                        onClick={() => deleteVoluntariados(dato.cedula_identidad)}
+                    >
+                        Eliminar
+                    </Button>
+                    )}
+                </div>
+            </td>
+        </tr>
     );
+    
     
     return (
         <div className="container mt-5">

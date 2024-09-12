@@ -29,6 +29,7 @@ use App\Models\TipoVoluntariado;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InscripcionCursosController;
 use App\Http\Controllers\PromocionController;
+use App\Http\Controllers\RoleController;
 
 // Rutas definidas en routes/api.php
 
@@ -42,6 +43,15 @@ Route::middleware('auth.token')->group(function () {
     Route::get('/user', [AuthController::class, 'index']);
 
     // Rutas protegidas por rol - Admin tiene todos los permisos, superuser puede crear/editar/ver, invitado solo puede ver.
+
+    //Usuarios
+    Route::get('users', [AuthController::class, 'index'])->middleware('role:admin'); // 
+    Route::post('users', [AuthController::class, 'store'])->middleware('role:admin'); // 
+    Route::get('users/{id}', [AuthController::class, 'show'])->middleware('role:admin'); // 
+    Route::put('users/{id}', [AuthController::class, 'update'])->middleware('role:admin'); // 
+    Route::delete('users/{id}', [AuthController::class, 'destroy'])->middleware('role:admin'); // Solo admin 
+    Route::get('users-with-roles', [AuthController::class, 'getAllUsersWithRoles'])->middleware('role:admin'); 
+    Route::get('role', [RoleController::class, 'index'])->middleware('role:admin'); 
     
     // Datos Identificación
     Route::get('datos', [DatosIdentificacionController::class, 'index'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver

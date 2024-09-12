@@ -9,8 +9,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+
 class AuthController extends Controller
 {
+    public function show($id)
+{
+    try {
+        // Encuentra al usuario por su ID
+        $user = User::findOrFail($id);
+
+        // Devuelve la información del usuario
+        return response()->json(['user' => $user], 200);
+    } catch (\Exception $e) {
+        // Si algo sale mal, devuelve un error
+        return response()->json(['message' => 'Usuario no encontrado', 'error' => $e->getMessage()], 404);
+    }
+}
+
+    
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -83,4 +99,64 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+    // app/Http/Controllers/AuthController.php
+
+    public function getAllUsersWithRoles()
+    {
+        $users = User::with('role') // Usa el método `with` para cargar la relación del rol
+            ->get();
+    
+        return response()->json($users, 200);
+    }
+
+    public function destroy($id)
+{
+    try {
+        $user = User::findOrFail($id); // Busca el usuario por ID, lanza excepción si no lo encuentra
+        $user->delete(); // Elimina el usuario
+
+        return response()->json(['message' => 'Usuario eliminado con éxito'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Error al eliminar usuario', 'error' => $e->getMessage()], 500);
+    }
+}
+
+
+public function update(Request $request, $id)
+{
+    // Validar los datos recibidos en la solicitud
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+        'role_id' => 'required|integer|exists:role,id', // Valida que role_id sea un rol existente
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 400);
+    }
+
+    try {
+        // Encontrar el usuario por su ID
+        $user = User::findOrFail($id);
+
+        // Actualizar los campos del usuario
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->role_id = $request->input('role_id');
+
+        // Guardar los cambios
+        $user->save();
+
+        // Respuesta de éxito
+        return response()->json(['message' => 'Usuario actualizado correctamente', 'user' => $user], 200);
+    } catch (\Exception $e) {
+        // Manejo de errores si ocurre un problema
+        return response()->json(['message' => 'Error al actualizar el usuario', 'error' => $e->getMessage()], 500);
+    }
+}
+
+    
+
+
+
 }
