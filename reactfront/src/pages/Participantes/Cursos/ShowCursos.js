@@ -16,6 +16,7 @@ const ShowCursos = () => {
     const [cursos, setCursos] = useState([]);
     const [filteredCursos, setFilteredCursos] = useState([]);
     const [searchCurso, setSearchCurso] = useState('');
+    const [searchCod, setSearchCod] = useState(''); // Nuevo estado para el buscador por COD
     const [areaOptions, setAreaOptions] = useState([]);
     const [selectedArea, setSelectedArea] = useState('');
     const [error, setError] = useState(null);
@@ -82,21 +83,33 @@ const ShowCursos = () => {
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchCurso(value);
-        applyFilters(value, selectedArea);
+        applyFilters(value, searchCod, selectedArea); // Pasa el valor de búsqueda de curso
+    };
+
+    const handleCodChange = (e) => {
+        const value = e.target.value;
+        setSearchCod(value);
+        applyFilters(searchCurso, value, selectedArea); // Pasa el valor de búsqueda por COD
     };
 
     const handleAreaChange = (e) => {
         const value = e.target.value;
         setSelectedArea(value);
-        applyFilters(searchCurso, value);
+        applyFilters(searchCurso, searchCod, value);
     };
 
-    const applyFilters = (searchValue, areaValue) => {
+    const applyFilters = (searchValue, codValue, areaValue) => {
         let filtered = cursos;
 
         if (searchValue) {
             filtered = filtered.filter(curso =>
                 curso.descripcion.toLowerCase().includes(searchValue.toLowerCase())
+            );
+        }
+
+        if (codValue) {
+            filtered = filtered.filter(curso =>
+                curso.cod.toLowerCase().includes(codValue.toLowerCase())
             );
         }
 
@@ -113,11 +126,11 @@ const ShowCursos = () => {
         return <div>{error}</div>;
     }
 
-    const columns = ["id", "Descripción", "Horas", "Fecha", "Costo", "Acciones"];
+    const columns = ["COD", "Descripción", "Horas", "Fecha", "Costo", "Acciones"];
     
     const renderItem = (curso) => (
-        <tr key={curso.id}>
-            <td>{curso.id}</td>
+        <tr key={curso.cod}>
+            <td>{curso.cod}</td>
             <td>{curso.descripcion}</td>
             <td>{curso.cantidad_horas}</td>
             <td>{curso.fecha_inicio}</td>
@@ -179,7 +192,6 @@ const ShowCursos = () => {
     );
     
     
-    
     return (
         <div className="container mt-5">
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
@@ -208,7 +220,16 @@ const ShowCursos = () => {
                 </div>
             </div>
 
+            {/* Buscador por COD */}
             <div className="d-flex mb-3 custom-width">
+                <Form.Control
+                    type="text"
+                    placeholder="Buscar por COD"
+                    value={searchCod}
+                    onChange={handleCodChange}
+                    className="me-2"
+                />
+
                 <Form.Select
                     value={selectedArea}
                     onChange={handleAreaChange}

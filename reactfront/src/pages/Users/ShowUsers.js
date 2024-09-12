@@ -15,7 +15,9 @@ const ShowUsers = () => {
     const [users, setUsers] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [searchName, setSearchName] = useState('');
-
+    const [selectedRole, setSelectedRole] = useState('');
+    const [searchRole, setSearchRole] = useState('');
+    const [roleOptions, setRoleOptions] = useState([]);
     const userRole = localStorage.getItem('role');
     const itemsPerPage = 4;
     const [filters, setFilters] = useState({
@@ -28,7 +30,7 @@ const ShowUsers = () => {
 
     useEffect(() => {
         setLoading(true);
-        Promise.all([getAllUsers(), fetchFilterOptions()]).finally(() => {
+        Promise.all([getAllUsers(), fetchRoleOptions()]).finally(() => {
             setLoading(false);
         });
     }, []);
@@ -55,21 +57,16 @@ const ShowUsers = () => {
     };
     
 
-    const fetchFilterOptions = async () => {
+    const fetchRoleOptions = async () => {
         try {
             const token = localStorage.getItem('token');
-            const [] = await Promise.all([
-                // axios.get(`${endpoint}/centro`,{
-                //     headers: {
-                //         Authorization: `Bearer ${token}`,
-                //     },
-                // }),
-                
-            ]);
-            
+            const response = await axios.get(`${endpoint}/role`,{headers: {
+                Authorization: `Bearer ${token}`,
+            }});
+            setRoleOptions(response.data.data);
         } catch (error) {
-            setError('Error fetching filter options');
-            console.error('Error fetching filter options:', error);
+            setError('Error fetching area options');
+            console.error('Error fetching area options:', error);
         }
     };
 
@@ -99,22 +96,27 @@ const ShowUsers = () => {
         setSearchName(value);
         applyFilters({ ...filters, searchName: value });
     };
-
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        const newFilters = { ...filters, [name]: value };
-        setFilters(newFilters);
-        applyFilters(newFilters);
+    const handleRoleChange = (e) => {
+        const value = e.target.value;
+        setSelectedRole(value);
+        applyFilters(searchRole, value);
     };
+    
 
     
 
-    const applyFilters = (filters) => {
+    const applyFilters = (filters,roleValue) => {
         let filtered = users;
 
         if (filters.searchName) {
             filtered = filtered.filter(users =>
                 users.name.toLowerCase().includes(filters.searchName.toLowerCase())
+            );
+        }
+
+        if (roleValue) {
+            filtered = filtered.filter(users =>
+                users.role_id === parseInt(roleValue)
             );
         }
 
@@ -171,6 +173,18 @@ const ShowUsers = () => {
                         className="me-2"
                     />
                 </div>
+            </div>
+            <div className="d-flex mb-3 custom-width">
+                <Form.Select
+                    value={selectedRole}
+                    onChange={handleRoleChange}
+                    className="me-2"
+                >
+                    <option value="">Filtrar por Rol</option>
+                    {roleOptions.map(option => (
+                        <option key={option.id} value={option.id}>{option.name}</option>
+                    ))}
+                </Form.Select>
             </div>
 
             <PaginationTable
