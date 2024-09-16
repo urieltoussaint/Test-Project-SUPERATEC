@@ -28,8 +28,10 @@ use App\Http\Controllers\UnidadController;
 use App\Models\TipoVoluntariado;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InscripcionCursosController;
+use App\Http\Controllers\PeticionesController;
 use App\Http\Controllers\PromocionController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StatusProcessController;
 
 // Rutas definidas en routes/api.php
 
@@ -130,6 +132,9 @@ Route::middleware('auth.token')->group(function () {
     Route::get('turnos', [TurnosController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('status_process', [StatusProcessController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('peticiones', [PeticionesController::class, 'index'])->middleware('role:admin,superuser,invitado');
+
 });
 
 

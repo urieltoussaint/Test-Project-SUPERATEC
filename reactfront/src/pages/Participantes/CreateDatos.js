@@ -12,6 +12,7 @@ const endpoint = 'http://localhost:8000/api';
 const CreateDatos = () => {
   const [cedulaError, setCedulaError] = useState(''); 
   const [isCedulaValid, setIsCedulaValid] = useState(false);
+  const [cedulaLengthError, setCedulaLengthError] = useState(''); // Nuevo estado para controlar la longitud de la cédula
 
   const { setLoading } = useLoading();
   const [formData, setFormData] = useState({
@@ -63,10 +64,22 @@ const CreateDatos = () => {
         }));
     } else {
         let updatedValue = value;
-        
+
         // Si estamos actualizando la cédula de identidad, remover el prefijo 'V-' si está presente
         if (name === 'cedula_identidad') {
             updatedValue = value.replace(/^V-/, '');  // Remover 'V-' si está presente
+
+            // Validar que solo se ingresen números
+            updatedValue = updatedValue.replace(/\D/g, '');  // Eliminar cualquier carácter no numérico
+
+            // Verificar la longitud mínima de la cédula
+            if (updatedValue.length < 7) {
+                setCedulaLengthError('La cédula debe tener al menos 7 caracteres.');
+                setIsCedulaValid(false);
+            } else {
+                setCedulaLengthError('');
+                setIsCedulaValid(true);
+            }
         }
 
         setFormData(prevState => ({
@@ -74,11 +87,23 @@ const CreateDatos = () => {
             [name]: type === 'checkbox' ? checked : updatedValue,
         }));
     }
-};
+  };
+
+  const handleKeyDown = (e) => {
+    // Evitar que se ingresen letras o caracteres especiales
+    if (e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && !/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
 
   const handleSubmit = async (e, redirectToCursos) => {
     e.preventDefault();
     
+    if (formData.cedula_identidad.length < 8) {
+      setCedulaLengthError('La cédula debe tener al menos 7 caracteres.');
+      return; // Evitar el envío del formulario si la cédula es inválida
+    }
+
     try {
       const token = localStorage.getItem('token'); 
 
@@ -139,11 +164,16 @@ const CreateDatos = () => {
                 name="cedula_identidad"
                 value={formData.cedula_identidad ? `V-${formData.cedula_identidad}` : ''}
                 onChange={handleChange}
+                onKeyDown={handleKeyDown}  // Evita caracteres no numéricos
                 onBlur={handleBlur}
                 placeholder="V-123321123"
                 maxLength={10}
                 required
-                className={cedulaError ? 'is-invalid' : isCedulaValid ? 'is-valid' : ''}
+                className={
+                  cedulaError || cedulaLengthError
+                    ? 'is-invalid'
+                    : isCedulaValid ? 'is-valid' : ''
+                }
               />
               {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
               {!cedulaError && isCedulaValid && (

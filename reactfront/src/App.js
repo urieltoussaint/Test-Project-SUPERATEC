@@ -34,6 +34,7 @@ import EditPromocion from './pages/Promocion/EditPromocion';
 import ProtectedRoute from './components/ProtectedRoute';
 import ShowUsers from './pages/Users/ShowUsers';
 import EditUsers from './pages/Users/EditUsers';
+import ShowPeticiones from './pages/Bandeja/ShowPeticiones';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
             {/* Envuelve todas las rutas protegidas con AuthenticatedLayout y ProtectedRoute */}
+            <Route path="/peticiones" element={<AuthenticatedLayout><ShowPeticiones /></AuthenticatedLayout>} />
             <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><ShowUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="users/:id" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><EditUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos" element={<AuthenticatedLayout><ShowDatos /></AuthenticatedLayout>} />
@@ -135,7 +137,6 @@ const AuthenticatedLayout = ({ children }) => {
     <div>
       <div className="header">
         <button className="menu-button" onClick={toggleSidebar}>☰</button>
-
         <div className="header-content">
           <div className="logo">
             <img src="/IMG/cropped-PNG-7.png" alt="Logo" style={{ height: '45px' }} />
@@ -144,6 +145,9 @@ const AuthenticatedLayout = ({ children }) => {
           <div className="user-info">
             {user ? (
               <>
+                <div className="user-icon" onClick={() => navigate('/peticiones')}>
+                <i className="bi bi-inbox-fill" style={{ fontSize: '1.8rem', cursor: 'pointer', marginRight: '20px'}}></i>
+              </div>
                 <span className="username">{userRole}: {user.name}</span>
                 <button onClick={handleLogout} className="logout-button">Logout</button>
               </>
