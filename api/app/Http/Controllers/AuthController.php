@@ -65,7 +65,7 @@ class AuthController extends Controller
         // Genera y almacena el token en la columna remember_token
         $token = $this->generateToken($user);
 
-        return response()->json(['access_token' => $token, 'token_type' => 'Bearer','role' => $user->role->name ], 200);
+        return response()->json(['access_token' => $token, 'token_type' => 'Bearer','role' => $user->role->name,'user'=>$user->id,'role_id'=>$user->role_id ], 200);
     }
 
     protected function generateToken(User $user)

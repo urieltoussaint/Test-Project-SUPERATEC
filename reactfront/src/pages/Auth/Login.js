@@ -18,10 +18,10 @@ const Login = () => {
       const response = await axios.post('http://localhost:8000/api/login', { email, password });
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('role', response.data.role);
-      localStorage.setItem('user_id', response.id);  // Almacenar el ID del usuario autenticado
-      localStorage.setItem('role_id', response.role_id);  // Almacenar el rol del usuario autenticado
+      localStorage.setItem('user', response.data.user);
+      localStorage.setItem('role_id', response.data.role_id);
 
-      navigate('/datos'); // Redirige a la página principal después de iniciar sesión
+      navigate('/peticiones'); // Redirige a la página principal después de iniciar sesión
     } catch (error) {
       setError('Invalid login credentials');
     }

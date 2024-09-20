@@ -17,7 +17,7 @@ const SelectComponent = ({ endpoint, nameField, valueField, selectedValue, handl
           Error al cargar opciones: {error.message}
         </Alert>
       ) : (
-        <Form.Control as="select" name={controlId} value={selectedValue} onChange={handleChange} required>
+        <Form.Control as="select" name={controlId} value={selectedValue} onChange={handleChange} >
           <option value="">Seleccione</option>
           {options.map(option => (
             <option key={option.value} value={option.value}>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useLoading } from '../../components/LoadingContext'; 
@@ -8,71 +8,78 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';
 import moment from 'moment';
+import './ShowPeticiones.css'; 
 
 const endpoint = 'http://localhost:8000/api';
 
 const ShowPeticiones = () => {
     const [peticiones, setPeticiones] = useState([]);
     const [filteredPeticiones, setFilteredPeticiones] = useState([]);
-    const [selectedStatus, setSelectedStatus] = useState(''); // Filtro basado en días transcurridos
+    const [selectedStatus, setSelectedStatus] = useState(''); 
+    const [showAttended, setShowAttended] = useState(false);
     const [error, setError] = useState(null);
     const { setLoading } = useLoading();
     const navigate = useNavigate();
-    const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
-    const itemsPerPage = 4; // Número de elementos por página
-    
+    const userRole = localStorage.getItem('role');
+    const itemsPerPage = 4;
+
     useEffect(() => {
         setLoading(true);
         getAllPeticiones().finally(() => {
             setLoading(false);
         });
-    }, []);
+    }, [showAttended]);
 
     const getAllPeticiones = async () => {
         try {
             const token = localStorage.getItem('token');
-            const userId = parseInt(localStorage.getItem('user_id'));  // Asegúrate de guardar esto como entero
-            const roleId = parseInt(localStorage.getItem('role_id'));  // Asegúrate de guardar esto como entero
-            
-            // Obtener todas las peticiones del servidor
+            const userId = parseInt(localStorage.getItem('user'));  
+            const roleId = parseInt(localStorage.getItem('role_id'));
+
             const response = await axios.get(`${endpoint}/peticiones?with=user,zonas`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            
-            const allPeticiones = response.data.data; // Todos los datos obtenidos
-            
-            // Filtrar solo las peticiones que coincidan con el user_id o role_id
+
+            const allPeticiones = response.data.data;
+
             const filteredPeticiones = allPeticiones.filter(peticion => {
-                console.log('Filtrando:', { destinatario_id: peticion.destinatario_id, role_id: peticion.role_id });
                 return peticion.destinatario_id === userId || peticion.role_id === roleId;
             });
-            
-            // Establecer las peticiones filtradas en el estado
-            setPeticiones(filteredPeticiones);
-            setFilteredPeticiones(filteredPeticiones); // También para el componente de tabla paginada
-        
-            console.log('Peticiones filtradas:', filteredPeticiones);
+
+            const statusFiltered = filteredPeticiones.filter(peticion => peticion.status === showAttended);
+
+            setPeticiones(statusFiltered);
+            setFilteredPeticiones(statusFiltered);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
-    
-    
-    // Función para calcular los días transcurridos desde la creación
+
     const calculateDaysSinceCreation = (created_at) => {
-        const creationDate = moment(created_at); // Formato estándar ISO
-        const now = moment(); // Fecha actual
-        return now.diff(creationDate, 'days'); // Diferencia en días
+        const creationDate = moment(created_at);
+        const now = moment();
+        return now.diff(creationDate, 'days');
     };
 
-    // Función para renderizar el color del semáforo
-    const renderStatusDot = (created_at) => {
+    const renderStatusDot = (created_at, status) => {
+        if (status) {
+            return (
+                <div
+                    style={{
+                        height: '20px',
+                        width: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: 'gray',  // Muestra el círculo en gris si el status es true
+                        display: 'inline-block',
+                    }}
+                ></div>
+            );
+        }
         const daysSinceCreation = calculateDaysSinceCreation(created_at);
-
-        let color = 'green'; // Por defecto, verde
+        let color = 'green';
         if (daysSinceCreation > 10) {
             color = 'red';
         } else if (daysSinceCreation > 3) {
@@ -111,14 +118,12 @@ const ShowPeticiones = () => {
         }
     };
 
-    // Función para manejar el cambio en el filtro
     const handleStatusChange = (e) => {
         const value = e.target.value;
         setSelectedStatus(value);
         applyFilters(value);
     };
 
-    // Función para aplicar los filtros basados en los días desde la creación
     const applyFilters = (statusValue) => {
         let filtered = peticiones;
 
@@ -133,57 +138,89 @@ const ShowPeticiones = () => {
         setFilteredPeticiones(filtered);
     };
 
+    const toggleAttendedFilter = () => {
+        setShowAttended(!showAttended);
+    };
+
+    const handleNavigate = (peticiones) => {
+        if (peticiones.zonas.id === 1) {
+            navigate(`/datos/${peticiones.key}/edit`);
+        } else if (peticiones.zonas.id === 2) {
+            navigate(`/cursos/${peticiones.key}/edit`);
+        } else {
+            toast.error('Zona no válida');
+        }
+    };
+
     if (error) {
         return <div>{error}</div>;
     }
 
-    const columns = ["Status", "Usuario", "key", "Zona", "Fecha de creación", "Acciones"];
+    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación", "Acciones/Finalizado"]; // Cambiamos el encabezado de la columna
 
     const renderItem = (peticiones) => (
-        <tr key={peticiones.id}>
-            <td className="text-center">{renderStatusDot(peticiones.created_at)}</td> {/* Semáforo basado en fecha */}
+        <tr key={peticiones.id} className={peticiones.status ? "attended-row" : ""}>  {/* Clase para filas atendidas */}
+            <td className="text-center">{renderStatusDot(peticiones.created_at, peticiones.status)}</td>
             <td className="text-center">{peticiones.user?.name}</td>
             <td className="text-center">{peticiones.key}</td>
             <td className="text-center">{peticiones.zonas?.name}</td>
             <td className="text-center">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
             <td className="text-center">
-                <div className="d-flex justify-content-around">
+                {peticiones.status ? (
+                    <span>{moment(peticiones.finish_time).format('YYYY-MM-DD HH:mm')}</span>  // Muestra la fecha de finalización si status es true
+                ) : (
                     <Button
                         variant="success"
-                        onClick={() => navigate(`/peticiones/${peticiones.id}`)}
+                        onClick={() => handleNavigate(peticiones)}
                         className="me-2"
                     >
                         Actualizar
                     </Button>
-                </div>
+                )}
             </td>
         </tr>
     );
 
     return (
-        <div className="container mt-5">
+        <div className="container mt-5 inbox-container">
             <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
+            
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Bandeja de Entrada</h1>
-                <div className="d-flex align-items-center"></div>
+                
+                {/* Botón para filtrar atendidas/no atendidas */}
+                <div className="d-flex align-items-center">
+                    <Button 
+                        variant={showAttended ? 'primary' : 'secondary'} 
+                        onClick={toggleAttendedFilter}
+                    >
+                        {showAttended ? 'Mostrar No Atendidas' : 'Mostrar Atendidas'}
+                    </Button>
+                </div>
             </div>
 
-            {/* Filtro */}
-            <div className="d-flex mb-3 custom-width">
+            {/* Filtro de status y leyenda alineada a la derecha */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
                 <Form.Select
                     value={selectedStatus}
                     onChange={handleStatusChange}
                     className="me-2"
+                    style={{ width: 'auto' }}
                 >
                     <option value="">Filtrar por Status</option>
                     <option value="green">Reciente (Verde)</option>
                     <option value="orange">Urgente (Naranja)</option>
                     <option value="red">Crítico (Rojo)</option>
+                    <option value="gray">Finalizado (Gris)</option>
                 </Form.Select>
+                <div className="status-legend">
+                    <span className="status-dot green"></span> Reciente (Verde)
+                    <span className="status-dot orange"></span> Urgente (Naranja)
+                    <span className="status-dot red"></span> Crítico (Rojo)
+                    <span className="status-dot gray"></span> Finalizado (Gris)
+                </div>
             </div>
 
-            <div className="cards-container"></div>
-            {/* Tabla paginada */}
             <PaginationTable
                 data={filteredPeticiones}
                 itemsPerPage={itemsPerPage}

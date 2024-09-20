@@ -97,8 +97,7 @@ const AuthenticatedLayout = ({ children }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-  
-        console.log('User data:', response.data);
+        
         setUser(response.data);
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -146,7 +145,7 @@ const AuthenticatedLayout = ({ children }) => {
             {user ? (
               <>
                 <div className="user-icon" onClick={() => navigate('/peticiones')}>
-                <i className="bi bi-inbox-fill" style={{ fontSize: '1.8rem', cursor: 'pointer', marginRight: '20px'}}></i>
+                <i className="bi bi-inbox-fill" style={{ fontSize: '1.6rem', cursor: 'pointer', marginRight: '20px'}}></i>
               </div>
                 <span className="username">{userRole}: {user.name}</span>
                 <button onClick={handleLogout} className="logout-button">Logout</button>

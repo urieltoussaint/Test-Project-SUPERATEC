@@ -29,7 +29,8 @@ class DatosIdentificacion extends Model
         'telefono_casa',
         'telefono_celular',
         'nivel_instruccion_id',
-        'nro_documento'
+        'nro_documento',
+        'finish'
     ];
     protected $listable = [
         'cedula_identidad',
@@ -48,7 +49,8 @@ class DatosIdentificacion extends Model
         'telefono_casa',
         'telefono_celular',
         'nivel_instruccion_id',
-        'nro_documento'
+        'nro_documento',
+        'finish'
     ];
     
     

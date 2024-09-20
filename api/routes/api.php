@@ -39,7 +39,7 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 
-Route::middleware('auth.token')->group(function () {
+Route::middleware('auth.token','throttle:400,1')->group(function () {
     // Autenticación
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'index']);
@@ -47,13 +47,13 @@ Route::middleware('auth.token')->group(function () {
     // Rutas protegidas por rol - Admin tiene todos los permisos, superuser puede crear/editar/ver, invitado solo puede ver.
 
     //Usuarios
-    Route::get('users', [AuthController::class, 'index'])->middleware('role:admin'); // 
+    Route::get('users', [AuthController::class, 'index'])->middleware('role:admin,superuser,invitado'); // 
     Route::post('users', [AuthController::class, 'store'])->middleware('role:admin'); // 
     Route::get('users/{id}', [AuthController::class, 'show'])->middleware('role:admin'); // 
     Route::put('users/{id}', [AuthController::class, 'update'])->middleware('role:admin'); // 
     Route::delete('users/{id}', [AuthController::class, 'destroy'])->middleware('role:admin'); // Solo admin 
-    Route::get('users-with-roles', [AuthController::class, 'getAllUsersWithRoles'])->middleware('role:admin'); 
-    Route::get('role', [RoleController::class, 'index'])->middleware('role:admin'); 
+    Route::get('users-with-roles', [AuthController::class, 'getAllUsersWithRoles'])->middleware('role:admin,superuser,invitado'); 
+    Route::get('role', [RoleController::class, 'index'])->middleware('role:admin,superuser,invitado'); 
     
     // Datos Identificación
     Route::get('datos', [DatosIdentificacionController::class, 'index'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
@@ -134,6 +134,7 @@ Route::middleware('auth.token')->group(function () {
     Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::get('status_process', [StatusProcessController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::get('peticiones', [PeticionesController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('peticiones', [PeticionesController::class, 'store'])->middleware('role:admin,superuser,invitado');
 
 });
 

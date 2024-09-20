@@ -13,9 +13,9 @@ class Peticiones extends Model
         'role_id', 
         'zona_id', 
         'key',
-        'status_process_id', 
+        'status', 
         'created_at', 
-        'updated_at'
+        'finish_time'
     ];
 
     protected $listable = [
@@ -25,9 +25,9 @@ class Peticiones extends Model
         'role_id', 
         'zona_id', 
         'key',
-        'status_process_id', 
+        'status', 
         'created_at', 
-        'updated_at'
+        'finish_time'
     ];
 
 
