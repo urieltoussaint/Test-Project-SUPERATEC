@@ -75,20 +75,83 @@ const EditCursos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emptyFields = Object.keys(formData).filter(key => {
+      return !formData[key];  // Considerar vacíos los campos que no tienen valor
+    });
+
+    const hasEmptyFields = emptyFields.length > 0;
+
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${endpoint}/cursos/${id}`, formData,{headers: {
-        Authorization: `Bearer ${token}`,
-    }});
-      navigate('/cursos');
-      toast.success('Actualización con Éxito');
-    } catch (error) {
-      setError('Error updating course');
-      console.error('Error updating course:', error);
-      toast.error('Actualización con fallida');
 
+      if (!token) {
+        toast.error('Error: Token no encontrado');
+        return;
+      }
+
+      // 1. Actualizar los datos del curso
+      const formDataWithStatus = {
+        ...formData,
+        status: !hasEmptyFields  // Si no hay campos vacíos, el status será true, de lo contrario, false
+      };
+
+      const cursoResponse = await axios.put(`${endpoint}/cursos/${id}`, formDataWithStatus, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!hasEmptyFields) {
+        // 2. Si el formulario está completo, actualizar la petición correspondiente
+        const cursoId = cursoResponse.data.id;  // Usamos el ID del curso
+        const response = await axios.get(`${endpoint}/peticiones`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const allPeticiones = response.data.data;
+
+        // 3. Filtrar las peticiones por key = cursoId, zona_id = 2, y status = false
+        const peticionesFiltradas = allPeticiones.filter(peticion =>
+          peticion.key === String(cursoId) && peticion.zona_id === 2 && peticion.status === false
+        );
+
+        if (peticionesFiltradas.length > 0) {
+          const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
+
+          // 4. Actualizar el status de la petición a true
+          await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
+            status: true,   // Cambiar el estado a true
+            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }) // Ejemplo para Caracas
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          toast.success('Curso y petición actualizados con éxito.');
+        } else {
+          toast.success('Curso actualizado, pero no se encontró ninguna petición.');
+        }
+
+      } else {
+        // Si hay campos vacíos, solo actualizamos los datos del curso
+        toast.success('Curso actualizado con campos vacíos. Status marcado como false.');
+      }
+
+      // Redirigir después de la actualización
+      navigate('/cursos');
+      
+    } catch (error) {
+      // Captura cualquier error que ocurra en la solicitud
+      toast.error('Error al actualizar curso o petición');
+      console.error('Error actualizando:', error);
     }
-  };
+};
+
+
 
   return (
     <div className="container">

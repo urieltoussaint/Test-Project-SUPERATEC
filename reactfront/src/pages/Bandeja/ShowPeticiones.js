@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import Modal from 'react-bootstrap/Modal'; // Importar el componente Modal
 import { useLoading } from '../../components/LoadingContext'; 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -18,11 +19,12 @@ const ShowPeticiones = () => {
     const [selectedStatus, setSelectedStatus] = useState(''); 
     const [showAttended, setShowAttended] = useState(false);
     const [error, setError] = useState(null);
+    const [showRejectModal, setShowRejectModal] = useState(false); // Estado para controlar el modal de rechazo
+    const [selectedPeticion, setSelectedPeticion] = useState(null); // Petición seleccionada para rechazar
     const { setLoading } = useLoading();
     const navigate = useNavigate();
-    const userRole = localStorage.getItem('role');
     const itemsPerPage = 4;
-
+    const userId = parseInt(localStorage.getItem('user'));
     useEffect(() => {
         setLoading(true);
         getAllPeticiones().finally(() => {
@@ -33,23 +35,19 @@ const ShowPeticiones = () => {
     const getAllPeticiones = async () => {
         try {
             const token = localStorage.getItem('token');
-            const userId = parseInt(localStorage.getItem('user'));  
+            
             const roleId = parseInt(localStorage.getItem('role_id'));
 
             const response = await axios.get(`${endpoint}/peticiones?with=user,zonas`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             const allPeticiones = response.data.data;
-
-            const filteredPeticiones = allPeticiones.filter(peticion => {
-                return peticion.destinatario_id === userId || peticion.role_id === roleId;
-            });
+            const filteredPeticiones = allPeticiones.filter(peticion => 
+                peticion.destinatario_id === userId || peticion.role_id === roleId
+            );
 
             const statusFiltered = filteredPeticiones.filter(peticion => peticion.status === showAttended);
-
             setPeticiones(statusFiltered);
             setFilteredPeticiones(statusFiltered);
         } catch (error) {
@@ -64,28 +62,16 @@ const ShowPeticiones = () => {
         return now.diff(creationDate, 'days');
     };
 
-    const renderStatusDot = (created_at, status) => {
-        if (status) {
-            return (
-                <div
-                    style={{
-                        height: '20px',
-                        width: '20px',
-                        borderRadius: '50%',
-                        backgroundColor: 'gray',  // Muestra el círculo en gris si el status es true
-                        display: 'inline-block',
-                    }}
-                ></div>
-            );
-        }
+    const getStatusColor = (created_at, status) => {
+        if (status) return 'gray'; // Estado finalizado
         const daysSinceCreation = calculateDaysSinceCreation(created_at);
-        let color = 'green';
-        if (daysSinceCreation > 10) {
-            color = 'red';
-        } else if (daysSinceCreation > 3) {
-            color = 'orange';
-        }
+        if (daysSinceCreation > 10) return 'red'; // Crítico
+        if (daysSinceCreation > 2) return 'orange'; // Urgente
+        return 'green'; // Reciente
+    };
 
+    const renderStatusDot = (created_at, status) => {
+        const color = getStatusColor(created_at, status);
         return (
             <div
                 style={{
@@ -100,21 +86,17 @@ const ShowPeticiones = () => {
     };
 
     const deletePeticiones = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar esta Petición?')) {
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${endpoint}/peticiones/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                getAllPeticiones();
-                toast.success('Eliminado con éxito');
-            } catch (error) {
-                setError('Error deleting data');
-                console.error('Error deleting data:', error);
-                toast.error('Error al eliminar petición');
-            }
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${endpoint}/peticiones/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            getAllPeticiones();
+            toast.success('Petición eliminada con éxito');
+        } catch (error) {
+            setError('Error eliminando la petición');
+            console.error('Error eliminando la petición:', error);
+            toast.error('Error al eliminar petición');
         }
     };
 
@@ -125,8 +107,7 @@ const ShowPeticiones = () => {
     };
 
     const applyFilters = (statusValue) => {
-        let filtered = peticiones;
-
+        let filtered = [...peticiones];
         if (statusValue === 'green') {
             filtered = filtered.filter(peticion => calculateDaysSinceCreation(peticion.created_at) <= 3);
         } else if (statusValue === 'orange') {
@@ -134,7 +115,6 @@ const ShowPeticiones = () => {
         } else if (statusValue === 'red') {
             filtered = filtered.filter(peticion => calculateDaysSinceCreation(peticion.created_at) > 10);
         }
-
         setFilteredPeticiones(filtered);
     };
 
@@ -143,23 +123,62 @@ const ShowPeticiones = () => {
     };
 
     const handleNavigate = (peticiones) => {
-        if (peticiones.zonas.id === 1) {
+        const { id } = peticiones.zonas || {};
+        if (id === 1) {
             navigate(`/datos/${peticiones.key}/edit`);
-        } else if (peticiones.zonas.id === 2) {
+        } else if (id === 2) {
             navigate(`/cursos/${peticiones.key}/edit`);
         } else {
             toast.error('Zona no válida');
         }
     };
 
-    if (error) {
-        return <div>{error}</div>;
-    }
+    const handleRejectClick = (peticion) => {
+        setSelectedPeticion(peticion); // Guardar la petición seleccionada
+        setShowRejectModal(true); // Abrir el modal de confirmación
+    };
 
-    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación", "Acciones/Finalizado"]; // Cambiamos el encabezado de la columna
+    const handleRejectConfirm = async () => {
+        if (!selectedPeticion) return;
+        try {
+            const token = localStorage.getItem('token');
+
+            // Borrar la petición actual
+            await axios.delete(`${endpoint}/peticiones/${selectedPeticion.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            // Crear una nueva petición con destinatario_id como user_id y role_id null
+            const newPeticion = {
+
+                user_id: userId,
+                destinatario_id: selectedPeticion.user_id, // Cambiar destinatario_id
+                role_id: null, // role_id será null
+                zona_id: selectedPeticion.zona_id,
+                status: false,
+                finish_time: null,
+                key: selectedPeticion.key, // Mantener la misma key
+            };
+
+            await axios.post(`${endpoint}/peticiones`, newPeticion, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            getAllPeticiones();
+            toast.success('Petición rechazada y reenviada al solicitante.');
+        } catch (error) {
+            setError('Error al rechazar la petición');
+            console.error('Error al rechazar la petición:', error);
+            toast.error('Error al rechazar petición');
+        } finally {
+            setShowRejectModal(false); // Cerrar el modal
+        }
+    };
+
+    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación", "Acciones/Finalizado"];
 
     const renderItem = (peticiones) => (
-        <tr key={peticiones.id} className={peticiones.status ? "attended-row" : ""}>  {/* Clase para filas atendidas */}
+        <tr key={peticiones.id} className={peticiones.status ? "attended-row" : ""}>  
             <td className="text-center">{renderStatusDot(peticiones.created_at, peticiones.status)}</td>
             <td className="text-center">{peticiones.user?.name}</td>
             <td className="text-center">{peticiones.key}</td>
@@ -167,15 +186,23 @@ const ShowPeticiones = () => {
             <td className="text-center">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
             <td className="text-center">
                 {peticiones.status ? (
-                    <span>{moment(peticiones.finish_time).format('YYYY-MM-DD HH:mm')}</span>  // Muestra la fecha de finalización si status es true
+                    <span>{moment(peticiones.finish_time).format('YYYY-MM-DD HH:mm')}</span>
                 ) : (
-                    <Button
-                        variant="success"
-                        onClick={() => handleNavigate(peticiones)}
-                        className="me-2"
-                    >
-                        Actualizar
-                    </Button>
+                    <>
+                        <Button
+                            variant="success"
+                            onClick={() => handleNavigate(peticiones)}
+                            className="me-2"
+                        >
+                            Actualizar
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={() => handleRejectClick(peticiones)} // Botón para rechazar
+                        >
+                            Rechazar
+                        </Button>
+                    </>
                 )}
             </td>
         </tr>
@@ -227,6 +254,23 @@ const ShowPeticiones = () => {
                 columns={columns}
                 renderItem={renderItem}
             />
+
+            {/* Modal de confirmación para rechazar petición */}
+            <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar Rechazo</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedPeticion && (
+                        <p>¿Estás seguro de que deseas rechazar la petición de {selectedPeticion.user?.name}?</p>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowRejectModal(false)}>Cancelar</Button>
+                    <Button variant="danger" onClick={handleRejectConfirm}>Rechazar</Button>
+                </Modal.Footer>
+            </Modal>
+
             <ToastContainer />
         </div>
     );

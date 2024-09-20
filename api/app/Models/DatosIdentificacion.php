@@ -29,8 +29,7 @@ class DatosIdentificacion extends Model
         'telefono_casa',
         'telefono_celular',
         'nivel_instruccion_id',
-        'nro_documento',
-        'finish'
+       
     ];
     protected $listable = [
         'cedula_identidad',
@@ -49,8 +48,7 @@ class DatosIdentificacion extends Model
         'telefono_casa',
         'telefono_celular',
         'nivel_instruccion_id',
-        'nro_documento',
-        'finish'
+        
     ];
     
     
@@ -105,6 +103,11 @@ class DatosIdentificacion extends Model
     return $this->hasOne(InscripcionCursos::class, 'cedula_identidad', 'cedula_identidad');
 }
 
+    public function Peticiones()
+{
+    return $this->hasOne(Peticiones::class, 'key', 'cedula_identidad');
+}
+
     protected static function boot()
     {
         parent::boot();
@@ -121,6 +124,7 @@ class DatosIdentificacion extends Model
     
             // Ahora puedes eliminar cualquier otra relación directa (por ejemplo, InformacionInscripcion)
             $datosIdentificacion->informacionInscripcion()->delete();
+            $datosIdentificacion->Peticiones()->delete();
         });
     }
     

@@ -40,8 +40,5 @@ class Peticiones extends Model
         return $this->belongsTo(Zonas::class, 'zona_id');
     }
 
-    public function StatusProcess()
-    {
-        return $this->belongsTo(StatusProcess::class, 'status_process_id');
-    }
+
 }

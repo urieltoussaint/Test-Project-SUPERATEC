@@ -6,7 +6,7 @@ import SelectComponent from '../../components/SelectComponent';
 import './EditDatos.css'; // Importa la hoja de estilo si es necesario
 import { useLoading } from '../../components/LoadingContext'; // Importa useLoading
 import { ToastContainer,toast } from 'react-toastify';
-
+import moment from 'moment';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -114,18 +114,73 @@ const EditDatos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emptyFields = Object.keys(formData).filter(key => {
+      if (key === 'realiza_aporte' || key === 'es_patrocinado') {
+        return false;  // Excluir checkboxes de la validación de campos vacíos
+      }
+      return !formData[key];  // Considerar vacíos los campos que no tienen valor
+    });
+
+    const hasEmptyFields = emptyFields.length > 0;
+
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${endpoint}/datos/${id}`, formData,{
+      const cedulaIdentidad = formData.cedula_identidad;
+
+      // 1. Actualizar los datos del participante
+      await axios.put(`${endpoint}/datos/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!hasEmptyFields) {
+        // Si no hay campos vacíos, proceder con la actualización de la petición
+
+        // 2. Obtener todas las peticiones y filtrar por key = cedula_identidad y zona_id = 1
+        const response = await axios.get(`${endpoint}/peticiones`, {
           headers: {
-              Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
-      toast.success('Actualización con Éxito');
+
+        const allPeticiones = response.data.data;
+
+        // Filtrar las peticiones por cedula_identidad ,zona_id y status
+        const peticionesFiltradas = allPeticiones.filter(peticion =>
+          peticion.key === cedulaIdentidad && peticion.zona_id === 1 && peticion.status === false
+        );
+
+        if (peticionesFiltradas.length > 0) {
+          const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
+
+          // 3. Actualizar el status de la petición a true
+          await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
+            status: true,   // Cambiar el estado a true
+            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }) // Ejemplo para Caracas
+
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          toast.success('Actualización con Éxito, Petición también actualizada');
+        } else {
+          // Si no hay peticiones, no mencionar en el mensaje de éxito
+          toast.success('Actualización con Éxito');
+        }
+      } else {
+        // Si hay campos vacíos, solo actualizamos los datos del participante
+        toast.success('Formulario actualizado con éxito.');
+      }
+
       navigate('/datos');
     } catch (error) {
-      toast.success('Error al actualizar Participante')
-      console.error('Error updating data:', error);
+      // Captura cualquier error que ocurra en la solicitud
+      toast.error('Error al actualizar Participante o Petición');
+      console.error('Error actualizando:', error);
     }
   };
 
@@ -175,7 +230,6 @@ const EditDatos = () => {
                 name="nombres"
                 value={formData.nombres}
                 onChange={handleChange}
-                required
               />
             </Form.Group>
 
@@ -186,7 +240,6 @@ const EditDatos = () => {
                 name="apellidos"
                 value={formData.apellidos}
                 onChange={handleChange}
-                required
               />
             </Form.Group>
 
@@ -197,7 +250,6 @@ const EditDatos = () => {
                 name="fecha_nacimiento"
                 value={formData.fecha_nacimiento}
                 onChange={handleChange}
-                required
               />
             </Form.Group>
 
@@ -208,7 +260,6 @@ const EditDatos = () => {
                 name="edad"
                 value={formData.edad}
                 onChange={handleChange}
-                required
               />
             </Form.Group>
 
@@ -239,7 +290,6 @@ const EditDatos = () => {
                 name="direccion"
                 value={formData.direccion}
                 onChange={handleChange}
-                required
               />
             </Form.Group>
 
@@ -260,7 +310,6 @@ const EditDatos = () => {
                 name="direccion_email"
                 value={formData.direccion_email}
                 onChange={handleChange}
-                required
               />
             </Form.Group>
 

@@ -104,6 +104,13 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('promocion/{id}', [PromocionController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('promocion/{id}', [PromocionController::class, 'destroy'])->middleware('role:admin');
 
+    // Peticiones
+    Route::get('peticiones', [PeticionesController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('peticiones', [PeticionesController::class, 'store'])->middleware('role:admin,superuser,invitado');
+    Route::put('peticiones/{id}', [PeticionesController::class, 'update'])->middleware('role:admin,superuser,invitado');
+    Route::delete('peticiones/{id}', [PeticionesController::class, 'destroy'])->middleware('role:admin,superuser,invitado');
+
+
     // Rutas solo para ver (invitado, superuser y admin)
     Route::get('status_seleccion', [StatusSeleccionController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
@@ -133,8 +140,9 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::get('status_process', [StatusProcessController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('peticiones', [PeticionesController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::post('peticiones', [PeticionesController::class, 'store'])->middleware('role:admin,superuser,invitado');
+    
+    
+   
 
 });
 

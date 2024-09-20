@@ -6,8 +6,8 @@ use Illuminate\Support\Str;
 class Cursos extends Model
 {
     protected $table = 'cursos';
-    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod'];
-    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod'];
+    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status'];
+    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status'];
 
     // Relación con InscripcionCursos (un curso puede tener muchas inscripciones)
     public function InscripcionCursos()
