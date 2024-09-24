@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
-import { ToastContainer,toast } from 'react-toastify';
-
+import { ToastContainer, toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -28,8 +27,12 @@ const CreatePago = () => {
   const [cursoSeleccionado, setCursoSeleccionado] = useState(null);
   const [tasaBcv, setTasaBcv] = useState(null);
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // Estado de bloqueo
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [canceladoError, setCanceladoError] = useState('');
+  const [exoneradoError, setExoneradoError] = useState('');
   const navigate = useNavigate();
+  const [cursoId, setCursoId] = useState(null); // <-- Añadido el estado para cursoId
+
 
   useEffect(() => {
     fetchTasaBcv();
@@ -38,9 +41,11 @@ const CreatePago = () => {
   const fetchTasaBcv = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/tasa_bcv`,{headers: {
-        Authorization: `Bearer ${token}`,
-    },});
+      const response = await axios.get(`${endpoint}/tasa_bcv`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setTasaBcv(response.data.tasa);
       setFormData((prevState) => ({
         ...prevState,
@@ -54,9 +59,11 @@ const CreatePago = () => {
   const fetchOptions = async (inputValue) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`,{headers: {
-        Authorization: `Bearer ${token}`,
-    },});
+      const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data.map((cedula) => ({ value: cedula.cedula_identidad, label: cedula.cedula_identidad }));
     } catch (error) {
       console.error('Error fetching cedulas:', error);
@@ -71,9 +78,11 @@ const CreatePago = () => {
     if (selectedCedula) {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${endpoint}/cursos_por_cedula/${selectedCedula}`,{headers: {
-          Authorization: `Bearer ${token}`,
-      }});
+        const response = await axios.get(`${endpoint}/cursos_por_cedula/${selectedCedula}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setCursos(response.data);
         setCursoSeleccionado(null);
         setFormData({
@@ -81,7 +90,7 @@ const CreatePago = () => {
           monto_cancelado: '',
           monto_exonerado: '',
           tipo_moneda: 'bsF',
-          tasa_bcv_id: formData.tasa_bcv_id, // Preservar tasa_bcv_id
+          tasa_bcv_id: formData.tasa_bcv_id,
           comentario_cuota: '',
           monto_total: '',
           monto_restante: '',
@@ -104,14 +113,23 @@ const CreatePago = () => {
   const handleCursoChange = async (event) => {
     const selectedCursoId = event.target.value;
     const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId, 10));
+
     setCursoSeleccionado(selectedCurso);
+    setCursoId(selectedCurso.curso_id); // <-- Almacenar el curso_id en el estado global
+    console.log(cedula, " y ", cursoId); // <-- Usamos el cursoId desde el estado global
+
+
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/ultimo_pago/${selectedCursoId}/${cedula}`,{headers: {
-        Authorization: `Bearer ${token}`,
-    },});
+      const response = await axios.get(`${endpoint}/ultimo_pago/${selectedCursoId}/${cedula}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const ultimoPago = response.data;
+     
+      
 
       const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(selectedCurso.costo);
       setFormData((prevState) => ({
@@ -119,7 +137,8 @@ const CreatePago = () => {
         inscripcion_curso_id: selectedCursoId,
         monto_total: montoTotal,
         monto_restante: montoTotal,
-        conversion_total: calcularConversion(montoTotal)
+        conversion_total: calcularConversion(montoTotal),
+       
       }));
     } catch (error) {
       console.error('Error fetching ultimo pago:', error);
@@ -135,48 +154,120 @@ const CreatePago = () => {
 
   const handleMontoChange = (event) => {
     const { name, value } = event.target;
+    const inputValue = parseFloat(value) || 0;
+
+    // Limpiar errores previos
+    setCanceladoError('');
+    setExoneradoError('');
+
+    let cancelado = name === 'monto_cancelado' ? inputValue : parseFloat(formData.monto_cancelado) || 0;
+    let exonerado = name === 'monto_exonerado' ? inputValue : parseFloat(formData.monto_exonerado) || 0;
+
+    const montoRestante = parseFloat(formData.monto_total) - cancelado - exonerado;
+
+    if (montoRestante < 0) {
+      if (name === 'monto_cancelado') {
+        setCanceladoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
+      } else {
+        setExoneradoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
+      }
+    }
+
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
+      monto_restante: montoRestante > 0 ? montoRestante.toFixed(2) : '0.00',
+      conversion_restante: calcularConversion(montoRestante),
+      conversion_cancelado: calcularConversion(cancelado),
+      conversion_exonerado: calcularConversion(exonerado)
     }));
-
-    if (name === 'monto_cancelado' || name === 'monto_exonerado') {
-      const montoCancelado = name === 'monto_cancelado' ? parseFloat(value) || 0 : parseFloat(formData.monto_cancelado) || 0;
-      const montoExonerado = name === 'monto_exonerado' ? parseFloat(value) || 0 : parseFloat(formData.monto_exonerado) || 0;
-      const nuevoMontoRestante = cursoSeleccionado ? (parseFloat(formData.monto_total) - montoCancelado - montoExonerado).toFixed(2) : 0;
-      setFormData((prevState) => ({
-        ...prevState,
-        monto_restante: nuevoMontoRestante,
-        conversion_restante: calcularConversion(nuevoMontoRestante),
-        conversion_cancelado: calcularConversion(montoCancelado),
-        conversion_exonerado: calcularConversion(montoExonerado)
-      }));
-    }
   };
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return; // Si ya se está enviando, no hacer nada
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+
+      // Crear el pago
       await axios.post(`${endpoint}/pagos`, { 
         ...formData, 
         cedula_identidad: cedula, 
         conversion_total: calcularConversion(formData.monto_total) 
-      },{headers: {
-        Authorization: `Bearer ${token}`,
-    },});
-      toast.success('Reporte de pago creado con Éxito')
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const montoRestante = parseFloat(formData.monto_restante);
+
+
+      // console.log(cedula," y ",selectedCursoId );
+      // Actualizar inscripcion_cursos según el monto restante
+      if (montoRestante === 0) {
+        // Si el monto restante es 0, actualizar status_pay a 3
+        await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
+          cedula_identidad: cedula,
+          curso_id: cursoId,
+          status_pay: 3
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Buscar la petición correspondiente y actualizar status a true
+        const peticionesResponse = await axios.get(`${endpoint}/peticiones`, {
+          params: {
+            key: cedula,
+            zona_id: 3,
+            status: false
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const peticiones = peticionesResponse.data.data;
+        if (peticiones.length > 0) {
+          const peticion = peticiones[0]; // Tomar la primera petición coincidente
+          await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
+            status: true
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
+
+      } else if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
+        // Si el monto restante es mayor que 0 pero menor que el monto total, actualizar el status_pay
+        await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
+          cedula_identidad: cedula,
+          curso_id: cursoId,
+          status_pay: 2 // status pago en proceso
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+
+      toast.success('Reporte de pago creado con Éxito');
       navigate('/pagos');
     } catch (error) {
-      toast.error('Reporte de pago fallido')
+      toast.error('Reporte de pago fallido');
       console.error('Error creando el pago:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const calcularConversion = (monto) => {
     return tasaBcv ? (monto * tasaBcv).toFixed(2) : 'N/A';
@@ -235,8 +326,9 @@ const CreatePago = () => {
                 name="monto_cancelado"
                 value={formData.monto_cancelado}
                 onChange={handleMontoChange}
-                required
+                className={canceladoError ? 'is-invalid' : ''}
               />
+              {canceladoError && <Alert variant="danger">{canceladoError}</Alert>}
               <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_cancelado)}BsF</Form.Text>
             </Form.Group>
             <Form.Group controlId="monto_exonerado">
@@ -246,8 +338,9 @@ const CreatePago = () => {
                 name="monto_exonerado"
                 value={formData.monto_exonerado}
                 onChange={handleMontoChange}
-                required
+                className={exoneradoError ? 'is-invalid' : ''}
               />
+              {exoneradoError && <Alert variant="danger">{exoneradoError}</Alert>}
               <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_exonerado)}BsF</Form.Text>
             </Form.Group>
             <Form.Group controlId="monto_restante">

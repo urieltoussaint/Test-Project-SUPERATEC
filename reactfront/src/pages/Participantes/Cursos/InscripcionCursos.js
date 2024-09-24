@@ -4,8 +4,8 @@ import { Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
 import { useLoading } from '../../../components/LoadingContext';
-import { ToastContainer,toast } from 'react-toastify';
-
+import { ToastContainer, toast } from 'react-toastify';
+const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
 const InscripcionCursos = () => {
@@ -15,10 +15,8 @@ const InscripcionCursos = () => {
     const [curso, setCurso] = useState(null);
     const [error, setError] = useState('');
     const { setLoading } = useLoading();
-
     const navigate = useNavigate();
-    
-    
+
     useEffect(() => {
         setLoading(true);
         Promise.all([fetchCurso()]).finally(() => {
@@ -26,14 +24,14 @@ const InscripcionCursos = () => {
         });
     }, [cursoId]);
 
-
-
     const fetchCurso = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/cursos/${cursoId}`,{headers: {
-                Authorization: `Bearer ${token}`,
-            },});
+            const response = await axios.get(`${endpoint}/cursos/${cursoId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             setCurso(response.data);
         } catch (error) {
             console.error('Error fetching curso:', error);
@@ -44,10 +42,15 @@ const InscripcionCursos = () => {
     const fetchOptions = async (inputValue) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`,{headers: {
-                Authorization: `Bearer ${token}`,
-            },});
-            return response.data.map(cedula => ({ value: cedula.cedula_identidad, label: cedula.cedula_identidad }));
+            const response = await axios.get(`${endpoint}/cedulas?query=${inputValue}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return response.data.map((cedula) => ({
+                value: cedula.cedula_identidad,
+                label: cedula.cedula_identidad,
+            }));
         } catch (error) {
             console.error('Error fetching cedulas:', error);
             return [];
@@ -61,9 +64,11 @@ const InscripcionCursos = () => {
         if (selectedCedula) {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get(`${endpoint}/identificacion/${selectedCedula}`,{headers: {
-                    Authorization: `Bearer ${token}`,
-                },});
+                const response = await axios.get(`${endpoint}/identificacion/${selectedCedula}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 setDatos(response.data);
                 setError('');
             } catch (error) {
@@ -78,16 +83,41 @@ const InscripcionCursos = () => {
     const handleInscripcion = async () => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post(`${endpoint}/cursos_inscripcion`, {
+
+            // Realizar la inscripción del curso y actualizar el status_pay
+            const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, {
                 cedula_identidad: cedula,
-                curso_id: cursoId
-            },{headers: {
-                Authorization: `Bearer ${token}`,
-            },});
-            toast.success('Inscripción Exitosa')
+                curso_id: cursoId,
+                status_pay: 1, // Actualizar el status_pay a 1
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            toast.success('Inscripción Exitosa');
+
+            // Crear la petición de pago no realizado
+            const peticionResponse = await axios.post(`${endpoint}/peticiones`, {
+                zona_id: 3, // Zona 3
+                comentario: 'Pago no realizado', // Comentario
+                user_id: userId,  // Usuario logueado que envía la solicitud
+                role_id: 4,
+                status: false,  // Estado de la petición
+                finish_time: null,  // No hay finish_time al momento de creación
+                key: cedula,  // Usar el ID del curso como key
+
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            toast.success('Petición creada: Pago no realizado');
             navigate('/cursos');
         } catch (error) {
-            toast.error('Inscripción Fallida')
+            toast.error('Error en la inscripción o en la creación de la petición');
+            console.error('Error en la inscripción o en la creación de la petición:', error);
         }
     };
 
@@ -116,13 +146,10 @@ const InscripcionCursos = () => {
                     <Button variant="success" onClick={handleInscripcion}>
                         Inscribir
                     </Button>
-                    
-                    
                 </div>
-                
             )}
-            <Button 
-                variant="secondary" 
+            <Button
+                variant="secondary"
                 onClick={() => navigate('/cursos')}
                 className="mt-4"
             >

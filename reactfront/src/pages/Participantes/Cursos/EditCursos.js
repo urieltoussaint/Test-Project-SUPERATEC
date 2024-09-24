@@ -133,12 +133,12 @@ const EditCursos = () => {
 
           toast.success('Curso y petición actualizados con éxito.');
         } else {
-          toast.success('Curso actualizado, pero no se encontró ninguna petición.');
+          toast.success('Curso actualizado');
         }
 
       } else {
         // Si hay campos vacíos, solo actualizamos los datos del curso
-        toast.success('Curso actualizado con campos vacíos. Status marcado como false.');
+        toast.success('Curso actualizado con campos vacíos.');
       }
 
       // Redirigir después de la actualización
@@ -167,7 +167,6 @@ const EditCursos = () => {
             value={formData.descripcion}
             onChange={handleChange}
             maxLength={40}
-            required
           />
         </Form.Group>
 
@@ -178,7 +177,6 @@ const EditCursos = () => {
             name="cantidad_horas"
             value={formData.cantidad_horas}
             onChange={handleChange}
-            required
           />
         </Form.Group>
 
@@ -189,7 +187,6 @@ const EditCursos = () => {
             name="fecha_inicio"
             value={formData.fecha_inicio}
             onChange={handleChange}
-            required
           />
         </Form.Group>
 
@@ -201,7 +198,6 @@ const EditCursos = () => {
             name="costo"
             value={formData.costo}
             onChange={handleChange}
-            required
           />
         </Form.Group>
 
@@ -212,7 +208,6 @@ const EditCursos = () => {
             name="area_id"
             value={formData.area_id}
             onChange={handleChange}
-            required
           >
             <option value="">Seleccione un área</option>
             {areas.map((area) => (

@@ -22,6 +22,8 @@ const ShowPeticiones = () => {
     const [showRejectModal, setShowRejectModal] = useState(false); // Estado para controlar el modal de rechazo
     const [selectedPeticion, setSelectedPeticion] = useState(null); // Petición seleccionada para rechazar
     const { setLoading } = useLoading();
+    const [rejectComment, setRejectComment] = useState(''); // Estado para el comentario de rechazo
+
     const navigate = useNavigate();
     const itemsPerPage = 4;
     const userId = parseInt(localStorage.getItem('user'));
@@ -35,26 +37,42 @@ const ShowPeticiones = () => {
     const getAllPeticiones = async () => {
         try {
             const token = localStorage.getItem('token');
-            
             const roleId = parseInt(localStorage.getItem('role_id'));
-
-            const response = await axios.get(`${endpoint}/peticiones?with=user,zonas`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            const allPeticiones = response.data.data;
-            const filteredPeticiones = allPeticiones.filter(peticion => 
-                peticion.destinatario_id === userId || peticion.role_id === roleId
+            let allPeticiones = [];
+            let currentPage = 1;
+            let totalPages = 1; // Asumimos que hay al menos una página al inicio
+    
+            // Sigue solicitando páginas mientras no llegues al final
+            while (currentPage <= totalPages) {
+                const response = await axios.get(`${endpoint}/peticiones?with=user,zonas&page=${currentPage}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+    
+                // Combina las peticiones recibidas
+                allPeticiones = [...allPeticiones, ...response.data.data];
+    
+                // Actualiza el número total de páginas
+                totalPages = response.data.last_page;
+                currentPage++;
+            }
+    
+            // Filtrar las peticiones obtenidas
+            const filteredPeticiones = allPeticiones.filter(
+                (peticion) => peticion.destinatario_id === userId || peticion.role_id === roleId
             );
-
-            const statusFiltered = filteredPeticiones.filter(peticion => peticion.status === showAttended);
+    
+            const statusFiltered = filteredPeticiones.filter((peticion) => peticion.status === showAttended);
             setPeticiones(statusFiltered);
             setFilteredPeticiones(statusFiltered);
+    
+            console.log("Total peticiones cargadas:", statusFiltered); // Verifica todas las peticiones
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
+    
+      
 
     const calculateDaysSinceCreation = (created_at) => {
         const creationDate = moment(created_at);
@@ -128,7 +146,10 @@ const ShowPeticiones = () => {
             navigate(`/datos/${peticiones.key}/edit`);
         } else if (id === 2) {
             navigate(`/cursos/${peticiones.key}/edit`);
-        } else {
+        }else if (id === 3) {
+            navigate(`/cursos/${peticiones.key}/edit`);
+        } 
+        else {
             toast.error('Zona no válida');
         }
     };
@@ -142,15 +163,14 @@ const ShowPeticiones = () => {
         if (!selectedPeticion) return;
         try {
             const token = localStorage.getItem('token');
-
+    
             // Borrar la petición actual
             await axios.delete(`${endpoint}/peticiones/${selectedPeticion.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
-            // Crear una nueva petición con destinatario_id como user_id y role_id null
+    
+            // Crear una nueva petición con destinatario_id como user_id, role_id null y agregar el comentario de rechazo
             const newPeticion = {
-
                 user_id: userId,
                 destinatario_id: selectedPeticion.user_id, // Cambiar destinatario_id
                 role_id: null, // role_id será null
@@ -158,12 +178,13 @@ const ShowPeticiones = () => {
                 status: false,
                 finish_time: null,
                 key: selectedPeticion.key, // Mantener la misma key
+                comentario: rejectComment // Agregar el comentario de rechazo
             };
-
+    
             await axios.post(`${endpoint}/peticiones`, newPeticion, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
+    
             getAllPeticiones();
             toast.success('Petición rechazada y reenviada al solicitante.');
         } catch (error) {
@@ -172,10 +193,12 @@ const ShowPeticiones = () => {
             toast.error('Error al rechazar petición');
         } finally {
             setShowRejectModal(false); // Cerrar el modal
+            setRejectComment(''); // Limpiar el campo de comentario
         }
     };
+    
 
-    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación", "Acciones/Finalizado"];
+    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación","Comentarios", "Acciones/Finalizado"];
 
     const renderItem = (peticiones) => (
         <tr key={peticiones.id} className={peticiones.status ? "attended-row" : ""}>  
@@ -184,27 +207,29 @@ const ShowPeticiones = () => {
             <td className="text-center">{peticiones.key}</td>
             <td className="text-center">{peticiones.zonas?.name}</td>
             <td className="text-center">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
-            <td className="text-center">
-                {peticiones.status ? (
-                    <span>{moment(peticiones.finish_time).format('YYYY-MM-DD HH:mm')}</span>
-                ) : (
-                    <>
-                        <Button
-                            variant="success"
-                            onClick={() => handleNavigate(peticiones)}
-                            className="me-2"
-                        >
-                            Actualizar
-                        </Button>
-                        <Button
-                            variant="danger"
-                            onClick={() => handleRejectClick(peticiones)} // Botón para rechazar
-                        >
-                            Rechazar
-                        </Button>
-                    </>
-                )}
+            <td className="text-center">{peticiones.comentario}</td>
+            <td className="text-center actions-column">
+            {peticiones.status ? (
+                <span>{moment(peticiones.finish_time).format('YYYY-MM-DD HH:mm')}</span>
+            ) : (
+                <>
+                <Button
+                    variant="success"
+                    onClick={() => handleNavigate(peticiones)}
+                    className="me-2"
+                >
+                    Actualizar
+                </Button>
+                <Button
+                    variant="danger"
+                    onClick={() => handleRejectClick(peticiones)} // Botón para rechazar
+                >
+                    Rechazar
+                </Button>
+                </>
+            )}
             </td>
+
         </tr>
     );
 
@@ -255,21 +280,35 @@ const ShowPeticiones = () => {
                 renderItem={renderItem}
             />
 
-            {/* Modal de confirmación para rechazar petición */}
-            <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)}>
+                            {/* Modal de confirmación para rechazar petición */}
+                <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)}>
                 <Modal.Header closeButton>
                     <Modal.Title>Confirmar Rechazo</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {selectedPeticion && (
+                    <>
                         <p>¿Estás seguro de que deseas rechazar la petición de {selectedPeticion.user?.name}?</p>
+                        {/* Campo para agregar un comentario de rechazo */}
+                        <Form.Group controlId="rejectComment">
+                        <Form.Label>Comentario (opcional)</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            rows={3}
+                            value={rejectComment}
+                            onChange={(e) => setRejectComment(e.target.value)} // Actualiza el estado con el comentario
+                            placeholder="Escribe el motivo del rechazo o algún comentario."
+                        />
+                        </Form.Group>
+                    </>
                     )}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowRejectModal(false)}>Cancelar</Button>
                     <Button variant="danger" onClick={handleRejectConfirm}>Rechazar</Button>
                 </Modal.Footer>
-            </Modal>
+                </Modal>
+
 
             <ToastContainer />
         </div>

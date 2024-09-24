@@ -35,20 +35,34 @@ const ShowPagos = () => {
     const getAllReportes = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/pagos`,{
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            console.log('Datos obtenidos:', response.data);
-            const sortedReportes = response.data.data.sort((a, b) => b.id - a.id);
+            let allReportes = [];
+            let currentPage = 1;
+            let totalPages = 1;
+    
+            // Loop para obtener todas las páginas
+            while (currentPage <= totalPages) {
+                const response = await axios.get(`${endpoint}/pagos?page=${currentPage}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+    
+                allReportes = [...allReportes, ...response.data.data];
+                totalPages = response.data.last_page; // Total de páginas
+                currentPage++;
+            }
+    
+            // Ordenar los reportes por ID
+            const sortedReportes = allReportes.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
             setFilteredReportes(sortedReportes);
+            console.log('Datos obtenidos:', sortedReportes);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
+    
 
     const deleteReporte = async (id) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar este Reporte de Pago?')) {

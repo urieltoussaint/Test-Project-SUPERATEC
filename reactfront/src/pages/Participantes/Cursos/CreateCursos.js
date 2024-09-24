@@ -4,11 +4,11 @@ import { Form, Button, Modal, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import { useLoading } from '../../../components/LoadingContext';
-import { ToastContainer,toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
-  
+
 const CreateCursos = () => {
   const { setLoading } = useLoading();
   const [selectedUserName, setSelectedUserName] = useState(''); // Nombre del usuario seleccionado
@@ -18,7 +18,6 @@ const CreateCursos = () => {
   const [selectedRoleName, setSelectedRoleName] = useState('');  // Nombre del rol seleccionado
   const [filteredRoles, setFilteredRoles] = useState([]);
   const [searchRoleName, setSearchRoleName] = useState(''); // Estado específico para la búsqueda de roles
-  const [previousModal, setPreviousModal] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);  
   const [showUserRoleModal, setShowUserRoleModal] = useState(false); 
   const [showUserSearchModal, setShowUserSearchModal] = useState(false);  // Modal de búsqueda de usuarios
@@ -26,6 +25,7 @@ const CreateCursos = () => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchName, setSearchName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [comentario, setComentario] = useState('');  // Nuevo estado para el comentario
   const [formData, setFormData] = useState({
     descripcion: '',
     cantidad_horas: '',
@@ -34,15 +34,12 @@ const CreateCursos = () => {
     costo: ''
   });
   const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
-
   const navigate = useNavigate();
 
   useEffect(() => {
-
     const fetchSelectData = async () => {
       setLoading(true); // Inicia la animación de carga
       try {
-        // Realiza las solicitudes necesarias para cargar los selectores
         const token = localStorage.getItem('token');
         await axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } });
         setSelectDataLoaded(true); // Indica que los datos han sido cargados
@@ -57,18 +54,13 @@ const CreateCursos = () => {
     } else if (showRoleSearchModal) {
       getAllRoles();
     }
-  }, [showUserSearchModal, showRoleSearchModal]
-);
- 
+  }, [showUserSearchModal, showRoleSearchModal]);
 
-  
   const getAllUsers = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${endpoint}/users-with-roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
       setFilteredUsers(response.data);
@@ -81,19 +73,15 @@ const CreateCursos = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${endpoint}/role`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-  
-      // Asegúrate de extraer los roles desde 'data'
-      // const roles = response.data.data || [];
-      setRoles (response.data.data);
+      setRoles(response.data.data);
       setFilteredRoles(response.data.data);
     } catch (error) {
       console.error('Error fetching roles:', error);
     }
   };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData(prevState => ({
@@ -102,135 +90,109 @@ const CreateCursos = () => {
     }));
   };
 
-  
-const handleSubmit = async (e, redirectToCursos) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e, redirectToCursos) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const emptyFields = Object.keys(formData).filter(key => {
-    // Excluir los campos que no son obligatorios (realiza_aporte y es_patrocinado)
-    if (key === 'realiza_aporte' || key === 'es_patrocinado') {
-      return false;
-    }
-    return !formData[key];
-  });
+    const emptyFields = Object.keys(formData).filter(key => {
+      if (key === 'realiza_aporte' || key === 'es_patrocinado') {
+        return false;
+      }
+      return !formData[key];
+    });
 
-  // Si hay campos vacíos, no se procede con el envío de los datos, mostrar modal
-  if (emptyFields.length > 0) {
-    setShowConfirmModal(true);  // Mostrar el modal de confirmación
-    setLoading(false);
-    return;
-  }
-
-  // Si el formulario está completo, se envían los datos del curso directamente con status true
-  try {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      toast.error('Error: Token no encontrado');
+    if (emptyFields.length > 0) {
+      setShowConfirmModal(true);
       setLoading(false);
       return;
     }
 
-    // Enviar los datos del curso con status true
-    const formDataWithStatus = {
-      ...formData,
-      status: true,  // Completo, entonces se guarda con status true
-    };
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Error: Token no encontrado');
+        setLoading(false);
+        return;
+      }
 
-    await axios.post(`${endpoint}/cursos`, formDataWithStatus, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const formDataWithStatus = {
+        ...formData,
+        status: true,
+      };
 
-    toast.success('Nuevo Curso agregado con Éxito');
+      await axios.post(`${endpoint}/cursos`, formDataWithStatus, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // Redireccionar a la página de cursos o datos
-    if (redirectToCursos) {
-      navigate(`/inscribir-cursos/${formData.id}`);
-    } else {
-      navigate('/cursos');
+      toast.success('Nuevo Curso agregado con Éxito');
+      if (redirectToCursos) {
+        navigate(`/inscribir-cursos/${formData.id}`);
+      } else {
+        navigate('/cursos');
+      }
+    } catch (error) {
+      toast.error('Error al crear Curso');
+      console.error('Error creando curso:', error);
+    } finally {
+      setLoading(false);
     }
-
-  } catch (error) {
-    toast.error('Error al crear Curso');
-    console.error('Error creando curso:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-  
-  
-  const handleSelectUser = (user) => {
-    setSelectedUserId(user.id); // Guardar ID del usuario seleccionado
-    setSelectedUserName(user.name); // Guardar nombre del usuario seleccionado
-    setShowUserSearchModal(false); // Cerrar modal de búsqueda
-    setShowConfirmModal(true); // Mostrar el modal de confirmación después de seleccionar un usuario
   };
 
+  const handleSelectUser = (user) => {
+    setSelectedUserId(user.id);
+    setSelectedUserName(user.name);
+    setSelectedRoleId(null); // Limpiar selección de rol al seleccionar usuario
+    setSelectedRoleName('');
+    setShowUserSearchModal(false);
+    setShowConfirmModal(true);
+  };
 
   const handleSelectRole = (role) => {
-    setSelectedRoleId(role.id);  // Guardar ID del rol seleccionado
-    setSelectedRoleName(role.name);  // Guardar nombre del rol seleccionado
-    setShowRoleSearchModal(false);  // Cerrar modal de búsqueda de roles
-    setShowConfirmModal(true);  // Mostrar modal de confirmación
+    setSelectedRoleId(role.id);
+    setSelectedRoleName(role.name);
+    setSelectedUserId(null); // Limpiar selección de usuario al seleccionar rol
+    setSelectedUserName('');
+    setShowRoleSearchModal(false);
+    setShowConfirmModal(true);
   };
 
   const handleConfirmSendRequest = async () => {
     try {
       const token = localStorage.getItem('token');
-  
       if (!token) {
         toast.error('Error: Token no encontrado');
         return;
       }
-  
-      // Primero, enviamos los datos del curso con status false (incompleto)
-      const formDataWithStatus = {
-        ...formData,
-        status: false,  // Formulario incompleto, entonces se guarda con status false
-      };
-  
+
+      const formDataWithStatus = { ...formData, status: false };
       const cursoResponse = await axios.post(`${endpoint}/cursos`, formDataWithStatus, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-          // Extraer el ID del curso recién creado
-    const nuevoCursoId = cursoResponse.data.id;
+      const nuevoCursoId = cursoResponse.data.id;
+      const requestData = {
+        user_id: userId,
+        destinatario_id: selectedUserId || null,
+        role_id: selectedRoleId || null,
+        zona_id: 2,
+        status: false,
+        finish_time: null,
+        key: nuevoCursoId,
+        comentario: comentario
+      };
 
-    // Crear la petición usando el ID del curso como key
-    const requestData = {
-      user_id: userId,  // Usuario logueado que envía la solicitud
-      destinatario_id: selectedUserId || null,  // Usuario destinatario seleccionado (si existe)
-      role_id: selectedRoleId || null,  // El role_id es nulo si se seleccionó un usuario
-      zona_id: 2,  // Valor fijo para cursos
-      status: false,  // Estado de la petición
-      finish_time: null,  // No hay finish_time al momento de creación
-      key: nuevoCursoId,  // Usar el ID del curso como key
-    };
+      await axios.post(`${endpoint}/peticiones`, requestData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // Luego enviamos la petición con el ID del curso recién creado
-    await axios.post(`${endpoint}/peticiones`, requestData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      toast.success('Solicitud y datos del curso enviados exitosamente');
+      navigate('/cursos');
+    } catch (error) {
+      toast.error('Error al enviar la solicitud o los datos del curso');
+      console.error('Error al enviar la solicitud o los datos del curso:', error);
+    }
+  };
 
-    // Mensaje de éxito y redirección
-    toast.success('Solicitud y datos del curso enviados exitosamente');
-    navigate('/cursos');
-
-  } catch (error) {
-    // Mensaje de error y log en consola
-    toast.error('Error al enviar la solicitud o los datos del curso');
-    console.error('Error al enviar la solicitud o los datos del curso:', error);
-  }
-};
-
-  
   const handleUserSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchName(value);
@@ -240,22 +202,15 @@ const handleSubmit = async (e, redirectToCursos) => {
 
   const handleRoleSearch = (e) => {
     const value = e.target.value.toLowerCase();
-    setSearchRoleName(value); // Actualiza el estado de búsqueda para roles
-    
-    // Filtrar los roles basados en el valor ingresado en el campo de búsqueda
-    const filtered = roles.filter(role => role.name.toLowerCase().includes(value)
-    );
-    
-    // Actualizar el estado de filteredRoles con los resultados filtrados
+    setSearchRoleName(value);
+    const filtered = roles.filter(role => role.name.toLowerCase().includes(value));
     setFilteredRoles(filtered);
   };
 
   return (
     <div className="container">
-      <meta name="csrf-token" content="{{ csrf_token() }}" />
       <h1>Agregar Nuevo Curso</h1>
       <Form onSubmit={handleSubmit}>
-        <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
             <Form.Group controlId="descripcion">
@@ -266,7 +221,6 @@ const handleSubmit = async (e, redirectToCursos) => {
                 value={formData.descripcion}
                 onChange={handleChange}
                 maxLength={40}
-                requi
               />
             </Form.Group>
             <Form.Group controlId="cantidad_horas">
@@ -325,8 +279,9 @@ const handleSubmit = async (e, redirectToCursos) => {
           Volver
         </Button>
       </Form>
-            {/* Modal de confirmación si hay campos vacíos */}
-            <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
+
+      {/* Modal de confirmación si hay campos vacíos */}
+      <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Campos Vacíos</Modal.Title>
         </Modal.Header>
@@ -338,9 +293,8 @@ const handleSubmit = async (e, redirectToCursos) => {
             Cancelar
           </Button>
           <Button variant="success" onClick={() => {
-            setPreviousModal('confirm');  // Guardamos el modal actual como "anterior"
             setShowConfirmModal(false);
-            setShowUserRoleModal(true);  // Mostrar el modal para seleccionar usuario o rol
+            setShowUserRoleModal(true);
           }}>
             Enviar Petición
           </Button>
@@ -360,27 +314,16 @@ const handleSubmit = async (e, redirectToCursos) => {
             Cancelar
           </Button>
           <Button variant="warning" onClick={() => {
-            setPreviousModal('userRole');  // Guardamos el modal actual como "anterior"
             setShowUserRoleModal(false);
-            setShowUserSearchModal(true);  // Abrir modal de búsqueda de usuarios
+            setShowUserSearchModal(true);
           }}>
             Buscar Usuario
           </Button>
           <Button variant="info" onClick={() => {
-            setPreviousModal('userRole');  // Guardamos el modal actual como "anterior"
             setShowUserRoleModal(false);
-            setShowRoleSearchModal(true);  // Abrir modal de búsqueda de roles
+            setShowRoleSearchModal(true);
           }}>
             Buscar Rol
-          </Button>
-          {/* Botón Volver */}
-          <Button variant="secondary" onClick={() => {
-            if (previousModal === 'confirm') {
-              setShowUserRoleModal(false);
-              setShowConfirmModal(true);  // Volver al modal de confirmación
-            }
-          }}>
-            Volver
           </Button>
         </Modal.Footer>
       </Modal>
@@ -414,9 +357,7 @@ const handleSubmit = async (e, redirectToCursos) => {
                     <td>
                       <Button
                         variant="primary"
-                        onClick={() => {
-                          handleSelectUser(user);  // Seleccionar el usuario
-                        }}
+                        onClick={() => handleSelectUser(user)}
                       >
                         Seleccionar
                       </Button>
@@ -435,10 +376,9 @@ const handleSubmit = async (e, redirectToCursos) => {
           <Button variant="secondary" onClick={() => setShowUserSearchModal(false)}>
             Cerrar
           </Button>
-          {/* Botón Volver */}
           <Button variant="light" onClick={() => {
             setShowUserSearchModal(false);
-            setShowUserRoleModal(true);  // Volver al modal anterior (Usuario o Rol)
+            setShowUserRoleModal(true);
           }}>
             Volver
           </Button>
@@ -454,10 +394,9 @@ const handleSubmit = async (e, redirectToCursos) => {
           <Form.Control
             type="text"
             placeholder="Buscar por nombre"
-            value={searchRoleName} // Usamos searchRoleName
-            onChange={handleRoleSearch} // Aseguramos que la búsqueda de roles se aplique correctamente
+            value={searchRoleName}
+            onChange={handleRoleSearch}
           />
-
           <Table striped bordered hover>
             <thead>
               <tr>
@@ -494,10 +433,9 @@ const handleSubmit = async (e, redirectToCursos) => {
           <Button variant="secondary" onClick={() => setShowRoleSearchModal(false)}>
             Cerrar
           </Button>
-          {/* Botón Volver */}
           <Button variant="light" onClick={() => {
             setShowRoleSearchModal(false);
-            setShowUserRoleModal(true);  // Volver al modal anterior
+            setShowUserRoleModal(true);
           }}>
             Volver
           </Button>
@@ -514,13 +452,23 @@ const handleSubmit = async (e, redirectToCursos) => {
             ? `¿Seguro que deseas enviar la solicitud al usuario ${selectedUserName}?`
             : 'No se ha seleccionado ningún usuario.'}
         </Modal.Body>
+        <Form.Group controlId="comentario" style={{ margin: '10px 20px' }}>
+          <Form.Label>Comentario (opcional)</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            placeholder="Agrega un comentario sobre lo que hiciste o lo que falta."
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            style={{ padding: '5px', resize: 'none' }}
+          />
+        </Form.Group>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>Cancelar</Button>
           <Button variant="success" onClick={handleConfirmSendRequest} disabled={!selectedUserId}>Confirmar</Button>
-          {/* Botón Volver */}
           <Button variant="light" onClick={() => {
             setShowConfirmModal(false);
-            setShowUserSearchModal(true);  // Volver al modal de búsqueda de usuarios
+            setShowUserSearchModal(true);
           }}>
             Volver
           </Button>
@@ -534,20 +482,27 @@ const handleSubmit = async (e, redirectToCursos) => {
         </Modal.Header>
         <Modal.Body>
           {selectedRoleId
-            ? `¿Seguro que deseas enviar la solicitud al rol ${selectedRoleName}?`
-            : 'No se ha seleccionado ningún rol.'}
-
+            ? <p>¿Seguro que deseas enviar la solicitud al rol {selectedRoleName}?</p>
+            : <p>No se ha seleccionado ningún rol.</p>}
+          <Form.Group controlId="comentario" style={{ margin: '10px 0' }}>
+            <Form.Label>Comentario (opcional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              placeholder="Agrega un comentario sobre lo que hiciste o lo que falta."
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              style={{ padding: '5px', resize: 'none' }}
+            />
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>Cancelar</Button>
           <Button variant="success" onClick={handleConfirmSendRequest} disabled={!selectedRoleId}>Confirmar</Button>
-          {/* Botón Volver */}
           <Button variant="light" onClick={() => {
             setShowConfirmModal(false);
-            setShowRoleSearchModal(true);  // Volver al modal de búsqueda de roles
-          }}>
-            Volver
-          </Button>
+            setShowRoleSearchModal(true);
+          }}>Volver</Button>
         </Modal.Footer>
       </Modal>
 

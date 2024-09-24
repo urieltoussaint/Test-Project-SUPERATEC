@@ -47,20 +47,32 @@ const ShowVoluntariados = () => {
     const getAllVoluntariados = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/voluntariados?with=informacionVoluntariados,nivelInstruccion,genero`,{
-                
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            console.log('Voluntariados obtenidos:', response.data);
-            setVoluntariados(response.data.data);
-            setFilteredVoluntariados(response.data.data);
+            let allVoluntariados = [];
+            let currentPage = 1;
+            let totalPages = 1;
+    
+            // Loop para obtener todas las páginas
+            while (currentPage <= totalPages) {
+                const response = await axios.get(`${endpoint}/voluntariados?with=informacionVoluntariados,nivelInstruccion,genero&page=${currentPage}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+    
+                allVoluntariados = [...allVoluntariados, ...response.data.data];
+                totalPages = response.data.last_page; // Total de páginas
+                currentPage++;
+            }
+    
+            setVoluntariados(allVoluntariados);
+            setFilteredVoluntariados(allVoluntariados);
+            console.log('Voluntariados obtenidos:', allVoluntariados);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
+    
 
     
     const fetchFilterOptions = async () => {

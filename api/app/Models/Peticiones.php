@@ -15,7 +15,8 @@ class Peticiones extends Model
         'key',
         'status', 
         'created_at', 
-        'finish_time'
+        'finish_time',
+        'comentario'
     ];
 
     protected $listable = [
@@ -27,7 +28,8 @@ class Peticiones extends Model
         'key',
         'status', 
         'created_at', 
-        'finish_time'
+        'finish_time',
+        'comentario'
     ];
 
 

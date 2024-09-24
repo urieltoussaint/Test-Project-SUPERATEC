@@ -4,9 +4,9 @@ namespace App\Models;
 class InscripcionCursos extends Model
 {
     protected $table = 'inscripcion_cursos';
-    protected $fillable = ['id','cedula_identidad','fecha_inscripcion','curso_id'];
+    protected $fillable = ['id','cedula_identidad','fecha_inscripcion','curso_id','status_pay'];
 
-    protected $listable = ['id','cedula_identidad','fecha_inscripcion','curso_id'];
+    protected $listable = ['id','cedula_identidad','fecha_inscripcion','curso_id','status_pay'];
 
     public function DatosIdentificacion()
 {

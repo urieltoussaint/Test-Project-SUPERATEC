@@ -57,14 +57,26 @@ const ShowDatos = () => {
     const getAllDatos = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/datos?with=statusSeleccion,informacionInscripcion,NivelInstruccion,genero,estado`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            });
-            console.log('Datos obtenidos:', response.data);
-            setDatos(response.data.data);
-            setFilteredDatos(response.data.data);
+            let allDatos = [];
+            let currentPage = 1;
+            let totalPages = 1;
+    
+            // Loop para obtener todas las páginas
+            while (currentPage <= totalPages) {
+                const response = await axios.get(`${endpoint}/datos?with=statusSeleccion,informacionInscripcion,NivelInstruccion,genero,estado&page=${currentPage}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                });
+    
+                allDatos = [...allDatos, ...response.data.data];
+                totalPages = response.data.last_page;
+                currentPage++;
+            }
+    
+            setDatos(allDatos);
+            setFilteredDatos(allDatos);
+            console.log('Datos obtenidos:', allDatos);
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 setError('No estás autenticado. Por favor, inicia sesión.');
@@ -75,6 +87,7 @@ const ShowDatos = () => {
             }
         }
     };
+    
 
     const fetchFilterOptions = async () => {
         try {

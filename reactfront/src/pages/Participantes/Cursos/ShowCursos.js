@@ -35,18 +35,32 @@ const ShowCursos = () => {
     const getAllCursos = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/cursos?with=area`,{
-                headers: {
-                Authorization: `Bearer ${token}`,
-            },});
-            console.log('Datos obtenidos:', response.data);
-            setCursos(response.data.data);
-            setFilteredCursos(response.data.data);
+            let allCursos = [];
+            let currentPage = 1;
+            let totalPages = 1;
+    
+            // Loop para obtener todas las páginas
+            while (currentPage <= totalPages) {
+                const response = await axios.get(`${endpoint}/cursos?with=area&page=${currentPage}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                });
+    
+                allCursos = [...allCursos, ...response.data.data];
+                totalPages = response.data.last_page;
+                currentPage++;
+            }
+    
+            setCursos(allCursos);
+            setFilteredCursos(allCursos);
+            console.log('Datos obtenidos:', allCursos);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
+    
 
     const fetchAreaOptions = async () => {
         try {

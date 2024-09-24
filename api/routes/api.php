@@ -47,7 +47,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     // Rutas protegidas por rol - Admin tiene todos los permisos, superuser puede crear/editar/ver, invitado solo puede ver.
 
     //Usuarios
-    Route::get('users', [AuthController::class, 'index'])->middleware('role:admin,superuser,invitado'); // 
+    Route::get('users', [AuthController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos'); // 
     Route::post('users', [AuthController::class, 'store'])->middleware('role:admin'); // 
     Route::get('users/{id}', [AuthController::class, 'show'])->middleware('role:admin'); // 
     Route::put('users/{id}', [AuthController::class, 'update'])->middleware('role:admin'); // 
@@ -56,30 +56,31 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('role', [RoleController::class, 'index'])->middleware('role:admin,superuser,invitado'); 
     
     // Datos Identificación
-    Route::get('datos', [DatosIdentificacionController::class, 'index'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
+    Route::get('datos', [DatosIdentificacionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos'); // Todos pueden ver
     Route::post('datos', [DatosIdentificacionController::class, 'store'])->middleware('role:admin,superuser'); // Solo admin y superuser pueden crear
     Route::get('datos/{id}', [DatosIdentificacionController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
     Route::put('datos/{id}', [DatosIdentificacionController::class, 'update'])->middleware('role:admin,superuser'); // Solo admin y superuser pueden editar
     Route::delete('datos/{id}', [DatosIdentificacionController::class, 'destroy'])->middleware('role:admin'); // Solo admin puede eliminar
 
     // Cursos
-    Route::get('cursos', [CursosController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('cursos', [CursosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::post('cursos', [CursosController::class, 'store'])->middleware('role:admin,superuser');
     Route::get('cursos/{id}', [CursosController::class, 'show'])->middleware('role:admin,superuser,invitado');
     Route::put('cursos/{id}', [CursosController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('cursos/{id}', [CursosController::class, 'destroy'])->middleware('role:admin');
 
     // Inscripción Cursos
-    Route::get('cursos_inscripcion', [InscripcionCursosController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('cursos_inscripcion', [InscripcionCursosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::post('cursos_inscripcion', [InscripcionCursosController::class, 'store'])->middleware('role:admin,superuser');
-    Route::get('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'show'])->middleware('role:admin,superuser,invitado');
-    Route::put('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'update'])->middleware('role:admin,superuser');
+    Route::get('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
     Route::delete('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'destroy'])->middleware('role:admin');
+    Route::put('inscripcion_cursos/update_status', [InscripcionCursosController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
+
 
     // Reporte Pagos
-    Route::get('pagos', [ReportePagosController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::post('pagos', [ReportePagosController::class, 'store'])->middleware('role:admin,superuser');
-    Route::get('pagos/{id}', [ReportePagosController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::get('pagos', [ReportePagosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::post('pagos', [ReportePagosController::class, 'store'])->middleware('role:admin,superuser,pagos');
+    Route::get('pagos/{id}', [ReportePagosController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
     Route::put('pagos/{id}', [ReportePagosController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('pagos/{id}', [ReportePagosController::class, 'destroy'])->middleware('role:admin');
 
@@ -105,41 +106,41 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::delete('promocion/{id}', [PromocionController::class, 'destroy'])->middleware('role:admin');
 
     // Peticiones
-    Route::get('peticiones', [PeticionesController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::post('peticiones', [PeticionesController::class, 'store'])->middleware('role:admin,superuser,invitado');
-    Route::put('peticiones/{id}', [PeticionesController::class, 'update'])->middleware('role:admin,superuser,invitado');
-    Route::delete('peticiones/{id}', [PeticionesController::class, 'destroy'])->middleware('role:admin,superuser,invitado');
+    Route::get('peticiones', [PeticionesController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::post('peticiones', [PeticionesController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::put('peticiones/{id}', [PeticionesController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::delete('peticiones/{id}', [PeticionesController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
 
 
     // Rutas solo para ver (invitado, superuser y admin)
-    Route::get('status_seleccion', [StatusSeleccionController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('area', [AreaController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('centro', [CentroController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('cohorte', [CohorteController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('como_entero_superatec', [ComoEnteroSuperatecController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('estado', [EstadoController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('genero', [GeneroController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('grupo_prioritario', [GrupoPrioritarioController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('modalidad', [ModalidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('nacionalidad', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('nivel_instruccion', [NivelInstruccionController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('periodo', [PeriodoController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('tipo_programa', [TipoProgramaController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('unidad', [UnidadController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('nivel', [NivelController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('/identificacion/{cedula}', [DatosIdentificacionController::class, 'show'])->middleware('role:admin,superuser,invitado');
-    Route::get('/cedulas', [DatosIdentificacionController::class, 'searchCedulas'])->middleware('role:admin,superuser,invitado');
-    Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula'])->middleware('role:admin,superuser,invitado');
-    Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [ReportePagosController::class, 'obtenerUltimoPago'])->middleware('role:admin,superuser,invitado');
-    Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa'])->middleware('role:admin,superuser,invitado');
-    Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado');
-    Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago'])->middleware('role:admin,superuser,invitado');
-    Route::get('turnos', [TurnosController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado');
-    Route::get('status_process', [StatusProcessController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::get('status_seleccion', [StatusSeleccionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('area', [AreaController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('centro', [CentroController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('cohorte', [CohorteController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('como_entero_superatec', [ComoEnteroSuperatecController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('estado', [EstadoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('genero', [GeneroController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('grupo_prioritario', [GrupoPrioritarioController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('modalidad', [ModalidadController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('nacionalidad', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('nivel_instruccion', [NivelInstruccionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('periodo', [PeriodoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('tipo_programa', [TipoProgramaController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('unidad', [UnidadController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('nivel', [NivelController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('/identificacion/{cedula}', [DatosIdentificacionController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('/cedulas', [DatosIdentificacionController::class, 'searchCedulas'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [ReportePagosController::class, 'obtenerUltimoPago'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('turnos', [TurnosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('status_process', [StatusProcessController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     
     
    

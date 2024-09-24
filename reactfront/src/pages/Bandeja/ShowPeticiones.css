@@ -31,3 +31,9 @@
 .gray {
     background-color: rgb(62, 62, 62);
 }
+
+/* En ShowPeticiones.css */
+.actions-column {
+    width: 250px; /* Ajusta el ancho según tu preferencia */
+    text-align: center;
+}

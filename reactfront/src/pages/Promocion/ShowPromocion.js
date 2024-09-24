@@ -42,19 +42,34 @@ const ShowPromocion = () => {
     const getAllPromociones = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/promocion`,{
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const sortedPromociones = response.data.data.sort((a, b) => b.id - a.id);
+            let allPromociones = [];
+            let currentPage = 1;
+            let totalPages = 1;
+    
+            // Loop para obtener todas las páginas
+            while (currentPage <= totalPages) {
+                const response = await axios.get(`${endpoint}/promocion?page=${currentPage}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+    
+                allPromociones = [...allPromociones, ...response.data.data];
+                totalPages = response.data.last_page; // Total de páginas
+                currentPage++;
+            }
+    
+            // Ordenar las promociones por ID en orden descendente
+            const sortedPromociones = allPromociones.sort((a, b) => b.id - a.id);
             setPromociones(sortedPromociones);
             setFilteredPromociones(sortedPromociones);
+            console.log('Promociones obtenidas:', sortedPromociones);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
+    
 
     const fetchFilterOptions = async () => {
         try {
