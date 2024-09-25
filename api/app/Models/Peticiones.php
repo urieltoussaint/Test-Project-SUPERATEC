@@ -16,7 +16,8 @@ class Peticiones extends Model
         'status', 
         'created_at', 
         'finish_time',
-        'comentario'
+        'comentario',
+        'user_success'
     ];
 
     protected $listable = [
@@ -29,7 +30,8 @@ class Peticiones extends Model
         'status', 
         'created_at', 
         'finish_time',
-        'comentario'
+        'comentario',
+        'user_success'
     ];
 
 
@@ -37,6 +39,12 @@ class Peticiones extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function userSuccess()
+    {
+        return $this->belongsTo(User::class, 'user_success', 'id');  // 'user_success' es el campo en la tabla peticiones
+    }
+    
+
     public function Zonas()
     {
         return $this->belongsTo(Zonas::class, 'zona_id');

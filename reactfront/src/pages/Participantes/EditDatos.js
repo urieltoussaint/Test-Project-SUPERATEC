@@ -7,7 +7,7 @@ import './EditDatos.css'; // Importa la hoja de estilo si es necesario
 import { useLoading } from '../../components/LoadingContext'; // Importa useLoading
 import { ToastContainer,toast } from 'react-toastify';
 import moment from 'moment';
-
+const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
 const EditDatos = () => {
@@ -114,58 +114,66 @@ const EditDatos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const emptyFields = Object.keys(formData).filter(key => {
       if (key === 'realiza_aporte' || key === 'es_patrocinado') {
         return false;  // Excluir checkboxes de la validación de campos vacíos
       }
       return !formData[key];  // Considerar vacíos los campos que no tienen valor
     });
-
+  
     const hasEmptyFields = emptyFields.length > 0;
-
+  
     try {
       const token = localStorage.getItem('token');
       const cedulaIdentidad = formData.cedula_identidad;
-
+  
       // 1. Actualizar los datos del participante
       await axios.put(`${endpoint}/datos/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       if (!hasEmptyFields) {
         // Si no hay campos vacíos, proceder con la actualización de la petición
-
-        // 2. Obtener todas las peticiones y filtrar por key = cedula_identidad y zona_id = 1
-        const response = await axios.get(`${endpoint}/peticiones`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const allPeticiones = response.data.data;
-
-        // Filtrar las peticiones por cedula_identidad ,zona_id y status
+  
+        let allPeticiones = [];
+        let currentPage = 1;
+        let totalPages = 1;
+  
+        // 2. Obtener todas las páginas de peticiones y combinarlas
+        while (currentPage <= totalPages) {
+          const response = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+  
+          allPeticiones = [...allPeticiones, ...response.data.data];
+          totalPages = response.data.last_page;
+          currentPage++;
+        }
+  
+        // Filtrar las peticiones por cedula_identidad, zona_id, y status
         const peticionesFiltradas = allPeticiones.filter(peticion =>
           peticion.key === cedulaIdentidad && peticion.zona_id === 1 && peticion.status === false
         );
-
+  
         if (peticionesFiltradas.length > 0) {
           const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
-
+  
           // 3. Actualizar el status de la petición a true
           await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
             status: true,   // Cambiar el estado a true
-            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }) // Ejemplo para Caracas
-
+            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }), // Ejemplo para Caracas
+            user_success: userId //envia el usuario que completo la tarea
           }, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
-
+  
           toast.success('Actualización con Éxito, Petición también actualizada');
         } else {
           // Si no hay peticiones, no mencionar en el mensaje de éxito
@@ -175,7 +183,7 @@ const EditDatos = () => {
         // Si hay campos vacíos, solo actualizamos los datos del participante
         toast.success('Formulario actualizado con éxito.');
       }
-
+  
       navigate('/datos');
     } catch (error) {
       // Captura cualquier error que ocurra en la solicitud
@@ -183,6 +191,7 @@ const EditDatos = () => {
       console.error('Error actualizando:', error);
     }
   };
+  
 
   return (
     <div className="container">

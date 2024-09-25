@@ -35,6 +35,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ShowUsers from './pages/Users/ShowUsers';
 import EditUsers from './pages/Users/EditUsers';
 import ShowPeticiones from './pages/Bandeja/ShowPeticiones';
+import ShowPeticionesNoAtentidas from './pages/Bandeja/ShowPeticionesNoAtentidas';
+import ShowPagosCursos from './pages/Participantes/ReportePagos/ShowPagosCursos';
+
 
 function App() {
   return (
@@ -46,6 +49,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             {/* Envuelve todas las rutas protegidas con AuthenticatedLayout y ProtectedRoute */}
             <Route path="/peticiones" element={<AuthenticatedLayout><ShowPeticiones /></AuthenticatedLayout>} />
+            <Route path="/peticiones/Noat" element={<AuthenticatedLayout><ShowPeticionesNoAtentidas /></AuthenticatedLayout>} />
             <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><ShowUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="users/:id" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><EditUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos" element={<AuthenticatedLayout><ShowDatos /></AuthenticatedLayout>} />
@@ -62,6 +66,8 @@ function App() {
             <Route path="/pagos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:cedula/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:id" element={<AuthenticatedLayout><ShowMorePagos /></AuthenticatedLayout>} />
+            <Route path="/pagos/curso/:inscripcion_curso_id" element={<AuthenticatedLayout><ShowPagosCursos /></AuthenticatedLayout>} />
+
             <Route path="/voluntariados" element={<AuthenticatedLayout><ShowVoluntariados /></AuthenticatedLayout>} />
             <Route path="/voluntariados/:id" element={<AuthenticatedLayout><ShowMoreVoluntariados /></AuthenticatedLayout>} />
             <Route path="/voluntariados/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateVoluntariados /></AuthenticatedLayout></ProtectedRoute>}  />

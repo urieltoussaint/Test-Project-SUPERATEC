@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useLoading } from '../../../components/LoadingContext';
 import { ToastContainer,toast } from 'react-toastify';
 
-
+const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
 const EditCursos = () => {
@@ -75,81 +75,92 @@ const EditCursos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const emptyFields = Object.keys(formData).filter(key => {
       return !formData[key];  // Considerar vacíos los campos que no tienen valor
     });
-
+  
     const hasEmptyFields = emptyFields.length > 0;
-
+  
     try {
       const token = localStorage.getItem('token');
-
+  
       if (!token) {
         toast.error('Error: Token no encontrado');
         return;
       }
-
+  
       // 1. Actualizar los datos del curso
       const formDataWithStatus = {
         ...formData,
         status: !hasEmptyFields  // Si no hay campos vacíos, el status será true, de lo contrario, false
       };
-
+  
       const cursoResponse = await axios.put(`${endpoint}/cursos/${id}`, formDataWithStatus, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       if (!hasEmptyFields) {
-        // 2. Si el formulario está completo, actualizar la petición correspondiente
+        // 2. Si el formulario está completo, buscar todas las peticiones paginadas
         const cursoId = cursoResponse.data.id;  // Usamos el ID del curso
-        const response = await axios.get(`${endpoint}/peticiones`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const allPeticiones = response.data.data;
-
-        // 3. Filtrar las peticiones por key = cursoId, zona_id = 2, y status = false
+        let allPeticiones = [];
+        let currentPage = 1;
+        let totalPages = 1;
+  
+        // 3. Obtener todas las páginas de peticiones
+        while (currentPage <= totalPages) {
+          const response = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+  
+          allPeticiones = [...allPeticiones, ...response.data.data];
+          totalPages = response.data.last_page;
+          currentPage++;
+        }
+  
+        // 4. Filtrar las peticiones por key = cursoId, zona_id = 2, y status = false
         const peticionesFiltradas = allPeticiones.filter(peticion =>
           peticion.key === String(cursoId) && peticion.zona_id === 2 && peticion.status === false
         );
-
+  
         if (peticionesFiltradas.length > 0) {
           const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
-
-          // 4. Actualizar el status de la petición a true
+  
+          // 5. Actualizar el status de la petición a true
           await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
             status: true,   // Cambiar el estado a true
-            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }) // Ejemplo para Caracas
+            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }), // Ejemplo para Caracas
+            user_success: userId //envia el usuario que completo la tarea
           }, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
-
+  
           toast.success('Curso y petición actualizados con éxito.');
         } else {
-          toast.success('Curso actualizado');
+          toast.success('Curso actualizado.');
         }
-
+  
       } else {
         // Si hay campos vacíos, solo actualizamos los datos del curso
         toast.success('Curso actualizado con campos vacíos.');
       }
-
+  
       // Redirigir después de la actualización
       navigate('/cursos');
-      
+  
     } catch (error) {
       // Captura cualquier error que ocurra en la solicitud
       toast.error('Error al actualizar curso o petición');
       console.error('Error actualizando:', error);
     }
-};
+  };
+  
 
 
 

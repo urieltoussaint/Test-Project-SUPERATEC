@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import Modal from 'react-bootstrap/Modal'; // Importar el componente Modal
+import Modal from 'react-bootstrap/Modal'; 
 import { useLoading } from '../../components/LoadingContext'; 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -17,22 +17,22 @@ const ShowPeticiones = () => {
     const [peticiones, setPeticiones] = useState([]);
     const [filteredPeticiones, setFilteredPeticiones] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState(''); 
-    const [showAttended, setShowAttended] = useState(false);
     const [error, setError] = useState(null);
-    const [showRejectModal, setShowRejectModal] = useState(false); // Estado para controlar el modal de rechazo
-    const [selectedPeticion, setSelectedPeticion] = useState(null); // Petición seleccionada para rechazar
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [selectedPeticion, setSelectedPeticion] = useState(null);
     const { setLoading } = useLoading();
-    const [rejectComment, setRejectComment] = useState(''); // Estado para el comentario de rechazo
+    const [rejectComment, setRejectComment] = useState('');
 
     const navigate = useNavigate();
     const itemsPerPage = 4;
     const userId = parseInt(localStorage.getItem('user'));
+
     useEffect(() => {
         setLoading(true);
         getAllPeticiones().finally(() => {
             setLoading(false);
         });
-    }, [showAttended]);
+    }, []);
 
     const getAllPeticiones = async () => {
         try {
@@ -40,39 +40,34 @@ const ShowPeticiones = () => {
             const roleId = parseInt(localStorage.getItem('role_id'));
             let allPeticiones = [];
             let currentPage = 1;
-            let totalPages = 1; // Asumimos que hay al menos una página al inicio
+            let totalPages = 1;
     
-            // Sigue solicitando páginas mientras no llegues al final
             while (currentPage <= totalPages) {
                 const response = await axios.get(`${endpoint}/peticiones?with=user,zonas&page=${currentPage}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
     
-                // Combina las peticiones recibidas
                 allPeticiones = [...allPeticiones, ...response.data.data];
-    
-                // Actualiza el número total de páginas
                 totalPages = response.data.last_page;
                 currentPage++;
             }
     
-            // Filtrar las peticiones obtenidas
+            // Filtrar solo las peticiones no atendidas (status=false)
             const filteredPeticiones = allPeticiones.filter(
-                (peticion) => peticion.destinatario_id === userId || peticion.role_id === roleId
+                (peticion) => (peticion.destinatario_id === userId || peticion.role_id === roleId) && peticion.status === false
             );
     
-            const statusFiltered = filteredPeticiones.filter((peticion) => peticion.status === showAttended);
-            setPeticiones(statusFiltered);
-            setFilteredPeticiones(statusFiltered);
+            // Ordenar las peticiones por fecha de creación de forma descendente
+            const sortedPeticiones = filteredPeticiones.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
-            console.log("Total peticiones cargadas:", statusFiltered); // Verifica todas las peticiones
+            setPeticiones(sortedPeticiones);
+            setFilteredPeticiones(sortedPeticiones);
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
     
-      
 
     const calculateDaysSinceCreation = (created_at) => {
         const creationDate = moment(created_at);
@@ -80,16 +75,15 @@ const ShowPeticiones = () => {
         return now.diff(creationDate, 'days');
     };
 
-    const getStatusColor = (created_at, status) => {
-        if (status) return 'gray'; // Estado finalizado
+    const getStatusColor = (created_at) => {
         const daysSinceCreation = calculateDaysSinceCreation(created_at);
-        if (daysSinceCreation > 10) return 'red'; // Crítico
-        if (daysSinceCreation > 2) return 'orange'; // Urgente
-        return 'green'; // Reciente
+        if (daysSinceCreation > 10) return 'red';
+        if (daysSinceCreation > 2) return 'orange';
+        return 'green';
     };
 
-    const renderStatusDot = (created_at, status) => {
-        const color = getStatusColor(created_at, status);
+    const renderStatusDot = (created_at) => {
+        const color = getStatusColor(created_at);
         return (
             <div
                 style={{
@@ -136,55 +130,48 @@ const ShowPeticiones = () => {
         setFilteredPeticiones(filtered);
     };
 
-    const toggleAttendedFilter = () => {
-        setShowAttended(!showAttended);
-    };
-
     const handleNavigate = (peticiones) => {
         const { id } = peticiones.zonas || {};
         if (id === 1) {
             navigate(`/datos/${peticiones.key}/edit`);
         } else if (id === 2) {
             navigate(`/cursos/${peticiones.key}/edit`);
-        }else if (id === 3) {
+        } else if (id === 3) {
             navigate(`/cursos/${peticiones.key}/edit`);
-        } 
-        else {
+        } else {
             toast.error('Zona no válida');
         }
     };
 
     const handleRejectClick = (peticion) => {
-        setSelectedPeticion(peticion); // Guardar la petición seleccionada
-        setShowRejectModal(true); // Abrir el modal de confirmación
+        setSelectedPeticion(peticion);
+        setShowRejectModal(true);
     };
 
     const handleRejectConfirm = async () => {
         if (!selectedPeticion) return;
         try {
             const token = localStorage.getItem('token');
-    
-            // Borrar la petición actual
+
             await axios.delete(`${endpoint}/peticiones/${selectedPeticion.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-    
-            // Crear una nueva petición con destinatario_id como user_id, role_id null y agregar el comentario de rechazo
+
             const newPeticion = {
                 user_id: userId,
-                destinatario_id: selectedPeticion.user_id, // Cambiar destinatario_id
-                role_id: null, // role_id será null
+                destinatario_id: selectedPeticion.user_id,
+                role_id: null,
                 zona_id: selectedPeticion.zona_id,
                 status: false,
                 finish_time: null,
-                key: selectedPeticion.key, // Mantener la misma key
-                comentario: rejectComment // Agregar el comentario de rechazo
+                key: selectedPeticion.key,
+                comentario: rejectComment
             };
-    
+
             await axios.post(`${endpoint}/peticiones`, newPeticion, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-    
+
             getAllPeticiones();
             toast.success('Petición rechazada y reenviada al solicitante.');
         } catch (error) {
@@ -192,27 +179,22 @@ const ShowPeticiones = () => {
             console.error('Error al rechazar la petición:', error);
             toast.error('Error al rechazar petición');
         } finally {
-            setShowRejectModal(false); // Cerrar el modal
-            setRejectComment(''); // Limpiar el campo de comentario
+            setShowRejectModal(false);
+            setRejectComment('');
         }
     };
-    
 
-    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación","Comentarios", "Acciones/Finalizado"];
+    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación", "Comentarios", "Acciones"];
 
     const renderItem = (peticiones) => (
-        <tr key={peticiones.id} className={peticiones.status ? "attended-row" : ""}>  
-            <td className="text-center">{renderStatusDot(peticiones.created_at, peticiones.status)}</td>
+        <tr key={peticiones.id}>
+            <td className="text-center">{renderStatusDot(peticiones.created_at)}</td>
             <td className="text-center">{peticiones.user?.name}</td>
             <td className="text-center">{peticiones.key}</td>
             <td className="text-center">{peticiones.zonas?.name}</td>
             <td className="text-center">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
             <td className="text-center">{peticiones.comentario}</td>
             <td className="text-center actions-column">
-            {peticiones.status ? (
-                <span>{moment(peticiones.finish_time).format('YYYY-MM-DD HH:mm')}</span>
-            ) : (
-                <>
                 <Button
                     variant="success"
                     onClick={() => handleNavigate(peticiones)}
@@ -222,14 +204,11 @@ const ShowPeticiones = () => {
                 </Button>
                 <Button
                     variant="danger"
-                    onClick={() => handleRejectClick(peticiones)} // Botón para rechazar
+                    onClick={() => handleRejectClick(peticiones)}
                 >
                     Rechazar
                 </Button>
-                </>
-            )}
             </td>
-
         </tr>
     );
 
@@ -239,16 +218,12 @@ const ShowPeticiones = () => {
             
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Bandeja de Entrada</h1>
-                
-                {/* Botón para filtrar atendidas/no atendidas */}
-                <div className="d-flex align-items-center">
-                    <Button 
-                        variant={showAttended ? 'primary' : 'secondary'} 
-                        onClick={toggleAttendedFilter}
-                    >
-                        {showAttended ? 'Mostrar No Atendidas' : 'Mostrar Atendidas'}
-                    </Button>
-                </div>
+                <h5>Peticiones No Atendidas</h5>
+
+                {/* Botón que redirige a la página de Peticiones Atendidas */}
+                <Button variant="info" onClick={() => navigate('/peticiones/Noat')}>
+                    Mostrar Atendidas
+                </Button>
             </div>
 
             {/* Filtro de status y leyenda alineada a la derecha */}
@@ -263,13 +238,11 @@ const ShowPeticiones = () => {
                     <option value="green">Reciente (Verde)</option>
                     <option value="orange">Urgente (Naranja)</option>
                     <option value="red">Crítico (Rojo)</option>
-                    <option value="gray">Finalizado (Gris)</option>
                 </Form.Select>
                 <div className="status-legend">
                     <span className="status-dot green"></span> Reciente (Verde)
                     <span className="status-dot orange"></span> Urgente (Naranja)
                     <span className="status-dot red"></span> Crítico (Rojo)
-                    <span className="status-dot gray"></span> Finalizado (Gris)
                 </div>
             </div>
 
@@ -280,8 +253,8 @@ const ShowPeticiones = () => {
                 renderItem={renderItem}
             />
 
-                            {/* Modal de confirmación para rechazar petición */}
-                <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)}>
+            {/* Modal de confirmación para rechazar petición */}
+            <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)}>
                 <Modal.Header closeButton>
                     <Modal.Title>Confirmar Rechazo</Modal.Title>
                 </Modal.Header>
@@ -289,14 +262,13 @@ const ShowPeticiones = () => {
                     {selectedPeticion && (
                     <>
                         <p>¿Estás seguro de que deseas rechazar la petición de {selectedPeticion.user?.name}?</p>
-                        {/* Campo para agregar un comentario de rechazo */}
                         <Form.Group controlId="rejectComment">
                         <Form.Label>Comentario (opcional)</Form.Label>
                         <Form.Control
                             as="textarea"
                             rows={3}
                             value={rejectComment}
-                            onChange={(e) => setRejectComment(e.target.value)} // Actualiza el estado con el comentario
+                            onChange={(e) => setRejectComment(e.target.value)}
                             placeholder="Escribe el motivo del rechazo o algún comentario."
                         />
                         </Form.Group>
@@ -307,8 +279,7 @@ const ShowPeticiones = () => {
                     <Button variant="secondary" onClick={() => setShowRejectModal(false)}>Cancelar</Button>
                     <Button variant="danger" onClick={handleRejectConfirm}>Rechazar</Button>
                 </Modal.Footer>
-                </Modal>
-
+            </Modal>
 
             <ToastContainer />
         </div>

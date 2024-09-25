@@ -6,6 +6,7 @@ import Select from 'react-select/async';
 import { ToastContainer, toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
+const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 
 const CreatePago = () => {
   const [formData, setFormData] = useState({
@@ -188,11 +189,11 @@ const CreatePago = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
-
+  
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-
+  
       // Crear el pago
       await axios.post(`${endpoint}/pagos`, { 
         ...formData, 
@@ -203,11 +204,9 @@ const CreatePago = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       const montoRestante = parseFloat(formData.monto_restante);
-
-
-      // console.log(cedula," y ",selectedCursoId );
+  
       // Actualizar inscripcion_cursos según el monto restante
       if (montoRestante === 0) {
         // Si el monto restante es 0, actualizar status_pay a 3
@@ -220,31 +219,48 @@ const CreatePago = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        // Buscar la petición correspondiente y actualizar status a true
-        const peticionesResponse = await axios.get(`${endpoint}/peticiones`, {
-          params: {
-            key: cedula,
-            zona_id: 3,
-            status: false
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const peticiones = peticionesResponse.data.data;
-        if (peticiones.length > 0) {
-          const peticion = peticiones[0]; // Tomar la primera petición coincidente
+  
+        // Buscar todas las peticiones paginadas y actualizar la petición correspondiente
+        let allPeticiones = [];
+        let currentPage = 1;
+        let totalPages = 1;
+  
+        // Obtener todas las páginas de peticiones
+        while (currentPage <= totalPages) {
+          const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
+            params: {
+              key: cedula,
+              zona_id: 3,
+              status: false
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+  
+          allPeticiones = [...allPeticiones, ...peticionesResponse.data.data];
+          totalPages = peticionesResponse.data.last_page;
+          currentPage++;
+        }
+  
+        // Filtrar la petición correspondiente
+        const peticionesFiltradas = allPeticiones.filter(
+          peticion => peticion.key === cedula && peticion.zona_id === 3 && peticion.status === false
+        );
+  
+        if (peticionesFiltradas.length > 0) {
+          const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
           await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
-            status: true
+            status: true,
+            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }), // Ejemplo para Caracas
+            user_success: userId, //envia el usuario que completo la tarea
           }, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
         }
-
+  
       } else if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
         // Si el monto restante es mayor que 0 pero menor que el monto total, actualizar el status_pay
         await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
@@ -257,7 +273,7 @@ const CreatePago = () => {
           },
         });
       }
-
+  
       toast.success('Reporte de pago creado con Éxito');
       navigate('/pagos');
     } catch (error) {
@@ -267,7 +283,8 @@ const CreatePago = () => {
       setIsSubmitting(false);
     }
   };
-
+  
+  
 
   const calcularConversion = (monto) => {
     return tasaBcv ? (monto * tasaBcv).toFixed(2) : 'N/A';
