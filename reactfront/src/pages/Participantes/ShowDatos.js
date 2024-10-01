@@ -4,6 +4,7 @@ import Table from 'react-bootstrap/Table';
 import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import { Modal } from 'react-bootstrap';
 import { useLoading } from '../../components/LoadingContext';
 import './ShowDatos.css';
 import { ToastContainer, toast } from 'react-toastify';
@@ -26,6 +27,9 @@ const ShowDatos = () => {
     const [tipoProgramaOptions, setTipoProgramaOptions] = useState([]);
     const [unidadOptions, setUnidadOptions] = useState([]);
     const [cohorteOptions, setCohorteOptions] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
+
     const [filters, setFilters] = useState({
         nivel_instruccion_id: '',
         genero_id: '',
@@ -45,6 +49,14 @@ const ShowDatos = () => {
 
     // Obtener el rol del usuario desde localStorage
     const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
+    const handleShowModal = (id) => {
+        setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
+        setShowModal(true); // Muestra el modal
+    };
+    
+    const handleCloseModal = () => {
+        setShowModal(false); // Cierra el modal
+    };
     
     useEffect(() => {
         console.log('El rol del usuario es:', userRole); 
@@ -120,24 +132,25 @@ const ShowDatos = () => {
         }
     };
 
-    const deleteDatos = async (id) => {
+    const deleteDatos = async () => {
         const token = localStorage.getItem('token');
-        if (window.confirm('¿Estás seguro de que deseas eliminar este Participante y todos los datos relacionados a él?')) {
-            try {
-                await axios.delete(`${endpoint}/datos/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                toast.success('Participante eliminado con Éxito');             
-                getAllDatos();
-            } catch (error) {
-                setError('Error deleting data');
-                console.error('Error deleting data:', error);
-                toast.error('Error al eliminar Participante');
-            }
+        try {
+            await axios.delete(`${endpoint}/datos/${selectedId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            toast.success('Participante eliminado con Éxito');             
+            getAllDatos();
+            setShowModal(false); // Cierra el modal tras la eliminación exitosa
+        } catch (error) {
+            setError('Error deleting data');
+            console.error('Error deleting data:', error);
+            toast.error('Error al eliminar Participante');
+            setShowModal(false); // Cierra el modal tras el error
         }
     };
+    
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -227,34 +240,43 @@ const ShowDatos = () => {
 
     const renderItem = (dato) => (
         <tr key={dato.cedula_identidad}>
-            <td>{dato.cedula_identidad}</td>
-            <td>{dato.nombres}</td>
-            <td>{dato.apellidos}</td>
-            <td>
+            <td className="col-cedulas">{dato.cedula_identidad}</td>
+            <td className="col-nombress">{dato.nombres}</td>
+            <td className="col-apellidoss">{dato.apellidos}</td>
+            <td className="col-accioness">
                 <div className="d-flex justify-content-around">
-                    <Button 
-                        variant="info" 
-                        onClick={() => navigate(`/datos/${dato.cedula_identidad}`)}
-                    >
-                        Ver más
-                    </Button>
-                    
+                <Button
+                    variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
+                    onClick={() => navigate(`/datos/${dato.cedula_identidad}`)}
+                    className="me-2"
+                >
+                    <i className="bi bi-list-task"></i>
+                </Button>
+
+    
                     {userRole === 'admin' || userRole === 'superuser' ? (
                         <>
-                            <Button 
-                                variant="warning" 
+                            <Button
+                                variant="btn btn-warning"
                                 onClick={() => navigate(`/datos/${dato.cedula_identidad}/edit`)}
+                                className="me-2 icon-white"
                             >
-                                Actualizar
+                                <i className="bi bi-pencil-fill"></i>
                             </Button>
+
+                           
     
                             {userRole === 'admin' && (
-                                <Button 
-                                    variant="danger" 
-                                    onClick={() => deleteDatos(dato.cedula_identidad)}
+                         
+
+                                <Button
+                                variant="btn btn-danger"
+                                onClick={() => handleShowModal(dato.cedula_identidad)}
+                                className="me-2"
                                 >
-                                    Eliminar
+                                <i className="bi bi-trash3-fill"></i>
                                 </Button>
+
                             )}
                         </>
                     ) : null}
@@ -262,6 +284,7 @@ const ShowDatos = () => {
             </td>
         </tr>
     );
+    
     
 
     return (
@@ -277,13 +300,11 @@ const ShowDatos = () => {
                         className="me-2"
                     />
                 {userRole === 'admin' || userRole === 'superuser' ? (
-                    <Button 
-                    variant="success" 
-                    onClick={() => navigate('/formulario/create')}
-                    className="ms-2"
-                >
-                    Agregar Nuevo Participante
-                </Button>
+
+                <Button variant="btn custom" onClick={() => navigate('/formulario/create')} className="btn-custom">
+                <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
+            </Button>
+
                 
                 
                 ):(
@@ -419,6 +440,22 @@ const ShowDatos = () => {
                 columns={columns}
                 renderItem={renderItem}
             />
+
+            {/* Modal  de eliminación */}
+            <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar eliminación</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>¿Estás seguro de que deseas eliminar este Participante y todos los datos relacionados a él?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={deleteDatos}>
+                        Eliminar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             <ToastContainer />
         </div>

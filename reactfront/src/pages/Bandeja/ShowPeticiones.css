@@ -18,15 +18,15 @@
 }
 
 .green {
-    background-color: green;
+    background-color: rgb(48, 144, 99);
 }
 
 .orange {
-    background-color: orange;
+    background-color: rgb(254, 185, 56);
 }
 
 .red {
-    background-color: red;
+    background-color: rgb(255, 74, 74);
 }
 .gray {
     background-color: rgb(62, 62, 62);
@@ -37,3 +37,33 @@
     width: 250px; /* Ajusta el ancho según tu preferencia */
     text-align: center;
 }
+.icon-white i {
+    color: white !important;  /* Cambia el color del ícono a blanco */
+}
+
+
+.custom-eye-button {
+    background-color: #3692de;  /* Color de fondo inicial */
+    color: white;  /* Color del texto y del ícono */
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.custom-eye-button i {
+    margin-right: 8px;
+}
+
+.custom-eye-button:hover {
+    background-color: #4da0e4;  /* Color cuando se pasa el ratón */
+}
+
+.custom-eye-button:active {
+    background-color: #3171a6;  /* Color cuando se presiona */
+}
+

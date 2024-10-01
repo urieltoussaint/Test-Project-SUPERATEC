@@ -17,9 +17,9 @@ class AuthController extends Controller
     try {
         // Encuentra al usuario por su ID
         $user = User::findOrFail($id);
-
-        // Devuelve la información del usuario
+        $user->makeHidden(['password']);
         return response()->json(['user' => $user], 200);
+
     } catch (\Exception $e) {
         // Si algo sale mal, devuelve un error
         return response()->json(['message' => 'Usuario no encontrado', 'error' => $e->getMessage()], 404);
@@ -101,25 +101,33 @@ class AuthController extends Controller
     }
     // app/Http/Controllers/AuthController.php
 
-    public function getAllUsersWithRoles()
-    {
-        $users = User::with('role') // Usa el método `with` para cargar la relación del rol
-            ->get();
-    
-        return response()->json($users, 200);
-    }
+    public function getAllUsersWithRoles(Request $request)
+{
+    // Usa paginación para limitar la cantidad de registros por solicitud
+    $users = User::with('role')
+        ->paginate(10); // Cambia el número de registros por página según tu necesidad
+
+    return response()->json($users, 200);
+}
+
 
     public function destroy($id)
-{
-    try {
-        $user = User::findOrFail($id); // Busca el usuario por ID, lanza excepción si no lo encuentra
-        $user->delete(); // Elimina el usuario
-
-        return response()->json(['message' => 'Usuario eliminado con éxito'], 200);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Error al eliminar usuario', 'error' => $e->getMessage()], 500);
+    {
+        try {
+            $user = User::findOrFail($id);
+            
+            // Verifica si el usuario es el último administrador
+            if ($user->role->name === 'admin' && User::where('role_id', $user->role_id)->count() === 1) {
+                return response()->json(['message' => 'No se puede eliminar el último administrador'], 403);
+            }
+    
+            $user->delete();
+            return response()->json(['message' => 'Usuario eliminado con éxito'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminar usuario', 'error' => $e->getMessage()], 500);
+        }
     }
-}
+    
 
 
 public function update(Request $request, $id)

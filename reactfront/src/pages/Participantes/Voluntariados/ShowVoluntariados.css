@@ -15,3 +15,20 @@
     min-width: 45%;
     margin: 10px;
   }
+
+
+  .col-cedula {
+    width: 5%;
+}
+
+.col-nombre {
+    width: 30%;
+}
+
+.col-apellido {
+    width: 30%;
+}
+
+.col-acciones {
+    width: 60%;
+}

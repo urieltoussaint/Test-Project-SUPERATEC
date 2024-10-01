@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Table from 'react-bootstrap/Table';
-import { useParams, useNavigate } from 'react-router-dom';
-import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useLoading } from '../../../components/LoadingContext'; 
-import { ToastContainer,toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
+import PaginationTable from '../../../components/PaginationTable'; // Importa el componente
 
-
+const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
 const InscribirCedula = () => {
+    const { cursoId } = useParams();
     const { cedula } = useParams();
     const [cursos, setCursos] = useState([]);
+    const [searchCod, setSearchCod] = useState(''); // Nuevo estado para el buscador por COD
     const [filteredCursos, setFilteredCursos] = useState([]);
     const [searchCurso, setSearchCurso] = useState('');
     const [areaOptions, setAreaOptions] = useState([]);
@@ -21,20 +23,28 @@ const InscribirCedula = () => {
     const { setLoading } = useLoading();
     const navigate = useNavigate();
 
+    const itemsPerPage = 10;  // Definir cuántos elementos por página
+
     useEffect(() => {
         setLoading(true);
-        Promise.all([getAllCursos(), fetchAreaOptions()]).finally(() => {
-            setLoading(false);
-        });
-    }, []);
+        fetchInitialData();
+    }, [cursoId]);
+
+    const fetchInitialData = async () => {
+        await Promise.all([getAllCursos(), fetchAreaOptions()]);
+        setLoading(false);
+    };
 
     const getAllCursos = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/cursos?with=area`,{
+            const response = await axios.get(`${endpoint}/cursos?with=area`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },});
+                },
+            });
+
+            // Actualizar la lista de cursos
             setCursos(response.data.data);
             setFilteredCursos(response.data.data);
         } catch (error) {
@@ -46,9 +56,11 @@ const InscribirCedula = () => {
     const fetchAreaOptions = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/area`,{headers: {
-                Authorization: `Bearer ${token}`,
-            },});
+            const response = await axios.get(`${endpoint}/area`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             setAreaOptions(response.data.data);
         } catch (error) {
             setError('Error fetching area options');
@@ -59,21 +71,33 @@ const InscribirCedula = () => {
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchCurso(value);
-        applyFilters(value, selectedArea);
+        applyFilters(value, searchCod, selectedArea); // Pasa el valor de búsqueda de curso
+    };
+
+    const handleCodChange = (e) => {
+        const value = e.target.value;
+        setSearchCod(value);
+        applyFilters(searchCurso, value, selectedArea); // Pasa el valor de búsqueda por COD
     };
 
     const handleAreaChange = (e) => {
         const value = e.target.value;
         setSelectedArea(value);
-        applyFilters(searchCurso, value);
+        applyFilters(searchCurso, searchCod, value);
     };
 
-    const applyFilters = (searchValue, areaValue) => {
+    const applyFilters = (searchValue, codValue, areaValue) => {
         let filtered = cursos;
 
         if (searchValue) {
             filtered = filtered.filter(curso =>
                 curso.descripcion.toLowerCase().includes(searchValue.toLowerCase())
+            );
+        }
+
+        if (codValue) {
+            filtered = filtered.filter(curso =>
+                curso.cod.toLowerCase().includes(codValue.toLowerCase())
             );
         }
 
@@ -87,30 +111,73 @@ const InscribirCedula = () => {
     };
 
     const handleInscribir = async (cursoId) => {
-        setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(`${endpoint}/cursos_inscripcion`, {
-                cedula_identidad: cedula,
-                curso_id: cursoId
-            },{headers: {
-                Authorization: `Bearer ${token}`,
-            }});
-            const inscripcionCursoId = response.data.id; // Suponiendo que el servidor devuelve el ID de inscripción
-            toast.success('Inscripción Exitosa');
-            navigate(`/pagos/${cedula}/${inscripcionCursoId}`); // Redirige a la página de creación de pago con inscripcion_curso_id
-        } catch (error) {
 
-            toast.error('Inscripción Fallida');
-            console.error('Error inscribiendo al participante:', error);
-        } finally {
-            setLoading(false);
+            // Realizar la inscripción del curso y actualizar el status_pay
+            const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, {
+                cedula_identidad: cedula,
+                curso_id: cursoId,
+                status_pay: 1, // Actualizar el status_pay a 1
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            // Obtener el ID de la inscripción recién creada
+            const inscripcionId = inscripcionResponse.data.id;
+
+            toast.success('Inscripción Exitosa');
+
+            // Crear la petición de pago no realizado usando el ID de la inscripción como key
+            await axios.post(`${endpoint}/peticiones`, {
+                zona_id: 3, // Zona 3
+                comentario: 'Pago no realizado', // Comentario
+                user_id: userId,  // Usuario logueado que envía la solicitud
+                role_id: 4,
+                status: false,  // Estado de la petición
+                finish_time: null,  // No hay finish_time al momento de creación
+                key: inscripcionId,  // Usar el ID de la inscripción como key
+
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            toast.success('Petición creada: Pago no realizado');
+            navigate('/cursos');
+        } catch (error) {
+            toast.error('Error en la inscripción o en la creación de la petición');
+            console.error('Error en la inscripción o en la creación de la petición:', error);
         }
     };
 
     if (error) {
         return <div>{error}</div>;
     }
+
+    const columns = ["COD", "Curso", "Horas", "Fecha de Inicio", "Costo", "Acciones"];
+
+    const renderItem = (curso) => (
+        <tr key={curso.id}>
+            <td>{curso.cod}</td>
+            <td>{curso.descripcion}</td>
+            <td>{curso.cantidad_horas} h</td>
+            <td>{curso.fecha_inicio}</td>
+            <td>{curso.costo} $</td>
+            <td>
+                <Button
+                    variant="success"
+                    onClick={() => handleInscribir(curso.id)}
+                    className="d-flex align-items-center"
+                >
+                    <i className="bi bi-person-plus-fill me-2"></i> 
+                </Button>
+            </td>
+        </tr>
+    );
 
     return (
         <div className="container mt-5">
@@ -129,6 +196,14 @@ const InscribirCedula = () => {
             </div>
 
             <div className="d-flex mb-3 custom-width">
+
+                <Form.Control
+                    type="text"
+                    placeholder="Buscar por COD"
+                    value={searchCod}
+                    onChange={handleCodChange}
+                    className="me-2"
+                />
                 <Form.Select
                     value={selectedArea}
                     onChange={handleAreaChange}
@@ -141,39 +216,15 @@ const InscribirCedula = () => {
                 </Form.Select>
             </div>
 
-            <div className="cards-container"></div>
-            <Table striped bordered hover className="rounded-table">
-                <thead>
-                    <tr>
-                        <th className="col-id">ID</th>
-                        <th className="col-descripcion">Curso</th>
-                        <th className="col-horas">Cantidad de Horas</th>
-                        <th className="col-fecha">Fecha de Inicio</th>
-                        <th className="col-costo">Costo</th>
-                        <th className="col-acciones">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredCursos.map((curso) => (
-                        <tr key={curso.id}>
-                            <td className="col-id">{curso.id}</td>
-                            <td className="col-descripcion">{curso.descripcion}</td>
-                            <td className="col-horas">{curso.cantidad_horas} h</td>
-                            <td className="col-fecha">{curso.fecha_inicio}</td>
-                            <td className="col-costo">{curso.costo} $</td>
-                            <td className="col-acciones">
-                                <Button
-                                    variant="success"
-                                    onClick={() => handleInscribir(curso.id)}
-                                >
-                                    Inscribir
-                                </Button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
-            
+            {/* Tabla paginada */}
+            <PaginationTable
+                data={filteredCursos}
+                itemsPerPage={itemsPerPage}
+                columns={columns}
+                renderItem={renderItem}
+            />
+
+            <ToastContainer />
         </div>
     );
 };

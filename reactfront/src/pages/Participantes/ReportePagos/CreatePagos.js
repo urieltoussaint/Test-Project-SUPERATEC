@@ -34,7 +34,6 @@ const CreatePago = () => {
   const navigate = useNavigate();
   const [cursoId, setCursoId] = useState(null); // <-- Añadido el estado para cursoId
 
-
   useEffect(() => {
     fetchTasaBcv();
   }, []);
@@ -112,14 +111,13 @@ const CreatePago = () => {
   };
 
   const handleCursoChange = async (event) => {
-    const selectedCursoId = event.target.value;
+    const selectedCursoId = event.target.value; // <-- Aquí obtenemos el selectedCursoId
+    console.log(selectedCursoId); // <-- Imprimir en la consola
+
     const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId, 10));
 
     setCursoSeleccionado(selectedCurso);
     setCursoId(selectedCurso.curso_id); // <-- Almacenar el curso_id en el estado global
-    console.log(cedula, " y ", cursoId); // <-- Usamos el cursoId desde el estado global
-
-
 
     try {
       const token = localStorage.getItem('token');
@@ -129,8 +127,6 @@ const CreatePago = () => {
         },
       });
       const ultimoPago = response.data;
-     
-      
 
       const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(selectedCurso.costo);
       setFormData((prevState) => ({
@@ -139,7 +135,6 @@ const CreatePago = () => {
         monto_total: montoTotal,
         monto_restante: montoTotal,
         conversion_total: calcularConversion(montoTotal),
-       
       }));
     } catch (error) {
       console.error('Error fetching ultimo pago:', error);
@@ -157,7 +152,6 @@ const CreatePago = () => {
     const { name, value } = event.target;
     const inputValue = parseFloat(value) || 0;
 
-    // Limpiar errores previos
     setCanceladoError('');
     setExoneradoError('');
 
@@ -184,8 +178,6 @@ const CreatePago = () => {
     }));
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -209,7 +201,6 @@ const CreatePago = () => {
   
       // Actualizar inscripcion_cursos según el monto restante
       if (montoRestante === 0) {
-        // Si el monto restante es 0, actualizar status_pay a 3
         await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
           cedula_identidad: cedula,
           curso_id: cursoId,
@@ -225,11 +216,10 @@ const CreatePago = () => {
         let currentPage = 1;
         let totalPages = 1;
   
-        // Obtener todas las páginas de peticiones
         while (currentPage <= totalPages) {
           const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
             params: {
-              key: cedula,
+              key: formData.inscripcion_curso_id, 
               zona_id: 3,
               status: false
             },
@@ -243,17 +233,16 @@ const CreatePago = () => {
           currentPage++;
         }
   
-        // Filtrar la petición correspondiente
         const peticionesFiltradas = allPeticiones.filter(
-          peticion => peticion.key === cedula && peticion.zona_id === 3 && peticion.status === false
+          peticion => peticion.key === formData.inscripcion_curso_id && peticion.zona_id === 3 && peticion.status === false
         );
   
         if (peticionesFiltradas.length > 0) {
           const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
           await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
             status: true,
-            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }), // Ejemplo para Caracas
-            user_success: userId, //envia el usuario que completo la tarea
+            finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }), 
+            user_success: userId, 
           }, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -262,16 +251,53 @@ const CreatePago = () => {
         }
   
       } else if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
-        // Si el monto restante es mayor que 0 pero menor que el monto total, actualizar el status_pay
+        // Actualizar status_pay a 2 (pago en proceso)
         await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
           cedula_identidad: cedula,
           curso_id: cursoId,
-          status_pay: 2 // status pago en proceso
+          status_pay: 2
         }, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+  
+        // Agregar lógica para actualizar el comentario de peticiones a "Pagos Faltantes"
+        let allPeticiones = [];
+        let currentPage = 1;
+        let totalPages = 1;
+  
+        while (currentPage <= totalPages) {
+          const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
+            params: {
+              key: formData.inscripcion_curso_id,
+              zona_id: 3,
+              status: false
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+  
+          allPeticiones = [...allPeticiones, ...peticionesResponse.data.data];
+          totalPages = peticionesResponse.data.last_page;
+          currentPage++;
+        }
+  
+        const peticionesFiltradas = allPeticiones.filter(
+          peticion => peticion.key === formData.inscripcion_curso_id && peticion.zona_id === 3 && peticion.status === false
+        );
+  
+        if (peticionesFiltradas.length > 0) {
+          const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
+          await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
+            comentario: "Pagos Faltantes", // Actualizar el comentario
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
       }
   
       toast.success('Reporte de pago creado con Éxito');
@@ -283,7 +309,6 @@ const CreatePago = () => {
       setIsSubmitting(false);
     }
   };
-  
   
 
   const calcularConversion = (monto) => {

@@ -1,3 +1,27 @@
 .custom-width {
     width: 800px; /* Ajusta a tu necesidad */
 }
+
+.col-cods {
+    width: 10%;
+}
+
+.col-descripcions {
+    width: 30%;
+}
+
+.col-horas {
+    width: 10%;
+}
+
+.col-fechas {
+    width: 20%;
+}
+.col-costos {
+    width: 10%;
+}
+.col-acciones {
+    width: 20%;
+}
+
+

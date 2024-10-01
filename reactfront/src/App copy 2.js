@@ -83,8 +83,6 @@ function App() {
 }
 
 const AuthenticatedLayout = ({ children }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [user, setUser] = useState(null);
@@ -114,6 +112,7 @@ const AuthenticatedLayout = ({ children }) => {
   
     fetchUser();
   }, [navigate]);
+
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -134,104 +133,78 @@ const AuthenticatedLayout = ({ children }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const toggleDropdowns = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
   const toggleDropdown = (index) => {
     setOpenDropdown(openDropdown === index ? null : index);
   };
 
   return (
     <div className="app-container">
-  {/* Sidebar */}
-  <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-    <ul>
-      <li className={openDropdown === 1 ? 'expanded' : ''}>
-        <div className="logo">
-          <img src="/IMG/Simedimos_Logo_var3.png" alt="Logo" style={{ width: '140px' }} />
-        </div>
-        <div className="dropdown-button" onClick={() => toggleDropdown(1)}>
-          <i className="bi bi-bookmark-fill"></i> Módulo 1
-          <i className={`bi ${openDropdown === 1 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
-        </div>
-        <ul className={`dropdown-menu ${openDropdown === 1 ? 'show' : ''}`}>
-          <li><Link to="/datos"><i className="bi bi-person-circle"></i> Participantes</Link></li>
-          <li><Link to="/cursos"><i className="bi bi-book-half"></i> Cursos</Link></li>
-          <li><Link to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</Link></li>
-          <li><Link to="/promocion"><i className="bi bi-star-fill"></i> Promoción</Link></li>
-        </ul>
-      </li>
-      <li className={openDropdown === 2 ? 'expanded' : ''}>
-        <div className="dropdown-button" onClick={() => toggleDropdown(2)}>
-          <i className="bi bi-bookmark-fill"></i> Módulo 2
-          <i className={`bi ${openDropdown === 2 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
-        </div>
-        <ul className={`dropdown-menu ${openDropdown === 2 ? 'show' : ''}`}>
-          <li><Link to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</Link></li>
-        </ul>
-      </li>
-    </ul>
-  </div>
-
-    {/* Botón fijo para abrir/cerrar sidebar */}
-    <div
-    className="toggle-sidebar-button"
-    style={{ left: isSidebarOpen ? '200px' : '0' }} // Mueve la lógica a JSX
-    onClick={toggleSidebar}
-  >
-    <i className={`bi ${isSidebarOpen ? 'bi-caret-left' : 'bi-caret-right-fill'}`}></i>
-  </div>
-
-
+      {/* Header */}
       <div className="header">
         <button className="menu-button" onClick={toggleSidebar}>
-          
+          {isSidebarOpen ? '←' : '→'} {/* Icono actualizado */}
         </button>
-
         <div className="header-content">
-          <div className="user-section">
-            {/* Íconos a la izquierda */}
-            <div className="icon-container">
-              <div className="user-icon" onClick={() => navigate('/peticiones')}>
-                <i className="bi bi-inbox-fill" style={{ fontSize: '1.6rem', cursor: 'pointer', marginRight: '20px' }}></i>
+          
+
+          <div className="user-info">
+            {user ? (
+              <>
+                <div className="user-icon" onClick={() => navigate('/peticiones')}>
+                <i className="bi bi-inbox-fill" style={{ fontSize: '1.6rem', cursor: 'pointer', marginRight: '20px'}}></i>
               </div>
-              {userRole === 'admin' && (
-                <div className="user-icon" onClick={() => navigate('/users')}>
-                  <i className="bi bi-person-fill-gear" style={{ fontSize: '1.5rem', cursor: 'pointer', marginRight: '20px' }}></i>
-                </div>
-              )}
-            </div>
+                <span className="username">{userRole}: {user.name}</span>
+                <button onClick={handleLogout} className="logout-button">Logout</button>
+              </>
+            ) : (
+              <span>Cargando usuario...</span>
+            )}
 
-            {/* Nombre de Rol y Círculo */}
-            <span className="user-role">{userRole}</span>
-            <div className="user-circle" onClick={toggleDropdowns}>
-              <span className="user-initial">{user?.name?.charAt(0).toUpperCase()}</span>
-            </div>
-
-            {/* Menú Desplegable de Logout */}
-            {isDropdownOpen && (
-            <div className="dropdown-menux">
-              <div className="logout-options" >
-              <span>Usuario: {user.name}</span>
+            {/* Mostrar ícono de usuario solo si el rol es admin */}
+            {userRole === 'admin' && (
+              <div className="user-icon" onClick={() => navigate('/users')}>
+                <i className="bi bi-person-fill-gear" style={{ fontSize: '1.5rem', cursor: 'pointer' }}></i>
               </div>
-              <div className="logout-option" onClick={handleLogout}>
-
-              
-                <i className="bi bi-box-arrow-right" style={{ marginRight: '8px' }}></i>
-                <span>Logout</span>
-              </div>
-            </div>
-          )}
-
+            )}
           </div>
         </div>
       </div>
 
+      {/* Sidebar */}
+      <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <ul>
+          <li className={openDropdown === 1 ? 'expanded' : ''}>
+          <div className="logo">
+      <img src="/IMG/Simedimos_Logo_var3.png" alt="Logo" style={{ width: '140px' }} />
+    </div>
+            <div className="dropdown-button" onClick={() => toggleDropdown(1)}>
+              
+              <i className="bi bi-bookmark-fill"></i> Módulo 1
+              <i className={`bi ${openDropdown === 1 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
+            </div>
+            <ul className={`dropdown-menu ${openDropdown === 1 ? 'show' : ''}`}>
+              
+              <li><Link to="/datos"><i className="bi bi-person-circle"></i> Participantes</Link></li>
+              <li><Link to="/cursos"><i className="bi bi-book-half"></i> Cursos</Link></li>
+              <li><Link to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</Link></li>
+              <li><Link to="/promocion"><i className="bi bi-star-fill"></i> Promoción</Link></li>
+            </ul>
+          </li>
+          <li className={openDropdown === 2 ? 'expanded' : ''}>
+            <div className="dropdown-button" onClick={() => toggleDropdown(2)}>
+              <i className="bi bi-bookmark-fill"></i> Módulo 2
+              <i className={`bi ${openDropdown === 2 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
+            </div>
+            <ul className={`dropdown-menu ${openDropdown === 2 ? 'show' : ''}`}>
+              <li><Link to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</Link></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
 
-
-      {/* Main content */}
-      <div className="main-content">
-        {children} {/* Aquí va el contenido principal */}
+      {/* Contenido */}
+      <div className={`content ${isSidebarOpen ? 'open' : 'closed'}`}>
+        {children}
       </div>
     </div>
   );

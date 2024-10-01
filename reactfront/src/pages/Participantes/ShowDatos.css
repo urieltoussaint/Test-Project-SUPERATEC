@@ -1,17 +1,17 @@
-.col-cedula {
+.col-cedulas {
     width: 20%;
 }
 
-.col-nombres {
-    width: 25%;
-}
-
-.col-apellidos {
-    width: 25%;
-}
-
-.col-acciones {
+.col-nombress {
     width: 30%;
+}
+
+.col-apellidoss {
+    width: 30%;
+}
+
+.col-accioness {
+    width: 20%;
 }
 
 

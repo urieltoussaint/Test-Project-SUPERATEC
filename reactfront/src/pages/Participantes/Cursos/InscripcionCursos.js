@@ -81,45 +81,49 @@ const InscripcionCursos = () => {
     };
 
     const handleInscripcion = async () => {
-        try {
-            const token = localStorage.getItem('token');
+    try {
+        const token = localStorage.getItem('token');
 
-            // Realizar la inscripción del curso y actualizar el status_pay
-            const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, {
-                cedula_identidad: cedula,
-                curso_id: cursoId,
-                status_pay: 1, // Actualizar el status_pay a 1
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+        // Realizar la inscripción del curso y actualizar el status_pay
+        const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, {
+            cedula_identidad: cedula,
+            curso_id: cursoId,
+            status_pay: 1, // Actualizar el status_pay a 1
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
 
-            toast.success('Inscripción Exitosa');
+        // Obtener el ID de la inscripción recién creada
+        const inscripcionId = inscripcionResponse.data.id;
 
-            // Crear la petición de pago no realizado
-            const peticionResponse = await axios.post(`${endpoint}/peticiones`, {
-                zona_id: 3, // Zona 3
-                comentario: 'Pago no realizado', // Comentario
-                user_id: userId,  // Usuario logueado que envía la solicitud
-                role_id: 4,
-                status: false,  // Estado de la petición
-                finish_time: null,  // No hay finish_time al momento de creación
-                key: cedula,  // Usar el ID del curso como key
+        toast.success('Inscripción Exitosa');
 
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+        // Crear la petición de pago no realizado usando el ID de la inscripción como key
+        const peticionResponse = await axios.post(`${endpoint}/peticiones`, {
+            zona_id: 3, // Zona 3
+            comentario: 'Pago no realizado', // Comentario
+            user_id: userId,  // Usuario logueado que envía la solicitud
+            role_id: 4,
+            status: false,  // Estado de la petición
+            finish_time: null,  // No hay finish_time al momento de creación
+            key: inscripcionId,  // Usar el ID de la inscripción como key
 
-            toast.success('Petición creada: Pago no realizado');
-            navigate('/cursos');
-        } catch (error) {
-            toast.error('Error en la inscripción o en la creación de la petición');
-            console.error('Error en la inscripción o en la creación de la petición:', error);
-        }
-    };
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        toast.success('Petición creada: Pago no realizado');
+        navigate('/cursos');
+    } catch (error) {
+        toast.error('Error en la inscripción o en la creación de la petición');
+        console.error('Error en la inscripción o en la creación de la petición:', error);
+    }
+};
+
 
     return (
         <div className="container">

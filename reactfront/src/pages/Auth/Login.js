@@ -35,7 +35,7 @@ const Login = () => {
   return (
     <div className="login-wrapper">
       <div className="login-container">
-        <img src="/IMG/cropped-PNG-7.png" alt="Logo" className="login-logo" />
+        <img src="/IMG/Simedimos_Logo_var3.png" alt="Logo" className="login-logo" />
         <h2 className="login-title">Iniciar sesión</h2>
         <form onSubmit={handleSubmit} className="form-signin">
           <div className="form-group">

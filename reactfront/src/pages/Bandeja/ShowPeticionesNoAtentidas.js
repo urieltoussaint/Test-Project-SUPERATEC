@@ -147,15 +147,17 @@ const ShowPeticionesNoAtendidas = () => {
 
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Bandeja de Entrada</h1>
-                <h5>Peticiones Atendidas</h5>
+               
 
                 <div className="d-flex align-items-center">
-                    <Button variant="info" onClick={() => navigate('/peticiones')}>
-                        Ver Peticiones No Atendidas
+                    <Button variant="info" onClick={() => navigate('/peticiones')} className="custom-eye-button">
+                        <i className="bi bi-eye"></i> Mostrar No Atendidas
                     </Button>
                 </div>
+                
+                
             </div>
-
+            <h5>Peticiones Atendidas</h5>
             <PaginationTable
                 data={filteredPeticiones}
                 itemsPerPage={itemsPerPage}

@@ -1,43 +1,165 @@
-/* Estilos generales */
-.App {
-  text-align: center;
+/* Header */
+/* Sobrescribe el estilo de los botones de variante 'info' */
+/* Sobrescribe el estilo de los botones de variante 'outline-info' */
+.btn-outline-info {
+  color: #185da7 !important;            /* Color del texto y el borde */
+  border-color: #185da7 !important;     /* Borde */
 }
 
-
-
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.btn-outline-info:hover {
+  background-color: #3674b7 !important; /* Color de fondo al hacer hover */
+  border-color: #185da7 !important;     /* Cambia el color del borde */
+  color: white !important;              /* Color del texto al hacer hover */
 }
+
 
 .header {
   display: flex;
-  width: 100%;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
+  justify-content: flex-end;
+  padding: 15px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.header-content {
+.user-section {
   display: flex;
-  width: 100%;
   align-items: center;
-  justify-content: space-between;
-  position: relative;
+  justify-content: flex-end;
 }
 
-.logo {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+/* Contenedor de los íconos */
+.icon-container {
+  display: flex;
+  align-items: center;
+  margin-right: 2px;
 }
+
+/* Círculo del Usuario */
+.user-circle {
+  position: relative;
+  display: flex;
+  flex-direction: column; /* Para alinear el texto y el rol en vertical */
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #185da7;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+/* Inicial del Usuario dentro del círculo */
+.user-initial {
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.user-role {
+  margin-left: 0px; /* Ajusta el margen izquierdo para separar el rol del círculo */
+  margin-right: 15px; /* Ajusta el margen derecho para separarlo de los íconos */
+  font-weight: bold; /* Cambia a negrita */
+  font-size: 14px; /* Tamaño de fuente ajustable según preferencia */
+  color: #333; /* Color del texto */
+  align-self: center; /* Asegura que esté alineado correctamente con los otros elementos */
+}
+.toggle-sidebar-button {
+  position: fixed;
+  top: 10%; /* Para centrar verticalmente */
+  transform: translateY(-50%);
+  background-color: #eaeaea;
+  border-radius: 30%;
+  padding: 1px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  z-index: 1000;
+  transition: left 0.3s ease; /* Transición suave */
+}
+
+.toggle-sidebar-button i {
+  font-size: 24px;
+  color: #000;
+}
+
+
+/* Estilos del dropdown */
+.dropdown-menux {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background-color: white;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  z-index: 1000;
+}
+
+.logout-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  color: #333;
+  font-size: 14px;
+  font-weight: bold;
+}
+.logout-options {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  color: #5c5b5b;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.logout-option:hover {
+  background-color: #f5f5f5; /* Efecto hover */
+  color: #000;
+}
+
+
+.sidebar {
+  width: 200px;
+  background-color: #ffffffd9;
+  height: 100vh; /* Asegurar que el sidebar ocupe toda la altura de la pantalla */
+  position: fixed;
+  padding: 2px;
+  top: 0px;
+  left: 10px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0 30px 30px 0;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  color: rgb(96, 94, 94);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 15px 25px;
+  position: fixed; /* Asegura que el botón siempre esté visible en la pantalla */
+  top: 15px; /* Ajustar la posición desde la parte superior */
+  left: 100px; /* Ajustar la posición desde la izquierda */
+  z-index: 1001; /* Mantener el botón por encima del contenido */
+  border-radius: 15px;
+}
+
+.content.open {
+  margin-left: 200px;
+}
+
 
 .user-info {
   display: flex;
@@ -51,21 +173,6 @@
   color: #444444; /* Cambiado a blanco para mayor contraste */
 }
 
-.logout-button {
-  background-color: #3d3d3d;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 12px;
-  font-size: 14px;
-  position: relative;
-  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
-}
-
-.logout-button:hover {
-  background-color: #4d4d4d;
-}
 
 
 .App-link {
@@ -82,34 +189,10 @@
 }
 
 /* Estilos del encabezado */
-.header {
-  background-color: #ffffff;
-  color: rgb(255, 255, 255);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.05);
-  height: 60px; /* Altura fija del encabezado */
-  border-radius: 0 0 20px 20px; /* Bordes redondeados en la parte inferior */
-  justify-content: center;
-}
+
 
 /* Estilos del botón de menú */
-.menu-button {
-  position: fixed; /* Hace que el botón siempre esté visible en la pantalla */
-  top: 0px; /* Ajusta la posición desde la parte superior */
-  left: 10px; /* Ajusta la posición desde la izquierda */
-  z-index: 1000; /* Asegura que esté sobre otros elementos */
-  background: none;
-  border: none;
-  color: rgb(96, 94, 94);
-  font-size: 22px;
-  cursor: pointer;
-  padding: 15px 25px;
-  transition: color 0.3s ease, background-color 0.3s ease; /* Transición para el cambio de color */
-  border-radius:15px;
 
-}
 
 /* Estado hover del botón de menú */
 .menu-button:hover {
@@ -117,36 +200,10 @@
   background-color: rgba(96, 94, 94, 0.2); 
 } 
 
-/* Estilos del sidebar */
-.sidebar {
-  width: 200px;
-  background-color: #ffffffd9;
-  height: calc(100vh - 60px); /* Altura ajustada para no superponer el encabezado */
-  position: fixed;
-  padding: 20px;
-  top: 80px; /* Comienza justo debajo del encabezado */
-  left: 0;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 0 30px 30px 0; /* Bordes redondeados a la derecha */
-}
 
-.sidebar.open {
-  transform: translateX(0);
-}
 
 /* Estilos de los enlaces del sidebar */
-.sidebar a {
-  color: rgb(44, 44, 44); /* Color del texto */
-  text-decoration: none; /* Remover subrayado */
-  display: flex; /* Hacer que el enlace y el icono se alineen horizontalmente */
-  align-items: center; /* Alinear verticalmente el icono y el texto */
-  padding: 10px 5px; /* Relleno alrededor del texto */
-  border-radius: 20px; /* Bordes redondeados */
-  transition: background-color 0.3s ease; /* Transición suave del fondo */
-  font-weight: 600; /* Fuente semibold */
-}
+
 
 /* Estado hover de los enlaces del sidebar */
 .sidebar a:hover {
@@ -162,9 +219,7 @@
   padding: 20px;
 }
 
-.content.open {
-  margin-left: 200px; /* Deja espacio para la barra lateral */
-}
+
 
 .content.closed {
   margin-left: 0; /* Usa todo el ancho de la pantalla */
@@ -225,7 +280,7 @@
   background: none;
   border: none;
   color: rgb(44, 44, 44);
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   width: 100%;
   text-align: left;
@@ -350,3 +405,86 @@
 }
 
 
+
+/* Cambiar el color de los botones de advertencia (warning) */
+.btn.btn-warning {
+  background-color: rgb(254, 185, 56) !important;
+  border-color: rgb(254, 185, 56) !important;
+  color: white !important;
+}
+
+.btn.btn-warning:hover {
+  background-color: rgba(254, 185, 56, 0.9) !important;  /* Color en hover */
+  border-color: rgba(254, 185, 56, 0.9) !important;
+}
+
+/* Cambiar el color de los botones de peligro (danger) */
+.btn.btn-danger {
+  background-color: rgb(255, 74, 74) !important;
+  border-color: rgb(255, 74, 74) !important;
+  color: white !important;
+}
+
+.btn.btn-danger:hover {
+  background-color: rgba(255, 74, 74, 0.9) !important;  /* Color en hover */
+  border-color: rgba(255, 74, 74, 0.9) !important;
+}
+
+/* Cambiar el color de los botones de éxito (success) */
+.btn.btn-success {
+  background-color: rgb(72, 205, 143) !important;
+  border-color:rgb(72, 205, 143) !important;
+  color: white !important;
+}
+
+.btn.btn-success:hover {
+  background-color: rgba(48, 144, 99, 0.9) !important;  /* Color en hover */
+  border-color: rgba(48, 144, 99, 0.9) !important;
+}
+
+.btn.btn-info {
+  background-color: rgb(61, 128, 200) !important;
+  border-color:   rgb(61, 128, 200) !important;
+  color: white !important;
+}
+.btn.btn-info:hover {
+  background-color: rgb(52, 110, 172) !important;  /* Color en hover */
+  border-color:rgb(52, 110, 172) !important;  /* Color en hover */
+}
+
+
+
+/* Estilos para el botón */
+.btn-custom {
+  display: flex;
+  align-items: center;
+  background-color: rgb(69, 196, 137); /* Color del botón (verde) */
+  border-color:rgb(69, 196, 137); /* Color del botón (verde) */
+  padding: 10px 20px;
+  font-size: 16px;
+  color: white;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-custom:hover {
+  background-color:rgb(58, 164, 114); /* Color del botón (verde) */
+  border-color:rgb(58, 164, 114); /* Color del botón (verde) */
+}
+
+.btn-custom:active {
+  background-color:rgb(58, 164, 114); /* Color del botón (verde) */
+  border-color:rgb(58, 164, 114); /* Color del botón (verde) */
+}
+
+/* Estilos para el ícono dentro del botón */
+.btn-icon {
+  font-size: 24px; /* Tamaño del ícono */
+  margin-right: 10px; /* Espacio entre el ícono y el texto */
+  color: white;
+}
+
+/* Ajustes para hover y active (opcional) */
+.btn-icon:hover {
+  color: white; /* Mantener el color blanco en hover */
+}

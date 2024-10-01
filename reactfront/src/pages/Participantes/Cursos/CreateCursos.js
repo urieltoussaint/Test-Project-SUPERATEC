@@ -59,28 +59,52 @@ const CreateCursos = () => {
   const getAllUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/users-with-roles`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(response.data);
-      setFilteredUsers(response.data);
+      let allUsers = [];
+      let currentPage = 1;
+      let lastPage = 1;
+      
+      do {
+        const response = await axios.get(`${endpoint}/users-with-roles?page=${currentPage}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        allUsers = allUsers.concat(response.data.data);  // Asumiendo que la respuesta tiene un formato de paginación
+        lastPage = response.data.last_page;  // Asumiendo que la respuesta incluye información de la última página
+        currentPage++;
+      } while (currentPage <= lastPage);
+
+      setUsers(allUsers);
+      setFilteredUsers(allUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+};
 
-  const getAllRoles = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/role`, {
+
+const getAllRoles = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    let allRoles = [];
+    let currentPage = 1;
+    let lastPage = 1;
+
+    do {
+      const response = await axios.get(`${endpoint}/role?page=${currentPage}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRoles(response.data.data);
-      setFilteredRoles(response.data.data);
-    } catch (error) {
-      console.error('Error fetching roles:', error);
-    }
-  };
+
+      allRoles = allRoles.concat(response.data.data); // Asumiendo que la respuesta tiene un formato de paginación
+      lastPage = response.data.last_page; // Asumiendo que la respuesta incluye información de la última página
+      currentPage++;
+    } while (currentPage <= lastPage);
+
+    setRoles(allRoles);
+    setFilteredRoles(allRoles);
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+  }
+};
+
 
   const handleChange = (event) => {
     const { name, value } = event.target;

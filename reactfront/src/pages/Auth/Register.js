@@ -33,7 +33,7 @@ const Register = () => {
   return (
     <div className="register-wrapper">
       <div className="register-container">
-        <img src="/IMG/cropped-PNG-7.png" alt="Logo" className="register-logo" />
+        <img src="/IMG/Simedimos_Logo_var3.png" alt="Logo" className="register-logo" />
         <h2 className="register-title">Registro de Usuario</h2>
         <form onSubmit={handleSubmit} className="form-signin">
           <div className="form-group">

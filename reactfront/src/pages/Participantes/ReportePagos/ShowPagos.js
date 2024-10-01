@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Table from 'react-bootstrap/Table';
+import { Modal } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
@@ -13,8 +14,12 @@ import PaginationTable from '../../../components/PaginationTable';
 
 const endpoint = 'http://localhost:8000/api';
 
+
+
 const ShowPagos = () => {
     const [reportes, setReportes] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
     const [filteredReportes, setFilteredReportes] = useState([]);
     const [searchCedula, setSearchCedula] = useState('');
     const [error, setError] = useState(null);
@@ -24,6 +29,14 @@ const ShowPagos = () => {
     const userRole = localStorage.getItem('role'); // Obtener el rol del usuario desde el localStorage
     const itemsPerPage = 4; // Número de elementos por página
     
+    const handleShowModal = (id) => {
+        setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
+        setShowModal(true); // Muestra el modal
+    };
+    
+    const handleCloseModal = () => {
+        setShowModal(false); // Cierra el modal
+    };   
 
     useEffect(() => {
         setLoading(true);
@@ -64,24 +77,25 @@ const ShowPagos = () => {
     };
     
 
-    const deleteReporte = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este Reporte de Pago?')) {
+    const deleteReporte = async () => {
             try {
                 const token = localStorage.getItem('token');
-                await axios.delete(`${endpoint}/pagos/${id}`,{
+                await axios.delete(`${endpoint}/pagos/${selectedId}`,{
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
                 getAllReportes();
+                setShowModal(false); // Cierra el modal tras la eliminación exitosa
                 toast.success('Reporte eliminado con éxito');
             } catch (error) {
                 setError('Error deleting data');
                 console.error('Error deleting data:', error);
                 toast.error('Error al eliminar el reporte');
             }
-        }
+        
     };
+
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -100,27 +114,31 @@ const ShowPagos = () => {
 
     const renderItem = (reporte) => (
         <tr key={reporte.id}>
-        <td className="col-id">{reporte.id}</td>
-        <td className="col-cedula">{reporte.cedula_identidad}</td>
-        <td className="col-fecha">{moment(reporte.fecha).format('YYYY-MM-DD')}</td>
-        <td className="col-monto">{reporte.monto_cancelado} $</td>
-        <td className="col-monto">{reporte.monto_restante} $</td>
-        <td className="col-comentario">{reporte.comentario_cuota}</td>
-        <td className="col-acciones">
+        <td className="col-idq">{reporte.id}</td>
+        <td className="col-cedulaq">{reporte.cedula_identidad}</td>
+        <td className="col-fechaq">{moment(reporte.fecha).format('YYYY-MM-DD')}</td>
+        <td className="col-montoq">{reporte.monto_cancelado} $</td>
+        <td className="col-montoq">{reporte.monto_restante} $</td>
+        <td className="col-comentarioq">{reporte.comentario_cuota}</td>
+        <td className="col-accionesq">
             <div className="d-flex justify-content-around">
+
                 <Button
-                    variant="info"
+                    variant="btn btn-info" 
                     onClick={() => navigate(`/pagos/${reporte.id}`)}
                     className="me-2"
                 >
-                    Detalles
+                    <i className="bi bi-eye"></i>
                 </Button>
                 {userRole === 'admin' && (
+                
+
                 <Button
-                    variant="danger"
-                    onClick={() => deleteReporte(reporte.id)}
+                variant="btn btn-danger"
+                onClick={() => handleShowModal(reporte.id)}
+                className="me-2"
                 >
-                    Eliminar
+                <i className="bi bi-trash3-fill"></i>
                 </Button>
                 )}
             </div>
@@ -141,14 +159,12 @@ const ShowPagos = () => {
                         onChange={handleSearchChange}
                         className="me-2"
                     />
-                    {userRole === 'admin' && (
-                    <Button
-                        variant="success"
-                        onClick={() => navigate('/pagos/create')}
-                    >
-                        Agregar Nuevo Pago
+                    {userRole === 'admin' ||userRole === 'pagos' ? (
+
+                    <Button variant="btn custom" onClick={() => navigate('/pagos/create')} className="btn-custom">
+                    <i className="bi bi-cash-coin me-2  "></i> Nuevo
                     </Button>
-                    )}
+                    ):null}
                 </div>
             </div>
             {/* Tabla paginada */}
@@ -158,6 +174,23 @@ const ShowPagos = () => {
                 columns={columns}
                 renderItem={renderItem}
             />
+
+
+            {/* Modal  de eliminación */}
+            <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar eliminación</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>¿Estás seguro de que deseas eliminar este Reporte de Pago?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={deleteReporte}>
+                        Eliminar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             <ToastContainer />
         </div>
     );

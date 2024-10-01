@@ -137,7 +137,7 @@ const ShowPeticiones = () => {
         } else if (id === 2) {
             navigate(`/cursos/${peticiones.key}/edit`);
         } else if (id === 3) {
-            navigate(`/cursos/${peticiones.key}/edit`);
+            navigate(`/pagos/curso/${peticiones.key}`);
         } else {
             toast.error('Zona no válida');
         }
@@ -188,26 +188,27 @@ const ShowPeticiones = () => {
 
     const renderItem = (peticiones) => (
         <tr key={peticiones.id}>
-            <td className="text-center">{renderStatusDot(peticiones.created_at)}</td>
-            <td className="text-center">{peticiones.user?.name}</td>
-            <td className="text-center">{peticiones.key}</td>
-            <td className="text-center">{peticiones.zonas?.name}</td>
-            <td className="text-center">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
-            <td className="text-center">{peticiones.comentario}</td>
-            <td className="text-center actions-column">
-                <Button
-                    variant="success"
-                    onClick={() => handleNavigate(peticiones)}
-                    className="me-2"
-                >
-                    Actualizar
-                </Button>
-                <Button
-                    variant="danger"
-                    onClick={() => handleRejectClick(peticiones)}
-                >
-                    Rechazar
-                </Button>
+            <td className="status">{renderStatusDot(peticiones.created_at)}</td>
+            <td className="usuario">{peticiones.user?.name}</td>
+            <td className="key">{peticiones.key}</td>
+            <td className="zona">{peticiones.zonas?.name}</td>
+            <td className="fecha">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
+            <td className="comentarios">{peticiones.comentario}</td>
+            <td className="acciones">
+            <Button
+                variant="btn btn-warning"
+                onClick={() => handleNavigate(peticiones)}
+                className="me-2 icon-white"
+            >
+                <i className="bi bi-pencil-fill"></i> 
+            </Button>
+            <Button
+                variant="btn btn-danger"
+                onClick={() => handleRejectClick(peticiones)}
+            >
+                <i className="bi bi-x-lg"></i> 
+            </Button>
+
             </td>
         </tr>
     );
@@ -218,13 +219,14 @@ const ShowPeticiones = () => {
             
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h1>Bandeja de Entrada</h1>
-                <h5>Peticiones No Atendidas</h5>
 
-                {/* Botón que redirige a la página de Peticiones Atendidas */}
-                <Button variant="info" onClick={() => navigate('/peticiones/Noat')}>
-                    Mostrar Atendidas
+                <Button variant="info" onClick={() => navigate('/peticiones/Noat')} className="custom-eye-button">
+                    <i className="bi bi-eye"></i> Mostrar Atendidas
                 </Button>
+                
+
             </div>
+            <h5>Peticiones No Atendidas</h5>
 
             {/* Filtro de status y leyenda alineada a la derecha */}
             <div className="d-flex justify-content-between align-items-center mb-3">

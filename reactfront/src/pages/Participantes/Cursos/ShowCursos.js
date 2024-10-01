@@ -3,6 +3,7 @@ import axios from 'axios';
 import Table from 'react-bootstrap/Table';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
+import { Modal } from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import './ShowCursos.css'; // Asegúrate de tener este archivo CSS en tu proyecto
 import { useLoading } from '../../../components/LoadingContext';
@@ -24,7 +25,20 @@ const ShowCursos = () => {
     const navigate = useNavigate();
     const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
     const itemsPerPage = 4; // Número de elementos por página
+    const [showModal, setShowModal] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
     
+
+    const handleShowModal = (id) => {
+        setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
+        setShowModal(true); // Muestra el modal
+    };
+    
+    const handleCloseModal = () => {
+        setShowModal(false); // Cierra el modal
+    };
+
+
     useEffect(() => {
         setLoading(true);
         Promise.all([getAllCursos(), fetchAreaOptions()]).finally(() => {
@@ -75,22 +89,22 @@ const ShowCursos = () => {
         }
     };
 
-    const deleteCursos = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este curso?')) {
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${endpoint}/cursos/${id}`,{
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                getAllCursos();
-                toast.success('Eliminado con éxito');
-            } catch (error) {
-                setError('Error deleting data');
-                console.error('Error deleting data:', error);
-                toast.error('Error al eliminar el curso');
-            }
+    const deleteCursos = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            await axios.delete(`${endpoint}/cursos/${selectedId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            toast.success('Curso eliminado con Éxito');             
+            getAllCursos();
+            setShowModal(false); // Cierra el modal tras la eliminación exitosa
+        } catch (error) {
+            setError('Error deleting data');
+            console.error('Error deleting data:', error);
+            toast.error('Error al eliminar Participante');
+            setShowModal(false); // Cierra el modal tras el error
         }
     };
 
@@ -144,61 +158,59 @@ const ShowCursos = () => {
     
     const renderItem = (curso) => (
         <tr key={curso.cod}>
-            <td>{curso.cod}</td>
-            <td>{curso.descripcion}</td>
-            <td>{curso.cantidad_horas}</td>
-            <td>{curso.fecha_inicio}</td>
-            <td>{curso.costo} $</td>
+            <td className='col-cods'>{curso.cod}</td>
+            <td className='col-descripcions'>{curso.descripcion}</td>
+            <td className='col-horass'>{curso.cantidad_horas}</td>
+            <td className='col-fechas'>{curso.fecha_inicio}</td>
+            <td className='col-costos'>{curso.costo} $</td>
             <td>
-            <div className="d-flex justify-content-around">
+            <div className="acciones">
                 {/* Mostrar el botón de Actualizar solo para 'admin' o 'superuser' */}
-                {userRole === 'admin' || userRole === 'superuser' ? (
-                                <>
                                     <Button
-                                        variant="warning"
-                                        onClick={() => navigate(`/cursos/${curso.id}/edit`)}
-                                        className="me-2"
-                                    >
-                                        Actualizar
-                                    </Button>
-
-                                    {/* Mostrar el botón de Inscribir solo para 'admin' o 'superuser' */}
-                                    <Button
-                                        variant="success"
-                                        onClick={() => navigate(`/inscribir/${curso.id}`)}
-                                    >
-                                        Inscribir
-                                    </Button>
-
-                                    {/* Mostrar el botón de Inscritos para 'admin' o 'superuser' */}
-                                    <Button
-                                        variant="info"
+                                        variant="btn btn-info" 
                                         onClick={() => navigate(`/inscritos/${curso.id}`)}
                                         className="me-2"
                                     >
-                                        Inscritos
+                                        <i className="bi bi-eye"></i>
                                     </Button>
-                                </>
-                            ) : (
-                                // Mostrar solo el botón de ver inscritos para otros roles
-                                <Button
-                                    variant="info"
-                                    onClick={() => navigate(`/inscritos/${curso.id}`)}
+                {userRole === 'admin' || userRole === 'superuser' ? (
+                                <>
+                                    <Button
+                                    variant="btn btn-warning"
+                                    onClick={() => navigate(`/cursos/${curso.id}/edit`)}
                                     className="me-2"
                                 >
-                                    Inscritos
+                                    <i className="bi bi-pencil-fill"></i>
                                 </Button>
+
+                                    {/* Mostrar el botón de Inscribir solo para 'admin' o 'superuser' */}
+
+                                    <Button
+                                        variant="btn btn-success" 
+                                        onClick={() => navigate(`/inscribir/${curso.id}`)}
+                                        className="me-2"
+                                    >
+                                        <i className="bi bi-person-plus-fill"></i>
+                                    </Button>
+
+                                </>
+                            ) : (
+                                null
                             )}
                     
                             {/* Mostrar el botón de Eliminar solo para 'admin' */}
                             {userRole === 'admin' && (
+
                                 <Button
-                                    variant="danger"
-                                    onClick={() => deleteCursos(curso.id)}
+                                    variant="btn btn-danger"
+                                    onClick={() => handleShowModal(curso.id)}
                                     className="me-2"
                                 >
-                                    Eliminar
+                                    <i className="bi bi-trash3-fill"></i>
                                 </Button>
+
+                                
+
                             )}
                 </div>
             </td>
@@ -223,11 +235,9 @@ const ShowCursos = () => {
 
                     {/* Mostrar el botón "Agregar Nuevo Curso" solo para 'admin' o 'superuser' */}
                     {userRole === 'admin' || userRole == 'superuser' ?(
-                        <Button
-                            variant="success"
-                            onClick={() => navigate('/cursos/create')}
-                        >
-                            Agregar Nuevo Curso
+
+                        <Button variant="btn custom" onClick={() => navigate('/cursos/create')} className="btn-custom">
+                            <i className="bi bi-book-half me-2  "></i> Nuevo
                         </Button>
                     ):
                     null}
@@ -243,7 +253,7 @@ const ShowCursos = () => {
                     onChange={handleCodChange}
                     className="me-2"
                 />
-
+               {/* Buscador por Area      */}
                 <Form.Select
                     value={selectedArea}
                     onChange={handleAreaChange}
@@ -264,6 +274,24 @@ const ShowCursos = () => {
                 columns={columns}
                 renderItem={renderItem}
             />
+
+
+             {/* Modal  de eliminación */}
+             <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar eliminación</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>¿Estás seguro de que deseas eliminar este Curso y todos los datos relacionados a él?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={deleteCursos}>
+                        Eliminar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <ToastContainer />
         </div>
     );

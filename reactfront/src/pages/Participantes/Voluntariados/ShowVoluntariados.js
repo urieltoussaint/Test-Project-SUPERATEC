@@ -8,12 +8,14 @@ import './ShowVoluntariados.css'; // Asegúrate de tener este archivo CSS en tu 
 import { useLoading } from '../../../components/LoadingContext';   
 import { toast, ToastContainer } from 'react-toastify';
 import PaginationTable from '../../../components/PaginationTable';
-
+import { Modal } from 'react-bootstrap';
 
 const endpoint = 'http://localhost:8000/api';
 
 const ShowVoluntariados = () => {
     const [voluntariados, setVoluntariados] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
     const [filteredVoluntariados, setFilteredVoluntariados] = useState([]);
     const [searchCedula, setSearchCedula] = useState('');
     const [areaOptions, setAreaOptions] = useState([]);
@@ -34,6 +36,15 @@ const ShowVoluntariados = () => {
     const itemsPerPage = 4;
 
     const navigate = useNavigate();
+
+    const handleShowModal = (id) => {
+        setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
+        setShowModal(true); // Muestra el modal
+    };
+    
+    const handleCloseModal = () => {
+        setShowModal(false); // Cierra el modal
+    };   
 
     useEffect(() => {
         setLoading(true);
@@ -122,11 +133,11 @@ const ShowVoluntariados = () => {
         
     };
 
-    const deleteVoluntariados = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este Voluntariado?')) {
+    const deleteVoluntariados = async () => {
+        
             try {
                 const token = localStorage.getItem('token');
-                await axios.delete(`${endpoint}/voluntariados/${id}`,{
+                await axios.delete(`${endpoint}/voluntariados/${selectedId}`,{
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -141,7 +152,7 @@ const ShowVoluntariados = () => {
                 toast.error('Error al eliminar Voluntariado');
                 console.error('Error deleting data:', error);
             }
-        }
+        
     };
 
     const handleSearchChange = (e) => {
@@ -215,33 +226,37 @@ const ShowVoluntariados = () => {
 
     const renderItem = (dato) => (
         <tr key={dato.cedula_identidad}>
-            <td >{dato.cedula_identidad}</td>
-            <td >{dato.nombres}</td>
-            <td >{dato.apellidos}</td>
+            <td className='col-cedula' >{dato.cedula_identidad}</td>
+            <td className='col-nombre'>{dato.nombres}</td>
+            <td className='col-apellido'>{dato.apellidos}</td>
             <td >
-                <div className="d-flex justify-content-around">
+                <div className="col-acciones">
+
                     <Button
-                        variant="info"
+                        variant="btn btn-info" 
                         onClick={() => navigate(`/Voluntariados/${dato.cedula_identidad}`)}
                         className="me-2"
                     >
-                        Ver más
+                        <i className="bi bi-eye"></i>
                     </Button>
                     {userRole && (userRole === 'admin' || userRole === 'superuser') && (
+
                         <Button
-                        variant="warning"
+                        variant="btn btn-warning"
                         onClick={() => navigate(`/voluntariados/${dato.cedula_identidad}/edit`)}
                         className="me-2"
                         >
-                        Actualizar
+                        <i className="bi bi-pencil-fill"></i>
                         </Button>
                     )}
                     {userRole === 'admin' && (
+                   
                     <Button
-                        variant="danger"
-                        onClick={() => deleteVoluntariados(dato.cedula_identidad)}
+                    variant="btn btn-danger"
+                    onClick={() => handleShowModal(dato.cedula_identidad)}
+                    className="me-2"
                     >
-                        Eliminar
+                    <i className="bi bi-trash3-fill"></i>
                     </Button>
                     )}
                 </div>
@@ -264,12 +279,9 @@ const ShowVoluntariados = () => {
                         className="me-2"
                     />
                     {userRole === 'admin' || userRole === 'superuser' ? (
-                    <Button
-                        variant="success"
-                        onClick={() => navigate('create')}
-                        className="mt-3"
-                    >
-                        Agregar Nuevo Voluntario
+
+                    <Button variant="btn custom" onClick={() => navigate('create')} className="btn-custom">
+                    <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
                     </Button>
                     ): null}
                 </div>
@@ -329,6 +341,22 @@ const ShowVoluntariados = () => {
                 columns={columns}
                 renderItem={renderItem}
             />
+
+             {/* Modal  de eliminación */}
+             <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar eliminación</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>¿Estás seguro de que deseas eliminar este Voluntariado?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={deleteVoluntariados}>
+                        Eliminar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             <ToastContainer />
         </div>
     );

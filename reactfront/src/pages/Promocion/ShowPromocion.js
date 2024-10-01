@@ -10,10 +10,13 @@ import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer,toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';
+import { Modal } from 'react-bootstrap';
 const endpoint = 'http://localhost:8000/api';
 
 const ShowPromocion = () => {
     const [promociones, setPromociones] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
     const [filteredPromociones, setFilteredPromociones] = useState([]);
     const [searchComentario, setSearchComentario] = useState('');
     const [centroOptions, setCentroOptions] = useState([]);
@@ -31,6 +34,15 @@ const ShowPromocion = () => {
     const { setLoading } = useLoading();
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+
+    const handleShowModal = (id) => {
+        setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
+        setShowModal(true); // Muestra el modal
+    };
+    
+    const handleCloseModal = () => {
+        setShowModal(false); // Cierra el modal
+    };   
 
     useEffect(() => {
         setLoading(true);
@@ -106,16 +118,17 @@ const ShowPromocion = () => {
         }
     };
 
-    const deletePromocion = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar esta Promoción?')) {
+    const deletePromocion = async () => {
+       
             try {
                 const token = localStorage.getItem('token');
-                await axios.delete(`${endpoint}/promocion/${id}`,{
+                await axios.delete(`${endpoint}/promocion/${selectedId}`,{
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
                 toast.success('Éxito al eliminar Promoción');
+                setShowModal(false); // Cierra el modal tras la eliminación exitosa
                 getAllPromociones();
                 
                 
@@ -124,7 +137,7 @@ const ShowPromocion = () => {
                 toast.error('Error al eliminar Promoción');
                 console.error('Error deleting data:', error);
             }
-        }
+        
     };
 
     const handleSearchChange = (e) => {
@@ -183,34 +196,36 @@ const ShowPromocion = () => {
 
     const renderItem = (dato) => (
         <tr key={dato.id}>
-        <td >{dato.id}</td>
-        <td >{moment(dato.fecha_registro).format('YYYY-MM-DD')}</td>
-        <td >{dato.comentarios}</td>
+        <td className='col-id'>{dato.id}</td>
+        <td className='col-fecha' >{moment(dato.fecha_registro).format('YYYY-MM-DD')}</td>
+        <td className='col-comentarios' >{dato.comentarios}</td>
         <td >
-            <div className="d-flex justify-content-around">
+            <div className="col-acciones">
+
                 <Button
-                    variant="info"
-                    onClick={() => navigate(`/promocion/${dato.id}`)}
-                    className="me-2"
-                >
-                    Ver más
-                </Button>
+                        variant="btn btn-info" 
+                        onClick={() => navigate(`/promocion/${dato.id}`)}
+                        className="me-2"
+                    >
+                        <i className="bi bi-eye"></i>
+                    </Button>
                     {userRole === 'admin' || userRole === 'superuser' ? (
-                        
+
                         <Button
-                            variant="warning"
-                            onClick={() => navigate(`/promocion/${dato.id}/edit`)}
-                            className="me-2"
+                        variant="btn btn-warning"
+                        onClick={() => navigate(`/promocion/${dato.id}/edit`)}
+                        className="me-2"
                         >
-                            Actualizar
+                        <i className="bi bi-pencil-fill"></i>
                         </Button>
                     ):null} {userRole === 'admin' && (
-                        
+
                     <Button
-                        variant="danger"
-                        onClick={() => deletePromocion(dato.id)}
+                    variant="btn btn-danger"
+                    onClick={() => handleShowModal(dato.id)}
+                    className="me-2"
                     >
-                        Eliminar
+                    <i className="bi bi-trash3-fill"></i>
                     </Button>
                     )}
             </div>
@@ -232,12 +247,9 @@ const ShowPromocion = () => {
                         className="me-2"
                     />
                     {userRole === 'admin' || userRole === 'superuser' ? (
-                    <Button
-                        variant="success"
-                        onClick={() => navigate('create')}
-                        className="mt-3"
-                    >
-                        Agregar Nueva Promoción
+
+                    <Button variant="btn custom" onClick={() => navigate('create')} className="btn-custom">
+                    <i className="bi bi-bookmark-star-fill me-2  "></i> Nuevo
                     </Button>
                     ):null}
                 </div>
@@ -299,6 +311,23 @@ const ShowPromocion = () => {
                 columns={columns}
                 renderItem={renderItem}
             />
+
+            
+            {/* Modal  de eliminación */}
+            <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar eliminación</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>¿Estás seguro de que deseas eliminar esta promocion?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={deletePromocion}>
+                        Eliminar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             <ToastContainer />
         </div>
     );

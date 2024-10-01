@@ -31,11 +31,9 @@ const CreateDatos = () => {
   const [filteredRoles, setFilteredRoles] = useState([]);
   const [searchRoleName, setSearchRoleName] = useState(''); // Estado específico para la búsqueda de roles
   const [previousModal, setPreviousModal] = useState(null);
+  const [comentario, setComentario] = useState('');
 
 
-
-
-  
   const [formData, setFormData] = useState({
     cedula_identidad: '',
     nombres: '',
@@ -80,35 +78,51 @@ const CreateDatos = () => {
   const getAllUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/users-with-roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setUsers(response.data);
-      setFilteredUsers(response.data);
+      let allUsers = [];
+      let currentPage = 1;
+      let lastPage = 1;
+      
+      do {
+        const response = await axios.get(`${endpoint}/users-with-roles?page=${currentPage}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        allUsers = allUsers.concat(response.data.data);  // Asumiendo que la respuesta tiene un formato de paginación
+        lastPage = response.data.last_page;  // Asumiendo que la respuesta incluye información de la última página
+        currentPage++;
+      } while (currentPage <= lastPage);
+
+      setUsers(allUsers);
+      setFilteredUsers(allUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+};
 
   const getAllRoles = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/role`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      let allRoles = [];
+      let currentPage = 1;
+      let lastPage = 1;
   
-      // Asegúrate de extraer los roles desde 'data'
-      // const roles = response.data.data || [];
-      setRoles (response.data.data);
-      setFilteredRoles(response.data.data);
+      do {
+        const response = await axios.get(`${endpoint}/role?page=${currentPage}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        allRoles = allRoles.concat(response.data.data); // Asumiendo que la respuesta tiene un formato de paginación
+        lastPage = response.data.last_page; // Asumiendo que la respuesta incluye información de la última página
+        currentPage++;
+      } while (currentPage <= lastPage);
+  
+      setRoles(allRoles);
+      setFilteredRoles(allRoles);
     } catch (error) {
       console.error('Error fetching roles:', error);
     }
   };
+  
   
   
   
@@ -161,6 +175,7 @@ const CreateDatos = () => {
         status: false,  // Estado de la petición
         finish_time: null,  // No hay finish_time al momento de creación
         key: formData.cedula_identidad,  // Enviar la cédula de identidad como key
+        comentario:comentario
       };
   
       await axios.post(`${endpoint}/peticiones`, requestData, {
@@ -182,6 +197,7 @@ const CreateDatos = () => {
       console.error('Error al enviar la solicitud o los datos:', error);
     }
   };
+ 
   
 
   const handleChange = (event) => {
@@ -646,8 +662,8 @@ const CreateDatos = () => {
 
         
       </Form>
-      {/* Modal de confirmación si hay campos vacíos */}
-      <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
+       {/* Modal de confirmación si hay campos vacíos */}
+       <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Campos Vacíos</Modal.Title>
         </Modal.Header>
@@ -659,9 +675,8 @@ const CreateDatos = () => {
             Cancelar
           </Button>
           <Button variant="success" onClick={() => {
-            setPreviousModal('confirm'); // Guardamos el modal actual como "anterior"
             setShowConfirmModal(false);
-            setShowUserRoleModal(true);  // Mostrar el modal para seleccionar usuario o rol
+            setShowUserRoleModal(true);
           }}>
             Enviar Petición
           </Button>
@@ -677,32 +692,20 @@ const CreateDatos = () => {
           ¿Desea enviar la petición a un usuario específico o a un rol?
         </Modal.Body>
         <Modal.Footer>
-          
+          <Button variant="secondary" onClick={() => setShowUserRoleModal(false)}>
+            Cancelar
+          </Button>
           <Button variant="warning" onClick={() => {
-            setPreviousModal('userRole');  // Guardamos el modal actual como "anterior"
             setShowUserRoleModal(false);
-            setShowUserSearchModal(true);  // Abrir modal de búsqueda de usuarios
+            setShowUserSearchModal(true);
           }}>
             Buscar Usuario
           </Button>
           <Button variant="info" onClick={() => {
-            setPreviousModal('userRole');  // Guardamos el modal actual como "anterior"
             setShowUserRoleModal(false);
-            setShowRoleSearchModal(true);  // Abrir modal de búsqueda de roles
+            setShowRoleSearchModal(true);
           }}>
             Buscar Rol
-          </Button>
-          {/* Botón Volver */}
-          <Button variant="secondary" onClick={() => {
-            if (previousModal === 'confirm') {
-              setShowUserRoleModal(false);
-              setShowConfirmModal(true);  // Volver al modal de confirmación
-            }
-          }}>
-            Volver
-          </Button>
-          <Button variant="secondary" onClick={() => setShowUserRoleModal(false)}>
-            Cancelar
           </Button>
         </Modal.Footer>
       </Modal>
@@ -736,9 +739,7 @@ const CreateDatos = () => {
                     <td>
                       <Button
                         variant="primary"
-                        onClick={() => {
-                          handleSelectUser(user);  // Seleccionar el usuario
-                        }}
+                        onClick={() => handleSelectUser(user)}
                       >
                         Seleccionar
                       </Button>
@@ -757,10 +758,9 @@ const CreateDatos = () => {
           <Button variant="secondary" onClick={() => setShowUserSearchModal(false)}>
             Cerrar
           </Button>
-          {/* Botón Volver */}
           <Button variant="light" onClick={() => {
             setShowUserSearchModal(false);
-            setShowUserRoleModal(true);  // Volver al modal anterior (Usuario o Rol)
+            setShowUserRoleModal(true);
           }}>
             Volver
           </Button>
@@ -774,12 +774,11 @@ const CreateDatos = () => {
         </Modal.Header>
         <Modal.Body>
           <Form.Control
-          type="text"
-          placeholder="Buscar por nombre"
-          value={searchRoleName} // Usamos searchRoleName
-          onChange={handleRoleSearch} // Aseguramos que la búsqueda de roles se aplique correctamente
-        />
-
+            type="text"
+            placeholder="Buscar por nombre"
+            value={searchRoleName}
+            onChange={handleRoleSearch}
+          />
           <Table striped bordered hover>
             <thead>
               <tr>
@@ -816,19 +815,79 @@ const CreateDatos = () => {
           <Button variant="secondary" onClick={() => setShowRoleSearchModal(false)}>
             Cerrar
           </Button>
-          {/* Botón Volver */}
           <Button variant="light" onClick={() => {
             setShowRoleSearchModal(false);
-            setShowUserRoleModal(true);  // Volver al modal anterior
+            setShowUserRoleModal(true);
           }}>
             Volver
           </Button>
         </Modal.Footer>
       </Modal>
 
+      {/* Modal de confirmación para enviar la solicitud al usuario */}
+      <Modal show={selectedUserId !== null && showConfirmModal} onHide={() => setShowConfirmModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Envío de Solicitud</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedUserId
+            ? `¿Seguro que deseas enviar la solicitud al usuario ${selectedUserName}?`
+            : 'No se ha seleccionado ningún usuario.'}
+        </Modal.Body>
+        <Form.Group controlId="comentario" style={{ margin: '10px 20px' }}>
+          <Form.Label>Comentario (opcional)</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            placeholder="Agrega un comentario sobre lo que hiciste o lo que falta."
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            style={{ padding: '5px', resize: 'none' }}
+          />
+        </Form.Group>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>Cancelar</Button>
+          <Button variant="success" onClick={handleConfirmSendRequest} disabled={!selectedUserId}>Confirmar</Button>
+          <Button variant="light" onClick={() => {
+            setShowConfirmModal(false);
+            setShowUserSearchModal(true);
+          }}>
+            Volver
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
+      {/* Modal de confirmación para enviar la solicitud al rol */}
+      <Modal show={selectedRoleId !== null && showConfirmModal} onHide={() => setShowConfirmModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Envío de Solicitud</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedRoleId
+            ? <p>¿Seguro que deseas enviar la solicitud al rol {selectedRoleName}?</p>
+            : <p>No se ha seleccionado ningún rol.</p>}
+          <Form.Group controlId="comentario" style={{ margin: '10px 0' }}>
+            <Form.Label>Comentario (opcional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              placeholder="Agrega un comentario sobre lo que hiciste o lo que falta."
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              style={{ padding: '5px', resize: 'none' }}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>Cancelar</Button>
+          <Button variant="success" onClick={handleConfirmSendRequest} disabled={!selectedRoleId}>Confirmar</Button>
+          <Button variant="light" onClick={() => {
+            setShowConfirmModal(false);
+            setShowRoleSearchModal(true);
+          }}>Volver</Button>
+        </Modal.Footer>
+      </Modal>
 
-      <ToastContainer />
     </div>
   );
 };

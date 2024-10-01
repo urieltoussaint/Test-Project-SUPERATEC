@@ -35,35 +35,40 @@ const ShowUsers = () => {
         });
     }, []);
 
-    const getAllUsers = async () => {
+    const getAllUsers = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            let allUsers = [];
-            let currentPage = 1;
-            let totalPages = 1;
+            
+            // Solicitar una página específica
+            const response = await axios.get(`${endpoint}/users-with-roles?page=${page}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
     
-            // Loop para obtener todas las páginas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/users-with-roles?page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+            // Si la respuesta tiene la estructura correcta para paginación
+            if (response.data && response.data.data) {
+                const newUsers = response.data.data.sort((a, b) => a.name.localeCompare(b.name));
     
-                allUsers = [...allUsers, ...response.data.data];
-                totalPages = response.data.last_page; // Total de páginas
-                currentPage++;
+                // Actualiza el estado añadiendo los usuarios de esta página
+                setUsers((prevUsers) => [...prevUsers, ...newUsers]);
+                setFilteredUsers((prevUsers) => [...prevUsers, ...newUsers]); // También actualizamos los filtrados
+    
+                // Verifica si hay más páginas
+                if (response.data.current_page < response.data.last_page) {
+                    // Cargar la siguiente página si existe
+                    getAllUsers(response.data.current_page + 1);
+                }
+            } else {
+                console.error('Unexpected data format:', response.data);
             }
-    
-            // Ordenar los usuarios por nombre
-            const sortedUsers = allUsers.sort((a, b) => a.name.localeCompare(b.name));
-            setUsers(sortedUsers);
-            setFilteredUsers(sortedUsers);
-            console.log('Usuarios obtenidos:', sortedUsers);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
+    
+    
+    
     
     
 
