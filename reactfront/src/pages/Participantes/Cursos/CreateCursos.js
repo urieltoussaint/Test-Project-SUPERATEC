@@ -266,8 +266,18 @@ const getAllRoles = async () => {
                 onChange={handleChange}
               />
             </Form.Group>
-
-            {selectDataLoaded && (
+            
+            <Form.Group controlId="cuotas">
+              <Form.Label>Cantidad de Cuotas</Form.Label>
+              <Form.Control
+                type="number"
+                name="cuotas"
+                value={formData.cuotas}
+                onChange={handleChange}
+                maxLength={4}
+              />
+            </Form.Group>
+            
               <SelectComponent
                 endpoint={`${endpoint}/area`}
                 nameField="descripcion"
@@ -277,7 +287,7 @@ const getAllRoles = async () => {
                 controlId="area_id"
                 label="Área"
               />
-            )}
+           
 
             <Form.Group controlId="costo">
               <Form.Label>Costo del curso ($)</Form.Label>

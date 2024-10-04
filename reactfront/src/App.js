@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, NavLink } from 'react-router-dom';
 import { LoadingProvider, useLoading } from './components/LoadingContext'; 
 import Loader from './components/Loader'; 
 import axios from 'axios';
@@ -37,6 +37,9 @@ import EditUsers from './pages/Users/EditUsers';
 import ShowPeticiones from './pages/Bandeja/ShowPeticiones';
 import ShowPeticionesNoAtentidas from './pages/Bandeja/ShowPeticionesNoAtentidas';
 import ShowPagosCursos from './pages/Participantes/ReportePagos/ShowPagosCursos';
+import Dashboard from './Dashboard';
+import { useLocation } from 'react-router-dom'; // Importa useLocation
+
 
 function App() {
   return (
@@ -48,6 +51,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             {/* Envuelve todas las rutas protegidas con AuthenticatedLayout y ProtectedRoute */}
             <Route path="/peticiones" element={<AuthenticatedLayout><ShowPeticiones /></AuthenticatedLayout>} />
+            <Route path="/dashboard" element={<AuthenticatedLayout><Dashboard /></AuthenticatedLayout>} />
             <Route path="/peticiones/Noat" element={<AuthenticatedLayout><ShowPeticionesNoAtentidas /></AuthenticatedLayout>} />
             <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><ShowUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="users/:id" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><EditUsers /></AuthenticatedLayout></ProtectedRoute>} />
@@ -83,6 +87,9 @@ function App() {
 }
 
 const AuthenticatedLayout = ({ children }) => {
+  const location = useLocation(); // Obtén la ubicación actual
+  const [pageTitle, setPageTitle] = useState('');
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -92,6 +99,7 @@ const AuthenticatedLayout = ({ children }) => {
   const userRole = localStorage.getItem('role');
 
   useEffect(() => {
+
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -113,7 +121,24 @@ const AuthenticatedLayout = ({ children }) => {
     };
   
     fetchUser();
-  }, [navigate]);
+
+
+    switch (location.pathname) {
+      case '/cursos':
+        setPageTitle('Cursos');
+        break;
+      case '/pagos':
+        setPageTitle('Reporte de Pagos');
+        break;
+      case '/voluntariados':
+        setPageTitle('Voluntariados');
+        break;
+      // Agrega más rutas aquí según sea necesario
+      default:
+        setPageTitle('Dashboard');
+        break;
+    }
+  }, [navigate],[location]);
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -143,22 +168,22 @@ const AuthenticatedLayout = ({ children }) => {
 
   return (
     <div className="app-container">
-  {/* Sidebar */}
-  <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+   {/* Sidebar */}
+  <div className={`sidebar`}>
+    <div className="logo">
+      <img src="/IMG/Simedimos_Logo_var3.png" alt="Logo" />
+    </div>
     <ul>
       <li className={openDropdown === 1 ? 'expanded' : ''}>
-        <div className="logo">
-          <img src="/IMG/Simedimos_Logo_var3.png" alt="Logo" style={{ width: '140px' }} />
-        </div>
         <div className="dropdown-button" onClick={() => toggleDropdown(1)}>
           <i className="bi bi-bookmark-fill"></i> Módulo 1
           <i className={`bi ${openDropdown === 1 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
         </div>
         <ul className={`dropdown-menu ${openDropdown === 1 ? 'show' : ''}`}>
-          <li><Link to="/datos"><i className="bi bi-person-circle"></i> Participantes</Link></li>
-          <li><Link to="/cursos"><i className="bi bi-book-half"></i> Cursos</Link></li>
-          <li><Link to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</Link></li>
-          <li><Link to="/promocion"><i className="bi bi-star-fill"></i> Promoción</Link></li>
+          <li><NavLink to="/datos"><i className="bi bi-person-circle"></i> Participantes</NavLink></li>
+          <li><NavLink to="/cursos"><i className="bi bi-book-half"></i> Cursos</NavLink></li>
+          <li><NavLink to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</NavLink></li>
+          <li><NavLink to="/promocion"><i className="bi bi-star-fill"></i> Promoción</NavLink></li>
         </ul>
       </li>
       <li className={openDropdown === 2 ? 'expanded' : ''}>
@@ -167,43 +192,36 @@ const AuthenticatedLayout = ({ children }) => {
           <i className={`bi ${openDropdown === 2 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
         </div>
         <ul className={`dropdown-menu ${openDropdown === 2 ? 'show' : ''}`}>
-          <li><Link to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</Link></li>
+          <li><NavLink to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</NavLink></li>
         </ul>
       </li>
     </ul>
   </div>
 
-    {/* Botón fijo para abrir/cerrar sidebar */}
-    <div
-    className="toggle-sidebar-button"
-    style={{ left: isSidebarOpen ? '200px' : '0' }} // Mueve la lógica a JSX
-    onClick={toggleSidebar}
-  >
-    <i className={`bi ${isSidebarOpen ? 'bi-caret-left' : 'bi-caret-right-fill'}`}></i>
-  </div>
+  
+
 
 
       <div className="header">
-        <button className="menu-button" onClick={toggleSidebar}>
-          
-        </button>
 
+      <h2 className="page-title">{`> ${pageTitle}`}</h2>
         <div className="header-content">
-          <div className="user-section">
+        
+          <div className="user-section ">
             {/* Íconos a la izquierda */}
             <div className="icon-container">
               <div className="user-icon" onClick={() => navigate('/peticiones')}>
-                <i className="bi bi-inbox-fill" style={{ fontSize: '1.6rem', cursor: 'pointer', marginRight: '20px' }}></i>
+                <i className="bi bi-inbox-fill" style={{ fontSize: '1.6rem', cursor: 'pointer', }}></i>
               </div>
               {userRole === 'admin' && (
                 <div className="user-icon" onClick={() => navigate('/users')}>
-                  <i className="bi bi-person-fill-gear" style={{ fontSize: '1.5rem', cursor: 'pointer', marginRight: '20px' }}></i>
+                  <i className="bi bi-person-fill-gear" style={{ fontSize: '1.5rem', cursor: 'pointer', }}></i>
                 </div>
               )}
             </div>
 
             {/* Nombre de Rol y Círculo */}
-            <span className="user-role">{userRole}</span>
+            <span className="user-role  ">{userRole}</span>
             <div className="user-circle" onClick={toggleDropdowns}>
               <span className="user-initial">{user?.name?.charAt(0).toUpperCase()}</span>
             </div>
@@ -211,8 +229,8 @@ const AuthenticatedLayout = ({ children }) => {
             {/* Menú Desplegable de Logout */}
             {isDropdownOpen && (
             <div className="dropdown-menux">
-              <div className="logout-options" >
-              <span>Usuario: {user.name}</span>
+              <div className="logout-options " >
+              <span >Usuario: {user.name}</span>
               </div>
               <div className="logout-option" onClick={handleLogout}>
 
@@ -230,7 +248,7 @@ const AuthenticatedLayout = ({ children }) => {
 
 
       {/* Main content */}
-      <div className="main-content">
+      <div className={`content ${isSidebarOpen ? '' : 'closed'}`}>
         {children} {/* Aquí va el contenido principal */}
       </div>
     </div>

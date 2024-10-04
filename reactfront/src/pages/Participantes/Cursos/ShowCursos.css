@@ -1,26 +1,101 @@
-.col-cods {
-    width: 10%;
-}
 
-.col-descripcions {
-    width: 20%;
-}
-
-.col-horass {
-    width: 10%;
-}
-
-.col-fechas {
-    width: 15%;
-}
-
-.col-costos {
-    width: 20%;
-}
-
-.col-accioness {
-    width: 20%;
-}
 .custom-width {
     width: 400px; /* Ajusta a tu necesidad */
 }
+
+
+
+.col-cod {
+    width: 1%;
+    white-space: nowrap;
+  }
+  .col-descripcions {
+    width: 30%;
+  }
+
+  .col-horas {
+    width: 1%;
+    white-space: nowrap;
+  }
+  .col-fecha {
+    width: 1%;
+    white-space: nowrap;
+  }
+  .col-costo {
+    width: 1%;
+    white-space: nowrap;
+  }
+  .col-cuotas {
+    width: 1%;
+    white-space: nowrap;
+  }
+.col-accionex {
+    
+    width: 1%;
+    white-space: nowrap;
+  }
+  
+
+.table-container {
+    flex-grow: 2; /* Permite que la tabla ocupe más espacio */
+    margin-right: 20px;
+}
+
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 40%; /* Aumenta el tamaño del contenedor de las gráficas */
+}
+
+.chart-box {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 0 0px 30px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.chart-box h4 {
+    margin-bottom: 10px;
+}
+
+
+
+.card-box {
+    background-color: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0px 30px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+  }
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.stat-box {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 30%;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 1.2rem;
+}
+
+  

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
+import { Modal } from 'react-bootstrap';
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
@@ -29,6 +30,10 @@ const CreatePagosCedula = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // Estado de bloqueo
   const [canceladoError, setCanceladoError] = useState('');  // Para manejo de errores en monto cancelado
   const [exoneradoError, setExoneradoError] = useState('');  // Para manejo de errores en monto exonerado
+  const [showModal, setShowModal] = useState(false);  // Controlar el modal
+  const [modalMessage, setModalMessage] = useState('');  // Mensaje del modal
+  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,85 +59,190 @@ const CreatePagosCedula = () => {
     }
   };
 
-  // Obtener información del curso
-  const fetchCursoInfo = async () => {
+  const getAllCursos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/ultimo_pago/${cursoId}/${cedula}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const ultimoPago = response.data;
-
-      const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : 0; // Asume 0 si no hay último pago
-      setFormData((prevState) => ({
-        ...prevState,
-        monto_total: montoTotal,
-        monto_restante: montoTotal,
-        conversion_total: calcularConversion(montoTotal),
-      }));
-    } catch (error) {
-      console.error('Error fetching curso info:', error);
-      setError('Error al obtener la información del curso');
-    }
-  };
-
-  // Obtener la inscripción del curso usando paginación
-  const fetchInscripcionCurso = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      let allInscripciones = [];
+      let allCursos = [];
       let currentPage = 1;
       let totalPages = 1;
-
+  
       while (currentPage <= totalPages) {
-        const response = await axios.get(`${endpoint}/cursos_inscripcion`, {
-          params: { inscripcion_curso_id: cursoId, page: currentPage },
+        const response = await axios.get(`${endpoint}/cursos?with=area&page=${currentPage}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        allInscripciones = [...allInscripciones, ...response.data.data];
+        allCursos = [...allCursos, ...response.data.data];
         totalPages = response.data.last_page;
         currentPage++;
       }
-
-      // Filtramos la inscripción por cursoId
-      const inscripcion = allInscripciones.find(
-        (inscripcion) => inscripcion.id === parseInt(cursoId, 10)
-      );
-
-      if (inscripcion) {
-        setInscripcionCursoId(inscripcion.curso_id);  // Guardamos el ID de la inscripción
-      } else {
-        throw new Error('No se encontró la inscripción para el curso');
-      }
+  
+      console.log('Cursos obtenidos:', allCursos);
+      return allCursos; // Devolver los cursos obtenidos
     } catch (error) {
-      console.error('Error fetching inscripcion del curso:', error);
-      setError('Error obteniendo la inscripción del curso');
+      console.error('Error fetching cursos:', error);
+      return [];
     }
   };
+  
+
+
+
+  // Obtener información del curso
+  // Obtener información del curso
+const fetchCursoInfo = async () => {
+  try {
+    // Llamamos a fetchInscripcionCurso para obtener el curso_id
+    const cursoIdObtenido = await fetchInscripcionCurso();
+
+    if (!cursoIdObtenido) {
+      throw new Error('No se pudo obtener el curso_id');
+    }
+
+    // Llamar a getAllCursos usando el curso_id obtenido
+    const allCursos = await getAllCursos();
+    const cursoFromApi = allCursos.find(curso => curso.id === parseInt(cursoIdObtenido, 10));
+    
+    if (!cursoFromApi) {
+      throw new Error('Curso no encontrado en la API');
+    }
+
+    // Obtener la cantidad de pagos ya realizados
+    const pagosRealizados = await getPagosByCurso(cursoId);
+
+    // Verificar si estamos en la última cuota
+    const esUltimaCuota = pagosRealizados + 1 === cursoFromApi.cuotas;
+
+    console.log('Curso seleccionado:', cursoFromApi.cod);
+    console.log('Cuotas del curso:', cursoFromApi.cuotas);
+    console.log('Pagos realizados:', pagosRealizados);
+
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${endpoint}/ultimo_pago/${cursoId}/${cedula}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const ultimoPago = response.data;
+    const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(cursoFromApi.costo);
+
+    setFormData((prevState) => ({
+      ...prevState,
+      monto_total: montoTotal,
+      monto_restante: montoTotal,
+      conversion_total: calcularConversion(montoTotal),
+      esUltimaCuota,  // Almacenar si es la última cuota
+    }));
+  } catch (error) {
+    console.error('Error fetching curso info:', error);
+    setError('Error al obtener la información del curso');
+  }
+};
+
+  
+
+const getPagosByCurso = async (inscripcion_curso_id) => {
+  try {
+    const token = localStorage.getItem('token');
+    let allPagos = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
+    while (currentPage <= totalPages) {
+      const response = await axios.get(`${endpoint}/pagos`, {
+        params: { curso_id: inscripcion_curso_id, page: currentPage },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      allPagos = [...allPagos, ...response.data.data];
+      totalPages = response.data.last_page;
+      currentPage++;
+    }
+
+    // Filtrar por inscripcion_curso_id
+    const pagosFiltrados = allPagos.filter((reporte) => reporte.inscripcion_curso_id === parseInt(inscripcion_curso_id));
+    return pagosFiltrados.length; // Devolver la cantidad de pagos realizados
+  } catch (error) {
+    console.error('Error fetching pagos:', error);
+    return 0;
+  }
+};
+
+  
+
+
+
+  // Obtener la inscripción del curso usando paginación
+  // Obtener la inscripción del curso usando paginación
+const fetchInscripcionCurso = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    let allInscripciones = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
+    while (currentPage <= totalPages) {
+      const response = await axios.get(`${endpoint}/cursos_inscripcion`, {
+        params: { inscripcion_curso_id: cursoId, page: currentPage },  // Filtrar por inscripcion_curso_id
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      allInscripciones = [...allInscripciones, ...response.data.data];
+      totalPages = response.data.last_page;
+      currentPage++;
+    }
+
+    // Filtrar por inscripcion_curso_id para obtener curso_id
+    const inscripcion = allInscripciones.find(
+      (inscripcion) => inscripcion.id === parseInt(cursoId, 10)
+    );
+
+    if (inscripcion) {
+      setInscripcionCursoId(inscripcion.curso_id);  // Guardamos el curso_id obtenido
+    } else {
+      throw new Error('No se encontró la inscripción para el curso');
+    }
+
+    return inscripcion?.curso_id; // Retornar curso_id para usarlo en el próximo paso
+  } catch (error) {
+    console.error('Error obteniendo la inscripción del curso:', error);
+    setError('Error obteniendo la inscripción del curso');
+    return null;
+  }
+};
+
 
   // Manejar cambios en los montos y validar errores
   const handleMontoChange = (event) => {
     const { name, value } = event.target;
     const inputValue = parseFloat(value) || 0;
-
+  
+    // Reiniciar errores
     setCanceladoError('');
     setExoneradoError('');
-
+  
+    // Obtener valores de los campos
     let cancelado = name === 'monto_cancelado' ? inputValue : parseFloat(formData.monto_cancelado) || 0;
     let exonerado = name === 'monto_exonerado' ? inputValue : parseFloat(formData.monto_exonerado) || 0;
-
+  
+    // Calcular el monto restante
     const montoRestante = parseFloat(formData.monto_total) - cancelado - exonerado;
-
-    // Validar si el monto restante es menor a 0
+  
+    // Verificar si el monto excede el monto restante (esta validación tiene mayor prioridad)
     if (montoRestante < 0) {
       if (name === 'monto_cancelado') {
         setCanceladoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
       } else {
         setExoneradoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
       }
+    } 
+    // Validar si es la última cuota y si cancelado + exonerado no cubren el monto restante
+    else if (formData.esUltimaCuota && montoRestante !== 0) {
+      if (name === 'monto_cancelado') {
+        setCanceladoError('En la última cuota, el monto debe cubrir el restante completo.');
+      } else {
+        setExoneradoError('En la última cuota, el monto debe cubrir el restante completo.');
+      }
     }
-
+  
+    // Actualizar el estado del formulario
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -142,11 +252,19 @@ const CreatePagosCedula = () => {
       conversion_exonerado: calcularConversion(exonerado)
     }));
   };
+  
 
  // Enviar formulario y crear el pago
-const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
   e.preventDefault();
   if (isSubmitting) return;
+
+  // Verificar si hay errores en los montos
+  if (canceladoError || exoneradoError) {
+    setModalMessage('Hay errores en los montos. Por favor, corrígelos antes de continuar.');
+    setShowModal(true);  // Mostrar el modal
+    return;  // No continuar con el submit
+  }
 
   setIsSubmitting(true);
   try {
@@ -220,7 +338,7 @@ const handleSubmit = async (e) => {
 
     } else if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
       // Si el monto restante es mayor que 0 pero menor que el monto total, actualizar el status_pay
-      await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
+      await axios.put(`${endpoint}/inscripcion_cursos/${cedula}/status`, {
         cedula_identidad: cedula,
         curso_id: inscripcionCursoId,
         status_pay: 2 // status pago en proceso
@@ -277,6 +395,7 @@ const handleSubmit = async (e) => {
     setIsSubmitting(false);
   }
 };
+
 
 
   // Calcular conversión a BsF
@@ -364,6 +483,19 @@ const handleSubmit = async (e) => {
           Volver
         </Button>
       </Form>
+
+            {/* // Modal de error */}
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Error en el formulario</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{modalMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
       {tasaBcv && (
         <div className="mt-3">
           <p><strong>Tasa BCV Actual:</strong> {tasaBcv}</p>

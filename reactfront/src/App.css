@@ -1,6 +1,13 @@
 /* Header */
 /* Sobrescribe el estilo de los botones de variante 'info' */
 /* Sobrescribe el estilo de los botones de variante 'outline-info' */
+
+body {
+  background-color: #fdfdfd; /* Cambia este color por el que desees */
+}
+
+
+
 .btn-outline-info {
   color: #185da7 !important;            /* Color del texto y el borde */
   border-color: #185da7 !important;     /* Borde */
@@ -17,7 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 15px;
+  padding: 20px;
   background-color: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
@@ -124,41 +131,74 @@
 }
 
 
+/* Ajustar el sidebar para centrar el logo y hacerlo más ancho */
+/* Estilo para el sidebar */
 .sidebar {
-  width: 200px;
-  background-color: #ffffffd9;
-  height: 100vh; /* Asegurar que el sidebar ocupe toda la altura de la pantalla */
-  position: fixed;
-  padding: 2px;
-  top: 0px;
-  left: 10px;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 0 30px 30px 0;
+  position: fixed; /* Sidebar fijo */
+  left: 0;
+  top: 0;
+  height: 100%; /* Ocupa toda la altura de la pantalla */
+  width: 200px; /* Ancho fijo del sidebar */
+  background-color: #f8f9fa; /* Color de fondo */
+  padding: 20px 10px; /* Ajusta el padding interno */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Sombras */
+  z-index: 1000; /* Asegura que esté por encima del contenido principal */
+  overflow-y: auto; /* Agrega scroll si es necesario */
 }
 
-.sidebar.open {
-  transform: translateX(0);
+/* Estilo para el contenido principal */
+.content {
+  margin-left: 210px; /* Ajusta el margen para que el contenido no se solape con el sidebar */
+  padding: 10px 80px; /* Padding del contenido principal */
 }
 
-.menu-button {
-  background: none;
-  border: none;
-  color: rgb(96, 94, 94);
-  font-size: 22px;
-  cursor: pointer;
-  padding: 15px 25px;
-  position: fixed; /* Asegura que el botón siempre esté visible en la pantalla */
-  top: 15px; /* Ajustar la posición desde la parte superior */
-  left: 100px; /* Ajustar la posición desde la izquierda */
-  z-index: 1001; /* Mantener el botón por encima del contenido */
-  border-radius: 15px;
+
+/* Centrar el logo */
+.sidebar .logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px; /* Espacio entre el logo y el contenido */
 }
 
-.content.open {
-  margin-left: 200px;
+.sidebar .logo img {
+  width: 160px; /* Ajustar el tamaño del logo */
 }
+
+/* Estilo de las letras en gris */
+.sidebar ul li a {
+  color: #404040; /* Letras en gris */
+}
+
+.sidebar ul li a:hover {
+  color: rgb(22, 54, 96); /* Letras más oscuras al pasar el mouse */
+}
+
+/* Estilo para el contenido principal adaptarse al sidebar */
+
+
+
+/* Estilo del enlace activo en la sidebar */
+.sidebar a.active {
+  background-color: #eeeeee; /* Color de fondo para el enlace activo */
+  color:rgb(17, 39, 66); /* Color del texto activo */
+  font-weight: bold; /* Texto más destacado */
+  padding-left: 10px; /* Mayor espacio de sangría */
+  border-radius: 5px; /* Bordes redondeados */
+}
+
+.sidebar a.active i {
+  color:rgb(17, 39, 66); /* Cambiar el color del ícono cuando el enlace está activo */
+}
+
+
+/* Cuando el sidebar está cerrado */
+.sidebar:not(.open) + .content {
+  margin-left: 0;
+  width: 100%; /* El contenido ocupa todo el ancho */
+}
+
+
 
 
 .user-info {
@@ -214,10 +254,6 @@
   margin-right: 10px; /* Espacio entre el icono y el texto */
 }
 
-.content {
-  transition: margin-left 0.3s ease; /* Animación suave para el margen */
-  padding: 20px;
-}
 
 
 
@@ -487,4 +523,47 @@
 /* Ajustes para hover y active (opcional) */
 .btn-icon:hover {
   color: white; /* Mantener el color blanco en hover */
+}
+
+.page-title {
+  font-size: 1.3rem;
+  font-weight: regular;
+  margin-right: auto;
+  margin-left: 300px; /* Espaciado desde el borde izquierdo */
+  color: #555555;
+}
+
+
+.icon-container .user-icon {
+  background-color: #f5f5f5; /* Color de fondo del círculo */
+  border-radius: 50%; /* Hace el fondo circular */
+  width: 40px;  /* Ajusta el tamaño */
+  height: 40px; /* Ajusta el tamaño */
+  display: flex; /* Flexbox para centrar el contenido */
+  justify-content: center; /* Centrar horizontalmente */
+  align-items: center; /* Centrar verticalmente */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 1.4rem; /* Tamaño del ícono */
+  line-height: 1; /* Ajusta la altura de línea para centrar mejor */
+}
+
+
+.icon-container .user-icon:hover {
+  background-color: #e0e0e0; /* Color de fondo al pasar el mouse */
+}
+
+.icon-container .user-icon i {
+  font-size: 1.6rem;
+  color: #666; /* Color del ícono */
+}
+
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

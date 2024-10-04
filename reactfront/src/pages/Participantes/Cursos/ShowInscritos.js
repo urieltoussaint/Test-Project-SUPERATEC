@@ -22,6 +22,8 @@ const ShowInscritos = () => {
   const { setLoading } = useLoading();
   const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
   const itemsPerPage = 5; // Número de elementos por página
+  const [showCompleteModal, setShowCompleteModal] = useState(false); // Estado para controlar el modal de "culminado"
+  const [selectedCompleteId, setSelectedCompleteId] = useState(null); // Estado para guardar el ID de la inscripción a marcar como culminado
 
   useEffect(() => {
     setLoading(true);
@@ -111,8 +113,47 @@ const ShowInscritos = () => {
     if (status_pay === '1') return 'red'; // No pagado
     if (status_pay === '2') return 'orange'; // En proceso
     if (status_pay === '3') return 'green'; // Pagado
+    if (status_pay === '4') return 'blue'; // Culminado
     return 'gray'; // Desconocido
   };
+
+
+// Mostrar el modal de confirmación para marcar como culminado
+const handleShowCompleteModal = (id) => {
+  setSelectedCompleteId(id);
+  setShowCompleteModal(true);
+};
+
+// Cerrar el modal de culminado
+const handleCloseCompleteModal = () => {
+  setShowCompleteModal(false);
+};
+
+  
+  // Manejar la acción para cambiar el status_pay a 4 (culminado)
+const handleMarkAsComplete = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put(`${endpoint}/inscripcion_cursos/${selectedCompleteId}`, {
+      status_pay: 4,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    toast.success('El participante ha sido marcado como "culminado"');
+    setFilteredInscripciones(
+      filteredInscripciones.map(inscripcion => 
+        inscripcion.id === selectedCompleteId ? { ...inscripcion, status_pay: 4 } : inscripcion
+      )
+    );
+    setShowCompleteModal(false); // Cierra el modal tras éxito
+  } catch (error) {
+    console.error('Error updating status_pay:', error);
+    toast.error('Error al marcar como culminado');
+    setShowCompleteModal(false);
+  }
+};
 
   const renderStatusPayDot = (status_pay) => {
     const color = getStatusPayColor(status_pay);
@@ -182,33 +223,46 @@ const ShowInscritos = () => {
     setFilteredInscripciones(filtered);
   };
 
+  // Filtrar todos los inscritos menos los que han culminado (status_pay = 4)
+const applyNonCulminadosFilter = () => {
+  const filtered = inscripciones.filter(inscripcion => inscripcion.status_pay !== '4');
+  setFilteredInscripciones(filtered);
+};
+
   const columns = ["Estado", "Cédula", "Fecha de Inscripción", "Nombres", "Apellidos", "Acciones"];
 
   const renderItem = (inscripcion) => (
     <tr key={inscripcion.id}>
-      <td className="text-center">{renderStatusPayDot(inscripcion.status_pay)}</td>
+      <td className="text-centerd-fel">{renderStatusPayDot(inscripcion.status_pay)}</td>
       <td>{inscripcion.cedula_identidad}</td>
       <td>{moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD')}</td>
       <td>{inscripcion.nombres}</td>
       <td>{inscripcion.apellidos}</td>
       <td>
-        <div className="d-flex justify-content-around">
-          <Button
-            variant="info"
-            onClick={() => navigate(`/pagos/curso/${inscripcion.id}`)}
-          >
-            Ver Pagos
+      <div className="d-flex" style={{ gap: '5px' }}>
+
+        {/* Botón para ver pagos */}
+        <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${inscripcion.id}`)} className="me-1">
+          <i className="bi bi-list-check"></i>
+        </Button>
+
+        {/* Botón para eliminar si el rol es 'admin' */}
+        {userRole === 'admin' && (
+          <Button variant="btn btn-danger" onClick={() => handleShowModal(inscripcion.id)} className="me-1">
+            <i className="bi bi-trash3-fill"></i>
           </Button>
-          {userRole === 'admin' && (
-            <Button
-              variant="danger"
-              onClick={() => handleShowModal(inscripcion.id)}
-            >
-              Eliminar
-            </Button>
-            
-          )}
+        )}
+
+        {/* Botón para marcar como culminado si el rol es 'admin' o 'superuser' y status_pay es 3 */}
+        {(userRole === 'admin' || userRole === 'superuser') && inscripcion.status_pay === '3' && (
+          <Button variant="btn btn-success" onClick={() => handleShowCompleteModal(inscripcion.id)} className="me-1">
+            <i className="bi bi-check-circle"></i>
+          </Button>
+        )}
+
+
         </div>
+
       </td>
     </tr>
   );
@@ -217,28 +271,22 @@ const ShowInscritos = () => {
     <div className="container">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1>Inscritos del Curso {cursoCod}</h1>
-        <div>
+        <div className="d-flex align-items-center justify-content-between"> {/* Alineación horizontal */}
           {(userRole === 'admin' || userRole === 'superuser' ) && (
-            <Button
-              variant="success"
-              onClick={() => navigate(`/inscribir/${cursoId}`)}
-              className="me-2"
-            >
-              Inscribir
+            <Button variant="btn custom" onClick={() => navigate(`/inscribir/${cursoId}`)} className="btn-custom me-2" style={{ fontSize: '0.9rem' }}>
+              <i className="bi bi-person-plus-fill"></i> Nuevo
             </Button>
           )}
 
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/cursos')}
-          >
-            Volver
+          <Button variant="secondary" onClick={() => navigate('/cursos')} className="secondary" style={{ fontSize: '0.9rem' }}>
+            <i className="bi bi-arrow-90deg-left"></i>
           </Button>
         </div>
       </div>
 
-      {/* Alinear el buscador y el filtro en la misma fila */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
+        {/* Alinear el buscador y el filtro en la misma fila con el nuevo botón a la derecha */}
+    <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex align-items-center" style={{ gap: '10px' }}> {/* Ajusta el espacio entre el buscador y el filtro */}
         <Form.Control
           type="text"
           placeholder="Buscar por cédula"
@@ -256,14 +304,28 @@ const ShowInscritos = () => {
           <option value="1">No pagado (Rojo)</option>
           <option value="2">En proceso (Naranja)</option>
           <option value="3">Pagado (Verde)</option>
+          <option value="4">Culminado (Azul)</option> {/* Opción para "Culminado" */}
         </Form.Select>
       </div>
+
+      {/* Botón para mostrar los inscritos que no han culminado (status_pay 1, 2 o 3) */}
+      <Button variant="success" onClick={() => applyNonCulminadosFilter()}>
+        Mostrar en Proceso
+      </Button>
+      <Button variant="info" onClick={() => applyPayStatusFilter('4')}>
+        Mostrar solo culminados
+      </Button>
+
+      
+    </div>
+
 
       {/* Leyenda de colores */}
       <div className="status-legend d-flex justify-content-start mb-3">
         <span className="status-dot red"></span> No pagado (Rojo)
         <span className="status-dot orange ms-3"></span> En proceso (Naranja)
         <span className="status-dot green ms-3"></span> Pagado (Verde)
+        <span className="status-dot blue ms-3"></span> Culminado (Azul)
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
@@ -291,6 +353,23 @@ const ShowInscritos = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Modal de Curso Completado */}
+      <Modal show={showCompleteModal} onHide={handleCloseCompleteModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>Confirmar finalización del curso</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>¿Estás seguro de que este participante ha culminado el curso?</Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleCloseCompleteModal}>
+          Cancelar
+        </Button>
+        <Button variant="success" onClick={handleMarkAsComplete}>
+          Marcar como culminado
+        </Button>
+      </Modal.Footer>
+    </Modal>
+
 
       <ToastContainer />
     </div>

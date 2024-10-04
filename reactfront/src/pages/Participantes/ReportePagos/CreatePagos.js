@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
+import { Modal } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 
 const endpoint = 'http://localhost:8000/api';
@@ -33,6 +34,8 @@ const CreatePago = () => {
   const [exoneradoError, setExoneradoError] = useState('');
   const navigate = useNavigate();
   const [cursoId, setCursoId] = useState(null); // <-- Añadido el estado para cursoId
+  const [showModal, setShowModal] = useState(false);  // Controlar el modal
+  const [modalMessage, setModalMessage] = useState('');  // Mensaje del modal
 
   useEffect(() => {
     fetchTasaBcv();
@@ -110,31 +113,88 @@ const CreatePago = () => {
     }
   };
 
-  const handleCursoChange = async (event) => {
-    const selectedCursoId = event.target.value; // <-- Aquí obtenemos el selectedCursoId
-    console.log(selectedCursoId); // <-- Imprimir en la consola
 
-    const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId, 10));
-
-    setCursoSeleccionado(selectedCurso);
-    setCursoId(selectedCurso.curso_id); // <-- Almacenar el curso_id en el estado global
-
+  const getAllCursos = async () => {
     try {
+        const token = localStorage.getItem('token');
+        let allCursos = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Loop para obtener todas las páginas
+        while (currentPage <= totalPages) {
+            const response = await axios.get(`${endpoint}/cursos?with=area&page=${currentPage}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            allCursos = [...allCursos, ...response.data.data];
+            totalPages = response.data.last_page;
+            currentPage++;
+        }
+
+        console.log('Cursos obtenidos:', allCursos);
+        return allCursos; // Devolver los cursos obtenidos
+    } catch (error) {
+        console.error('Error fetching cursos:', error);
+        return [];
+    }
+};
+
+
+  const handleCursoChange = async (event) => {
+    const selectedCursoId = event.target.value;
+    const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId, 10));
+    
+    if (!selectedCurso) {
+      console.error('Curso no encontrado');
+      return;
+    }
+    console.log('Curso seleccionado:', selectedCurso.curso_id);
+    
+    setCursoSeleccionado(selectedCurso);
+    setCursoId(selectedCurso.curso_id);
+    console.log (selectedCurso.curso_id);
+    
+  
+    try {
+      const allCursos = await getAllCursos();
+    
+      // Filtrar el curso exacto por curso_id después de obtener todos los cursos
+      const cursoFromApi = allCursos.find(curso => curso.id === selectedCurso.curso_id);
+  
+      if (!cursoFromApi) {
+        console.error('Curso no encontrado en la API');
+        return;
+      }
+  
+      console.log('Cuotas del curso desde API:', cursoFromApi.cuotas);
+  
+
+
+      // Obtener la cantidad de pagos ya realizados
+      const pagosRealizados = await getPagosByCurso(selectedCursoId);
+      console.log (cursoFromApi.cuotas);
+  
+      // Verificar si estamos en la última cuota
+      const esUltimaCuota = pagosRealizados + 1 === cursoFromApi.cuotas;
+  
       const token = localStorage.getItem('token');
       const response = await axios.get(`${endpoint}/ultimo_pago/${selectedCursoId}/${cedula}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
+  
       const ultimoPago = response.data;
-
       const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(selectedCurso.costo);
+  
       setFormData((prevState) => ({
         ...prevState,
         inscripcion_curso_id: selectedCursoId,
         monto_total: montoTotal,
         monto_restante: montoTotal,
         conversion_total: calcularConversion(montoTotal),
+        esUltimaCuota,  // Almacenar si es la última cuota
       }));
     } catch (error) {
       console.error('Error fetching ultimo pago:', error);
@@ -143,44 +203,55 @@ const CreatePago = () => {
         inscripcion_curso_id: selectedCursoId,
         monto_total: parseFloat(selectedCurso.costo),
         monto_restante: parseFloat(selectedCurso.costo),
-        conversion_total: calcularConversion(selectedCurso.costo)
+        conversion_total: calcularConversion(selectedCurso.costo),
+        esUltimaCuota: false,  // Asumir que no es la última cuota en caso de error
       }));
     }
   };
+  
+  
 
-  const handleMontoChange = (event) => {
-    const { name, value } = event.target;
-    const inputValue = parseFloat(value) || 0;
-
-    setCanceladoError('');
-    setExoneradoError('');
-
-    let cancelado = name === 'monto_cancelado' ? inputValue : parseFloat(formData.monto_cancelado) || 0;
-    let exonerado = name === 'monto_exonerado' ? inputValue : parseFloat(formData.monto_exonerado) || 0;
-
-    const montoRestante = parseFloat(formData.monto_total) - cancelado - exonerado;
-
-    if (montoRestante < 0) {
-      if (name === 'monto_cancelado') {
-        setCanceladoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
-      } else {
-        setExoneradoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
+  const getPagosByCurso = async (inscripcion_curso_id) => {
+    try {
+      const token = localStorage.getItem('token');
+      let allPagos = [];
+      let currentPage = 1;
+      let totalPages = 1;
+  
+      while (currentPage <= totalPages) {
+        const response = await axios.get(`${endpoint}/pagos`, {
+          params: { curso_id: inscripcion_curso_id, page: currentPage },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        allPagos = [...allPagos, ...response.data.data];
+        totalPages = response.data.last_page;
+        currentPage++;
       }
+  
+      // Filtrar por inscripcion_curso_id
+      const pagosFiltrados = allPagos.filter((reporte) => reporte.inscripcion_curso_id === parseInt(inscripcion_curso_id));
+      return pagosFiltrados.length; // Devolver la cantidad de pagos realizados
+    } catch (error) {
+      console.error('Error fetching pagos:', error);
+      return 0;
     }
-
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-      monto_restante: montoRestante > 0 ? montoRestante.toFixed(2) : '0.00',
-      conversion_restante: calcularConversion(montoRestante),
-      conversion_cancelado: calcularConversion(cancelado),
-      conversion_exonerado: calcularConversion(exonerado)
-    }));
   };
+  
+
+ 
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+  // Verificar si hay errores en los montos
+  if (canceladoError || exoneradoError) {
+    setModalMessage('Hay errores en los montos. Por favor, corrígelos antes de continuar.');
+    setShowModal(true);  // Mostrar el modal
+    return;  // No continuar con el submit
+  }
   
     setIsSubmitting(true);
     try {
@@ -201,7 +272,7 @@ const CreatePago = () => {
   
       // Actualizar inscripcion_cursos según el monto restante
       if (montoRestante === 0) {
-        await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
+        await axios.put(`${endpoint}/inscripcion_cursos/${cedula}/status`, {
           cedula_identidad: cedula,
           curso_id: cursoId,
           status_pay: 3
@@ -309,7 +380,52 @@ const CreatePago = () => {
       setIsSubmitting(false);
     }
   };
+  const handleMontoChange = (event) => {
+    const { name, value } = event.target;
+    const inputValue = parseFloat(value) || 0;
   
+    // Reiniciar errores
+    setCanceladoError('');
+    setExoneradoError('');
+  
+    // Obtener valores de los campos
+    let cancelado = name === 'monto_cancelado' ? inputValue : parseFloat(formData.monto_cancelado) || 0;
+    let exonerado = name === 'monto_exonerado' ? inputValue : parseFloat(formData.monto_exonerado) || 0;
+  
+    // Calcular el monto restante
+    const montoRestante = parseFloat(formData.monto_total) - cancelado - exonerado;
+  
+    // Verificar si el monto excede el monto restante (esta validación tiene mayor prioridad)
+    if (montoRestante < 0) {
+      if (name === 'monto_cancelado') {
+        setCanceladoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
+      } else {
+        setExoneradoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
+      }
+    } 
+    // Validar si es la última cuota y si cancelado + exonerado no cubren el monto restante
+    else if (formData.esUltimaCuota && montoRestante !== 0) {
+      if (name === 'monto_cancelado') {
+        setCanceladoError('En la última cuota, el monto debe cubrir el restante completo.');
+      } else {
+        setExoneradoError('En la última cuota, el monto debe cubrir el restante completo.');
+      }
+    }
+  
+    // Actualizar el estado del formulario
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+      monto_restante: montoRestante > 0 ? montoRestante.toFixed(2) : '0.00',
+      conversion_restante: calcularConversion(montoRestante),
+      conversion_cancelado: calcularConversion(cancelado),
+      conversion_exonerado: calcularConversion(exonerado)
+    }));
+  };
+  
+
+
+
 
   const calcularConversion = (monto) => {
     return tasaBcv ? (monto * tasaBcv).toFixed(2) : 'N/A';
@@ -426,6 +542,20 @@ const CreatePago = () => {
           Volver
         </Button>
       </Form>
+
+      
+            {/* // Modal de error */}
+            <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Error en el formulario</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{modalMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
       {tasaBcv && (
         <div className="mt-3">
           <p><strong>Tasa BCV Actual:</strong> {tasaBcv}</p>

@@ -74,7 +74,9 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::post('cursos_inscripcion', [InscripcionCursosController::class, 'store'])->middleware('role:admin,superuser');
     Route::get('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
     Route::delete('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'destroy'])->middleware('role:admin');
-    Route::put('inscripcion_cursos/update_status', [InscripcionCursosController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
+    Route::put('inscripcion_cursos/{id}', [InscripcionCursosController::class, 'update'])->middleware('role:admin,superuser,pagos');
+   
+    Route::put('inscripcion_cursos/{cedula}/status', [InscripcionCursosController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
 
 
     // Reporte Pagos
