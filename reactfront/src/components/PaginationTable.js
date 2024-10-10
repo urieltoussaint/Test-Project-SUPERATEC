@@ -1,9 +1,7 @@
-// PaginationTable.js
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Table } from 'react-bootstrap';
 
-const PaginationTable = ({ data, itemsPerPage, columns, renderItem }) => {
-    const [currentPage, setCurrentPage] = useState(1);
+const PaginationTable = ({ data, itemsPerPage, columns, renderItem, currentPage, onPageChange }) => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -19,12 +17,12 @@ const PaginationTable = ({ data, itemsPerPage, columns, renderItem }) => {
         pageNumbers.push(i);
     }
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
     const handlePreviousPage = () => {
-        if (currentPage > 1) setCurrentPage(currentPage - 1);
+        if (currentPage > 1) onPageChange(currentPage - 1);
     };
+
     const handleNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+        if (currentPage < totalPages) onPageChange(currentPage + 1);
     };
 
     return (
@@ -50,13 +48,13 @@ const PaginationTable = ({ data, itemsPerPage, columns, renderItem }) => {
                             onClick={handlePreviousPage}
                             disabled={currentPage === 1}
                         >
-                        Anterior
+                            Anterior
                         </Button>
                     </li>
                     {pageNumbers.map(number => (
                         <li key={number} className={`page-item ${currentPage === number ? 'active' : ''}`}>
                             <Button
-                                onClick={() => paginate(number)}
+                                onClick={() => onPageChange(number)}
                                 className="page-link"
                             >
                                 {number}
@@ -69,7 +67,7 @@ const PaginationTable = ({ data, itemsPerPage, columns, renderItem }) => {
                             onClick={handleNextPage}
                             disabled={currentPage === totalPages}
                         >
-                        Siguiente
+                            Siguiente
                         </Button>
                     </li>
                 </ul>

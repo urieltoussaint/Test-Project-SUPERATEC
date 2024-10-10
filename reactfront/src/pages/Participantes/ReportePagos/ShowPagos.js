@@ -28,6 +28,8 @@ const ShowPagos = () => {
     const { setLoading } = useLoading();
     const userRole = localStorage.getItem('role'); // Obtener el rol del usuario desde el localStorage
     const itemsPerPage = 4; // Número de elementos por página
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
+
     
     const handleShowModal = (id) => {
         setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
@@ -69,6 +71,7 @@ const ShowPagos = () => {
             const sortedReportes = allReportes.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
             setFilteredReportes(sortedReportes);
+            
             console.log('Datos obtenidos:', sortedReportes);
         } catch (error) {
             setError('Error fetching data');
@@ -104,6 +107,8 @@ const ShowPagos = () => {
             reporte.cedula_identidad.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredReportes(filtered);
+        setCurrentPage(1);
+           
     };
 
     if (error) {
@@ -169,11 +174,13 @@ const ShowPagos = () => {
             </div>
             {/* Tabla paginada */}
             <PaginationTable
-                data={filteredReportes}
+                data={filteredReportes}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
-            />
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
+                />
 
 
             {/* Modal  de eliminación */}

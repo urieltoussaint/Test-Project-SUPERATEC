@@ -25,6 +25,7 @@ const ShowPeticiones = () => {
 
     const navigate = useNavigate();
     const itemsPerPage = 4;
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const userId = parseInt(localStorage.getItem('user'));
 
     useEffect(() => {
@@ -128,6 +129,7 @@ const ShowPeticiones = () => {
             filtered = filtered.filter(peticion => calculateDaysSinceCreation(peticion.created_at) > 10);
         }
         setFilteredPeticiones(filtered);
+        setCurrentPage(1);
     };
 
     const handleNavigate = (peticiones) => {
@@ -249,11 +251,13 @@ const ShowPeticiones = () => {
             </div>
 
             <PaginationTable
-                data={filteredPeticiones}
+                data={filteredPeticiones}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
-            />
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
+                />
 
             {/* Modal de confirmación para rechazar petición */}
             <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)}>

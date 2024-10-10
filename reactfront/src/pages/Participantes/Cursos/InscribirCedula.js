@@ -22,6 +22,7 @@ const InscribirCedula = () => {
     const [error, setError] = useState(null);
     const { setLoading } = useLoading();
     const navigate = useNavigate();
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
 
     const itemsPerPage = 10;  // Definir cuántos elementos por página
 
@@ -108,6 +109,7 @@ const InscribirCedula = () => {
         }
 
         setFilteredCursos(filtered);
+        setCurrentPage(1);
     };
 
     const handleInscribir = async (cursoId) => {
@@ -218,11 +220,13 @@ const InscribirCedula = () => {
 
             {/* Tabla paginada */}
             <PaginationTable
-                data={filteredCursos}
+                data={filteredCursos}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
-            />
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
+                />
 
             <ToastContainer />
         </div>

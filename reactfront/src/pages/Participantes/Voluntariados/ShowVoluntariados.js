@@ -30,6 +30,8 @@ const ShowVoluntariados = () => {
     const { id } = useParams();
     const { setLoading } = useLoading();
     const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
+    
 
     
 
@@ -217,6 +219,7 @@ const ShowVoluntariados = () => {
         }
 
         setFilteredVoluntariados(filtered);
+        setCurrentPage(1);
     };
 
     if (error) {
@@ -336,11 +339,13 @@ const ShowVoluntariados = () => {
             </div>
             <div className="cards-container"></div>
             <PaginationTable
-                data={filteredVoluntariados}
+                data={filteredVoluntariados}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
-            />
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
+                />
 
              {/* Modal  de eliminación */}
              <Modal show={showModal} onHide={handleCloseModal}>

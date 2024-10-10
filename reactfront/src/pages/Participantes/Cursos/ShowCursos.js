@@ -43,6 +43,7 @@ const ShowCursos = () => {
     const [avgCost, setAvgCost] = useState(0);
     const [ingresosPorCurso, setIngresosPorCurso] = useState([]);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
 
 
 
@@ -190,8 +191,6 @@ const ShowCursos = () => {
 
       console.log("horas totales: ",totalHours);
       console.log("costo totales: ",totalCost);
-      const avgHours = totalCursos > 0 ? totalHours / totalCursos : 0;
-      const avgCost = totalCursos > 0 ? totalCost / totalCursos : 0; // Cálculo del promedio de costos
       console.log("Promedio de costos es: ",avgCost);
     
       animateValue(0, totalCursos, setTotalCursos);
@@ -333,11 +332,23 @@ const ShowCursos = () => {
     
       // Actualizar la lista de cursos filtrados
       setFilteredCursos(filtered);
+      setCurrentPage(1);
     
       // Obtener todas las inscripciones y filtrar según los cursos filtrados
       getInscritos().then(({ inscritosPorCurso, allInscripciones }) => {
         // Calcular las métricas usando los cursos filtrados y todas las inscripciones
         calculateMetricsInscritos(inscritosPorCurso, filtered, allInscripciones);
+        // Recalcular las métricas para los cursos filtrados
+    calculateMetrics(filtered, allInscripciones);
+
+
+    // **Calcular el promedio de costo de los cursos filtrados**
+    const totalCostFiltered = filtered.reduce((acc, curso) => acc + parseFloat(curso.costo), 0);
+    const avgCostFiltered = filtered.length > 0 ? totalCostFiltered / filtered.length : 0;
+    // Actualizar el estado del promedio de costos
+    setAvgCost(avgCostFiltered);
+    animateValue(avgCost, avgCostFiltered, setAvgCost, 2000); // Duración de 2 segundos para la animación
+
       });
     };
     
@@ -536,15 +547,14 @@ const ShowCursos = () => {
               </div>
     
               {/* Tabla paginada */}
-              <div className="table-container">
-                <PaginationTable
-                  data={filteredCursos}
-                  itemsPerPage={itemsPerPage}
-                  columns={columns}
-                  renderItem={renderItem}
-                  style={{ fontSize: '0.9rem' }}
+              <PaginationTable
+                data={filteredCursos}  // Datos filtrados
+                itemsPerPage={itemsPerPage}
+                columns={columns}
+                renderItem={renderItem}
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
                 />
-              </div>
             </div>
           </div>
     
@@ -588,34 +598,34 @@ const ShowCursos = () => {
         </div>
               {/* Gráfica de Estado de Pagos justo debajo de la tabla */}
               <div className="col-lg-10 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
-              <div className="chart-box" style={{ marginRight: '20px' }}>
-              <h4 style={{ fontSize: '1.2rem', textAlign: 'flex' }}>Estado de Pagos</h4>
-              <BarChart width={715} height={300} data={[
-                { name: 'No Pagado', value: statusPayCounts[1], fill: '#FF0000' },
-                { name: 'Pago en Proceso', value: statusPayCounts[2], fill: '#FFA500' },
-                { name: 'Pagado, Cursando', value: statusPayCounts[3], fill: '#008000' },
-                { name: 'Curso Finalizado', value: statusPayCounts[4], fill: '#0000FF' },
-              ]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" barSize={30} />
-              </BarChart>
+                <div className="chart-box" style={{ marginRight: '20px' }}>
+                  <h4 style={{ fontSize: '1.2rem', textAlign: 'flex' }}>Estado de Pagos</h4>
+                  <BarChart width={715} height={300} data={[
+                    { name: 'No Pagado', value: statusPayCounts[1], fill: '#FF0000' },
+                    { name: 'Pago en Proceso', value: statusPayCounts[2], fill: '#FFA500' },
+                    { name: 'Pagado, Cursando', value: statusPayCounts[3], fill: '#008000' },
+                    { name: 'Curso Finalizado', value: statusPayCounts[4], fill: '#0000FF' },
+                  ]}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" barSize={30} />
+                  </BarChart>
 
-    </div>
-            <div className="chart-box">
-            <h4 style={{ fontSize: '1.2rem' }}> Cursos con mayor Ingreso</h4>
-            <BarChart width={715} height={250} data={ingresosPorCurso}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="ingresos" fill="#82ca9d" name="Ingresos" />
-              </BarChart>
-          </div>
-      </div>
+                </div>
+                <div className="chart-box">
+                  <h4 style={{ fontSize: '1.2rem' }}> Cursos con mayor Ingreso</h4>
+                  <BarChart width={715} height={250} data={ingresosPorCurso}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="ingresos" fill="#82ca9d" name="Ingresos" />
+                    </BarChart>
+                </div>
+              </div>
 
 
        {/* Modal  de eliminación */}

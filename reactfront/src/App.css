@@ -4,6 +4,7 @@
 
 body {
   background-color: #fdfdfd; /* Cambia este color por el que desees */
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 
@@ -148,8 +149,8 @@ body {
 
 /* Estilo para el contenido principal */
 .content {
-  margin-left: 210px; /* Ajusta el margen para que el contenido no se solape con el sidebar */
-  padding: 10px 80px; /* Padding del contenido principal */
+  margin-left: 200px; /* Ajusta el margen para que el contenido no se solape con el sidebar */
+  padding: 10px 30px; /* Padding del contenido principal */
 }
 
 
@@ -183,8 +184,8 @@ body {
   background-color: #eeeeee; /* Color de fondo para el enlace activo */
   color:rgb(17, 39, 66); /* Color del texto activo */
   font-weight: bold; /* Texto más destacado */
-  padding-left: 10px; /* Mayor espacio de sangría */
-  border-radius: 5px; /* Bordes redondeados */
+  padding-left: 15px; /* Mayor espacio de sangría */
+  border-radius: 15px; /* Bordes redondeados */
 }
 
 .sidebar a.active i {
@@ -192,11 +193,7 @@ body {
 }
 
 
-/* Cuando el sidebar está cerrado */
-.sidebar:not(.open) + .content {
-  margin-left: 0;
-  width: 100%; /* El contenido ocupa todo el ancho */
-}
+
 
 
 
@@ -256,10 +253,6 @@ body {
 
 
 
-
-.content.closed {
-  margin-left: 0; /* Usa todo el ancho de la pantalla */
-}
 
 .sidebar ul {
   list-style-type: none; /* Remueve los marcadores de lista */
@@ -397,7 +390,7 @@ body {
 
 .pagination {
   display: flex;
-  justify-content: center;
+  justify-content: flex;
   align-items: center;
   margin-top: 20px;
 }

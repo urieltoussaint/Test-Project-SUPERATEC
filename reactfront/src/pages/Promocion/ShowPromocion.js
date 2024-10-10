@@ -25,6 +25,7 @@ const ShowPromocion = () => {
     const [mencionOptions, setMencionOptions] = useState([]);
     const userRole = localStorage.getItem('role');
     const itemsPerPage = 4;
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const [filters, setFilters] = useState({
         centro_id: '',
         periodo_id: '',
@@ -187,6 +188,7 @@ const ShowPromocion = () => {
         }
 
         setFilteredPromociones(filtered);
+        setCurrentPage(1);
     };
 
     if (error) {
@@ -306,10 +308,12 @@ const ShowPromocion = () => {
             </div>
 
             <PaginationTable
-                data={filteredPromociones}
+                data={filteredPromociones}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
             />
 
             

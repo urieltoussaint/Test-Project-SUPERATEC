@@ -23,7 +23,7 @@ const ShowPagosCursos = () => {
     const userRole = localStorage.getItem('role'); // Obtener el rol del usuario desde el localStorage
     const itemsPerPage = 4; // Número de elementos por página
     const [cursoId, setCursoId] = useState(null); // Estado para almacenar el ID del curso
-
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
 
     useEffect(() => {
         setLoading(true);
@@ -167,6 +167,8 @@ const ShowPagosCursos = () => {
             const sortedReportes = pagosFiltrados.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
             setFilteredReportes(sortedReportes);
+            setCurrentPage(1);
+
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
@@ -252,12 +254,15 @@ const ShowPagosCursos = () => {
                 <h4>Curso {cursoCod}</h4>
             </div>
             {/* Tabla paginada */}
+           
             <PaginationTable
-                data={filteredReportes}
+                data={filteredReportes}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
-            />
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
+                />
             <ToastContainer />
         </div>
     );

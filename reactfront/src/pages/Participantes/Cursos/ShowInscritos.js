@@ -24,6 +24,7 @@ const ShowInscritos = () => {
   const itemsPerPage = 5; // Número de elementos por página
   const [showCompleteModal, setShowCompleteModal] = useState(false); // Estado para controlar el modal de "culminado"
   const [selectedCompleteId, setSelectedCompleteId] = useState(null); // Estado para guardar el ID de la inscripción a marcar como culminado
+  const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
 
   useEffect(() => {
     setLoading(true);
@@ -184,6 +185,7 @@ const handleMarkAsComplete = async () => {
       filtered = filtered.filter(inscripcion => inscripcion.status_pay === statusValue);
     }
     setFilteredInscripciones(filtered);
+    setCurrentPage(1);
   };
 
   // Mostrar el modal para confirmar la eliminación
@@ -332,11 +334,13 @@ const applyNonCulminadosFilter = () => {
 
       {/* Tabla paginada */}
       <PaginationTable
-        data={filteredInscripciones}
+        data={filteredInscripciones}  // Datos filtrados
         itemsPerPage={itemsPerPage}
         columns={columns}
         renderItem={renderItem}
-      />
+        currentPage={currentPage}  // Página actual
+        onPageChange={setCurrentPage}  // Función para cambiar de página
+        />
 
       {/* Modal de eliminación */}
       <Modal show={showModal} onHide={handleCloseModal}>

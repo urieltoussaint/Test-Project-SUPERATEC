@@ -20,6 +20,7 @@ const ShowUsers = () => {
     const [roleOptions, setRoleOptions] = useState([]);
     const userRole = localStorage.getItem('role');
     const itemsPerPage = 4;
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const [filters, setFilters] = useState({
         // centro_id: '',
     
@@ -136,6 +137,7 @@ const ShowUsers = () => {
         }
 
         setFilteredUsers(filtered);
+        setCurrentPage(1);
     };
 
     if (error) {
@@ -203,11 +205,13 @@ const ShowUsers = () => {
             </div>
 
             <PaginationTable
-                data={filteredUsers}
+                data={filteredUsers}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
-            />
+                currentPage={currentPage}  // Página actual
+                onPageChange={setCurrentPage}  // Función para cambiar de página
+                />
             <ToastContainer />
         </div>
     );

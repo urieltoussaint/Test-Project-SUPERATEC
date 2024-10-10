@@ -1,19 +1,24 @@
 .col-cedulas {
-    width: 20%;
+    width: 10%;
 }
 
 .col-nombress {
-    width: 30%;
+    width: 15%;
 }
 
 .col-apellidoss {
-    width: 30%;
+    width: 15%;
 }
 
 .col-accioness {
     width: 20%;
 }
 
+.title-card {
+    font-size: 1rem;
+    color: rgb(44, 44, 44);
+    
+}
 
 
 
