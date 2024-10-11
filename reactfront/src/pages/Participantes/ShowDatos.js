@@ -303,6 +303,11 @@ const ShowDatos = () => {
     const porcentajeFemenino = totalFemenino > 0 ? (totalFemenino / dataToUse.length) * 100 : 0;
     const porcentajeOtros = totalOtros > 0 ? (totalOtros / dataToUse.length) * 100 : 0;
 
+    // Cálculo de la mayor y menor edad
+    const mayorEdad = dataToUse.length > 0 ? Math.max(...dataToUse.map(d => d.edad)) : 0;
+    const menorEdad = dataToUse.length > 0 ? Math.min(...dataToUse.map(d => d.edad)) : 0;
+
+
     // Porcentaje de Aporte y Patrocinado basado en filtros activos
     const totalAporte = dataToUse.filter(d => d.informacion_inscripcion.realiza_aporte).length;
     const totalPatrocinado = dataToUse.filter(d => d.informacion_inscripcion.es_patrocinado).length;
@@ -650,57 +655,109 @@ const ShowDatos = () => {
                     <div className="stat-number" style={{ color: '#58c765', fontSize: '1.8rem' }}>{totalParticipantes}</div>
                     <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total de Participantes</h4>
                 </div>
+                        <div className="stat-card" style={{
+                            padding: '8px',
+                            margin: '0 10px',
+                            width: '22%',
+                            position: 'relative',
+                            backgroundColor: '#fff',
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        }}>
 
-                {/* Promedio de Edad */}
-                <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%' }}>
-                
-                    <div className="stat-number" style={{ color: '#ffda1f', fontSize: '1.8rem' }}>{promedioEdad.toFixed(0)} Años</div>
-                    <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Promedio de Edad</h4>
-                    <div style={{ width: '70%', margin: '0 auto' }}> {/* Ajustar el ancho de la barra */}
-                        <ProgressBar now={(promedioEdad / 100) * 100}  variant="warning" />
+                    {/* Menor y Mayor Edad - Distribuidos a los lados */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',  // Distribuye menor a la izquierda y mayor a la derecha
+                        fontSize: '0.8rem',  // Ajustamos el tamaño del texto
+                        color: '#6c757d',
+                        padding: '0 8px',  // Reducimos el padding para que esté más junto
+                    }}>
+                        <div style={{ color: '#5cb85c', fontWeight: 'bold' }}> {/* Color verde para menor */}
+                            <span>↓ Menor:</span> {menorEdad} años
+                        </div>
+                        <div style={{ color: '#d9534f', fontWeight: 'bold' }}> {/* Color rojo para mayor */}
+                            <span>↑ Mayor:</span> {mayorEdad} años
+                        </div>
+                    </div>
+
+                    {/* Promedio de Edad */}
+                    <div className="stat-number" style={{
+                        color: '#ffda1f',  
+                        fontSize: '1.7rem',  // Reducimos el tamaño de la fuente
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        marginBottom: '3px',  // Reducimos el margen
+                    }}>
+                        {promedioEdad.toFixed(0)} Años
+                    </div>
+
+                    <h4 style={{
+                        fontSize: '0.9rem',  // Reducimos el tamaño del texto
+                        color: '#6c757d',  
+                        textAlign: 'center',
+                        marginBottom: '6px',  // Reducimos el margen inferior
+                    }}>
+                        Promedio de Edad
+                    </h4>
+
+                    {/* Barra de Progreso */}
+                    <div style={{ width: '75%', margin: '0 auto' }}>
+                        <ProgressBar
+                            now={(promedioEdad / 100) * 100} 
+                            variant="warning"
+                            style={{
+                                height: '8px',  // Reducimos la altura de la barra
+                                borderRadius: '5px',
+                                backgroundColor: '#f1f1f1'
+                            }}
+                        />
                     </div>
                 </div>
+
+
+
                 
-          {/* Porcentaje Genero */}
-<div className="stat-card" style={{ padding: '0', margin: '0 10px', width: '22%' }}> {/* Eliminamos padding adicional */}
-    <ResponsiveContainer width={400} height={120}> {/* Ajustamos el height para dar más espacio */}
-        <PieChart>
-            <Pie
-                data={[
-                    { name: 'Masculino', value: porcentajeMasculino },
-                    { name: 'Femenino', value: porcentajeFemenino },
-                    { name: 'Otros', value: porcentajeOtros },
-                ]}
-                dataKey="value"
-                startAngle={180} // Inicia el ángulo desde 180 grados para crear un semicírculo
-                endAngle={0}    // Termina el ángulo en 0 grados
-                cx="40%"        // Centrar horizontalmente
-                cy="84%"        // Ajustamos la gráfica para pegarla aún más arriba
-                outerRadius={55} // Radio del gráfico de torta
-                fill="#8884d8"  // Color por defecto
-                label={({ name, value }) => ` ${value.toFixed(2)}%`} // Mostrar los porcentajes
-                labelLine={false}
-            >
-                {/* Colores para cada sector */}
-                <Cell key="Masculino" fill="#185da7" />
-                <Cell key="Femenino" fill="rgba(254, 185, 56, 0.9)" />
-                <Cell key="Otros" fill="rgba(255, 74, 74, 0.9)" />
-            </Pie>
-            <Legend 
-                layout="horizontal" 
-                verticalAlign="bottom" 
-                align="center" 
-                wrapperStyle={{ 
-                    width: "88%", 
-                    textAlign: "center", 
-                    marginTop: "-15px", // Reducimos aún más el margen superior de la leyenda
-                    fontSize: '10px' 
-                }}
-            />
-            <Tooltip />
-        </PieChart>
-    </ResponsiveContainer>
-</div>
+                 {/* Porcentaje Genero */}
+                <div className="stat-card" style={{ padding: '0', margin: '0 10px', width: '22%' }}> {/* Eliminamos padding adicional */}
+                    <ResponsiveContainer width={400} height={120}> {/* Ajustamos el height para dar más espacio */}
+                        <PieChart>
+                            <Pie
+                                data={[
+                                    { name: 'Masculino', value: porcentajeMasculino },
+                                    { name: 'Femenino', value: porcentajeFemenino },
+                                    { name: 'Otros', value: porcentajeOtros },
+                                ]}
+                                dataKey="value"
+                                startAngle={180} // Inicia el ángulo desde 180 grados para crear un semicírculo
+                                endAngle={0}    // Termina el ángulo en 0 grados
+                                cx="40%"        // Centrar horizontalmente
+                                cy="84%"        // Ajustamos la gráfica para pegarla aún más arriba
+                                outerRadius={55} // Radio del gráfico de torta
+                                fill="#8884d8"  // Color por defecto
+                                label={({ name, value }) => ` ${value.toFixed(2)}%`} // Mostrar los porcentajes
+                                labelLine={false}
+                            >
+                                {/* Colores para cada sector */}
+                                <Cell key="Masculino" fill="#185da7" />
+                                <Cell key="Femenino" fill="rgba(254, 185, 56, 0.9)" />
+                                <Cell key="Otros" fill="rgba(255, 74, 74, 0.9)" />
+                            </Pie>
+                            <Legend 
+                                layout="horizontal" 
+                                verticalAlign="bottom" 
+                                align="center" 
+                                wrapperStyle={{ 
+                                    width: "88%", 
+                                    textAlign: "center", 
+                                    marginTop: "-15px", // Reducimos aún más el margen superior de la leyenda
+                                    fontSize: '10px' 
+                                }}
+                            />
+                            <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
 
 
 
@@ -995,7 +1052,7 @@ const ShowDatos = () => {
                                     cx="50%"
                                     cy="50%"
                                     innerRadius={80}
-                                    outerRadius={110}
+                                    outerRadius={100}
                                     fill="#82ca9d"
                                     label={({ value }) => `${value}%`}
                                 >

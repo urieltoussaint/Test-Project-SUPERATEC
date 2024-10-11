@@ -124,7 +124,8 @@ class DatosIdentificacion extends Model
     
             // Ahora puedes eliminar cualquier otra relación directa (por ejemplo, InformacionInscripcion)
             $datosIdentificacion->informacionInscripcion()->delete();
-            $datosIdentificacion->Peticiones()->delete();
+            \App\Models\Peticiones::where('key', $datosIdentificacion->cedula_identidad)->delete();
+
         });
     }
     
