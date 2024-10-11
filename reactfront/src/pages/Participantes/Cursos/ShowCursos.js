@@ -10,7 +10,7 @@ import { useLoading } from '../../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../../components/PaginationTable';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer,PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';  // Importa ProgressBar
 
@@ -562,27 +562,32 @@ const ShowCursos = () => {
           <div className="col-lg-3" style={{ marginLeft: '-100px' }}> {/* Reduce espacio entre columnas */}
             <div className="chart-box">
               <h4 style={{ fontSize: '1.2rem' }}>Cursos por Área</h4>
-              <PieChart width={390} height={280}>
+              <ResponsiveContainer width="100%" height={280}>
+              <PieChart >
                 <Pie
                   data={pieChartData}
-                  cx={160}
+                  cx={120}
                   cy={120}
                   outerRadius={60}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => ` ${(percent * 100).toFixed(0)}%`}
                 >
                   {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
+                <Legend/>
               </PieChart>
+              
+              </ResponsiveContainer>
             </div>
     
             <div className="chart-box mt-2"> {/* Reduce margen entre gráficas */}
               <h4 style={{ fontSize: '1.2rem' }}>Horas y Costo por Curso</h4>
-              <BarChart width={350} height={250} data={barChartData}>
+              <ResponsiveContainer width="100%" height={250}>
+              <BarChart  data={barChartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
@@ -592,15 +597,17 @@ const ShowCursos = () => {
                 <Bar yAxisId="left" dataKey="hours" fill="#8884d8" name="Horas" />
                 <Bar yAxisId="right" dataKey="cost" fill="#82ca9d" name="Costo" />
               </BarChart>
+              </ResponsiveContainer>
             </div>
 
           </div>
         </div>
               {/* Gráfica de Estado de Pagos justo debajo de la tabla */}
-              <div className="col-lg-10 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
-                <div className="chart-box" style={{ marginRight: '20px' }}>
+              <div className="col-lg-12 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
+                <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px' }}>
                   <h4 style={{ fontSize: '1.2rem', textAlign: 'flex' }}>Estado de Pagos</h4>
-                  <BarChart width={715} height={300} data={[
+                  <ResponsiveContainer width="100%" height={300}>
+                  <BarChart  data={[
                     { name: 'No Pagado', value: statusPayCounts[1], fill: '#FF0000' },
                     { name: 'Pago en Proceso', value: statusPayCounts[2], fill: '#FFA500' },
                     { name: 'Pagado, Cursando', value: statusPayCounts[3], fill: '#008000' },
@@ -612,11 +619,13 @@ const ShowCursos = () => {
                     <Tooltip />
                     <Bar dataKey="value" barSize={30} />
                   </BarChart>
+                  </ResponsiveContainer>
 
                 </div>
-                <div className="chart-box">
+                <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px' }}>
                   <h4 style={{ fontSize: '1.2rem' }}> Cursos con mayor Ingreso</h4>
-                  <BarChart width={715} height={250} data={ingresosPorCurso}>
+                  <ResponsiveContainer width="100%" height={300}>
+                  <BarChart  data={ingresosPorCurso}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -624,6 +633,8 @@ const ShowCursos = () => {
                     <Legend />
                     <Bar dataKey="ingresos" fill="#82ca9d" name="Ingresos" />
                     </BarChart>
+                  </ResponsiveContainer>
+
                 </div>
               </div>
 

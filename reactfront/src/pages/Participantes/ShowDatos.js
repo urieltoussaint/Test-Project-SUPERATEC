@@ -718,48 +718,45 @@ const ShowDatos = () => {
 
 
                 
-                 {/* Porcentaje Genero */}
-                <div className="stat-card" style={{ padding: '0', margin: '0 10px', width: '22%' }}> {/* Eliminamos padding adicional */}
-                    <ResponsiveContainer width={400} height={120}> {/* Ajustamos el height para dar más espacio */}
+                <div className="stat-card" style={{ padding: '0', margin: '0 10px', width: '100%', maxWidth: '300px' }}> 
+                    <ResponsiveContainer width="100%" height={120}> {/* Ajustamos el width y height dinámicamente */}
                         <PieChart>
-                            <Pie
-                                data={[
-                                    { name: 'Masculino', value: porcentajeMasculino },
-                                    { name: 'Femenino', value: porcentajeFemenino },
-                                    { name: 'Otros', value: porcentajeOtros },
-                                ]}
-                                dataKey="value"
-                                startAngle={180} // Inicia el ángulo desde 180 grados para crear un semicírculo
-                                endAngle={0}    // Termina el ángulo en 0 grados
-                                cx="40%"        // Centrar horizontalmente
-                                cy="84%"        // Ajustamos la gráfica para pegarla aún más arriba
-                                outerRadius={55} // Radio del gráfico de torta
-                                fill="#8884d8"  // Color por defecto
-                                label={({ name, value }) => ` ${value.toFixed(2)}%`} // Mostrar los porcentajes
-                                labelLine={false}
-                            >
-                                {/* Colores para cada sector */}
-                                <Cell key="Masculino" fill="#185da7" />
-                                <Cell key="Femenino" fill="rgba(254, 185, 56, 0.9)" />
-                                <Cell key="Otros" fill="rgba(255, 74, 74, 0.9)" />
-                            </Pie>
-                            <Legend 
-                                layout="horizontal" 
-                                verticalAlign="bottom" 
-                                align="center" 
-                                wrapperStyle={{ 
-                                    width: "88%", 
-                                    textAlign: "center", 
-                                    marginTop: "-15px", // Reducimos aún más el margen superior de la leyenda
-                                    fontSize: '10px' 
-                                }}
-                            />
-                            <Tooltip />
+                        <Pie
+                            data={[
+                            { name: 'Masculino', value: porcentajeMasculino },
+                            { name: 'Femenino', value: porcentajeFemenino },
+                            { name: 'Otros', value: porcentajeOtros },
+                            ]}
+                            dataKey="value"
+                            startAngle={180} // Semicírculo
+                            endAngle={0}
+                            cx="50%"        // Centrar horizontalmente con porcentaje
+                            cy="70%"        // Ajustamos la gráfica para pegarla más arriba
+                            outerRadius="70%" // Radio basado en el porcentaje del contenedor para mayor flexibilidad
+                            fill="#8884d8"
+                            label={({ name, value }) => ` ${value.toFixed(2)}%`} // Mostrar los porcentajes
+                            labelLine={false}
+                        >
+                            {/* Colores para cada sector */}
+                            <Cell key="Masculino" fill="#185da7" />
+                            <Cell key="Femenino" fill="rgba(254, 185, 56, 0.9)" />
+                            <Cell key="Otros" fill="rgba(255, 74, 74, 0.9)" />
+                        </Pie>
+                        <Legend 
+                            layout="horizontal" 
+                            verticalAlign="bottom" 
+                            align="center" 
+                            wrapperStyle={{ 
+                            width: "88%", 
+                            textAlign: "center", 
+                            marginTop: "-15px", 
+                            fontSize: '10px' 
+                            }}
+                        />
+                        <Tooltip />
                         </PieChart>
                     </ResponsiveContainer>
-                </div>
-
-
+                    </div>
 
 
 
@@ -1091,93 +1088,81 @@ const ShowDatos = () => {
             </div>
             </div>
             {/* Gráfica  justo debajo de la tabla */}
-            <div className="col-lg-11 d-flex justify-content-between" style={{ gap: '20px', marginTop: '10px' }}>
+            <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
+            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
+                <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Inscritos por Periodo</h4>
+                {periodoOptions.length > 0 && (
+                    <ResponsiveContainer width="100%" height={400}>
+                    <ComposedChart data={getInscritosPorPeriodo()} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
+                        <CartesianGrid stroke="#f5f5f5" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="count" barSize={50} fill="#413ea0" name="Total Inscritos" />
+                        <Line type="monotone" dataKey="count" stroke="#ff7300" name="Evolución" />
+                    </ComposedChart>
+                    </ResponsiveContainer>
+                )}
+                </div>
 
 
-                    <div className="chart-box" style={{ marginRight: '10px' }}>
-
-                    <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Inscritos por Periodo</h4>
-
-                    {periodoOptions.length > 0 && (
-                        <ResponsiveContainer width={600} height={400}>
-                            <ComposedChart data={getInscritosPorPeriodo()} margin={{ top: 10, right: 30, left: -20, bottom: 0 }} width={500} height={300}>
-                                <CartesianGrid stroke="#f5f5f5" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                
-                                {/* Gráfico de Barras para mostrar el total de inscritos */}
-                                <Bar dataKey="count" barSize={50} fill="#413ea0" name="Total Inscritos" />
-                                
-                                {/* Gráfico de Línea para mostrar la evolución de inscritos */}
-                                <Line type="monotone" dataKey="count" stroke="#ff7300" name="Evolución" />
-                            </ComposedChart>
-                        </ResponsiveContainer>
+                <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'  }}>
+                    <h4 style={{ fontSize: '1.2rem' }}>Distribución por Área</h4>
+                    {areaOptions.length > 0 && (
+                    <ResponsiveContainer width="100%" height={400}>
+                        <PieChart>
+                        <Pie
+                            data={getAreaDataForChart()}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={70}
+                            outerRadius={125}
+                            fill="#8884d8"
+                            label={({ value }) => `${value}%`}
+                        >
+                            {getAreaDataForChart().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                        </PieChart>
+                    </ResponsiveContainer>
                     )}
+                </div>
 
+                <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+                    <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Modalidad</h4>
+                    {modalidadOptions.length > 0 && (
+                    <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={getInscritosPorModalidad()} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
+                        <CartesianGrid stroke="#f5f5f5" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="count" barSize={35} fill="#82ca9d" name="Total Participantes" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                    )}
+                </div>
+                </div>
 
-                    </div>
-                    <div className="chart-box " style={{ marginRight: '10px' }}>
-                            <h4 style={{ fontSize: '1.2rem' }}>Distribución por Área</h4>
-
-                            {areaOptions.length > 0 && (
-                                <ResponsiveContainer width={400} height={400}>
-                                    <PieChart>
-                                        <Pie
-                                            data={getAreaDataForChart()}
-                                            dataKey="value"
-                                            nameKey="name"
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={70}  // Añadir radio interno para crear el "donut"
-                                            outerRadius={125}
-                                            fill="#8884d8"
-                                            label={({ value }) => `${value}%`}  // Mostrar el valor con el símbolo de porcentaje
-                >
-                                            {getAreaDataForChart().map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            )}
-                    </div>
-                    <div className="chart-box "style={{ marginRight: '10px' }}>
-                        <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Modalidad</h4>
-
-                            {modalidadOptions.length > 0 && (
-                                <ResponsiveContainer width={450} height={400}>
-                                    <BarChart data={getInscritosPorModalidad()}  margin={{ top: 10, right: 30, left: -20, bottom: 0 }} >
-                                        <CartesianGrid stroke="#f5f5f5" />
-                                        <XAxis dataKey="name" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Legend />
-                                        
-                                        {/* Gráfico de Barras para mostrar el total de inscritos por modalidad */}
-                                        <Bar dataKey="count" barSize={35} fill="#82ca9d" name="Total Participantes" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            )}
-                    </div>
-
-                
-              </div>
 
 
               {/* Gráfica segunda fila*/}
-            <div className="col-lg-11 d-flex justify-content-between" style={{ gap: '20px' }}>
+            <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
 
 
-                <div className="chart-box" style={{ marginRight: '10px' }}>
+                <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
 
                 <   h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Estado</h4>
     
                     {estadoOptions.length > 0 && (
-                        <ResponsiveContainer width={600} height={400}>
+                        <ResponsiveContainer width="100%" height={400}>
                             <BarChart data={getParticipantsByEstado()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
@@ -1193,11 +1178,11 @@ const ShowDatos = () => {
                     )}
                 </div>
 
-                <div className="chart-box " style={{ marginRight: '10px' }}>
+                <div className="chart-box " style={{flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
                     <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Tipo de Programa</h4>
 
                         {SuperatecOptions.length > 0 && (
-                        <ResponsiveContainer width={400} height={400}>
+                        <ResponsiveContainer width="100%" height={400}>
                             <RadarChart
                                 cx="50%"
                                 cy="50%"
@@ -1221,11 +1206,11 @@ const ShowDatos = () => {
 
 
                 </div>
-                <div className="chart-box "style={{ marginRight: '10px' }}>
+                <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
                     <h4 style={{ fontSize: '1.2rem' }}>Distribución por Unidad</h4>
 
                         {unidadOptions.length > 0 && (
-                            <ResponsiveContainer width={450} height={400}>
+                            <ResponsiveContainer width="100%" height={400}>
                                 <PieChart>
                                     <Pie
                                         data={getUnidadDataForChart()}
@@ -1260,15 +1245,15 @@ const ShowDatos = () => {
 
 
              {/* Gráfica tercera fila*/}
-             <div className="col-lg-11 d-flex justify-content-between" style={{ gap: '20px' }}>
+             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
 
 
-                <div className="chart-box" style={{ marginRight: '10px' }}>
+                <div className="chart-box" style={{flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
 
                     <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Cohorte</h4>
 
                         {cohorteOptions.length > 0 && (
-                            <ResponsiveContainer width={750} height={400}>
+                            <ResponsiveContainer width="100%" height={400}>
                                 <AreaChart
                                     data={getCohorteDataForChart()}
                                     margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
@@ -1290,8 +1275,8 @@ const ShowDatos = () => {
                         )}
                 </div>
 
-                <div className="chart-box">
-                    <div className="d-flex justify-content-between align-items-center">
+                <div className="chart-box" style={{flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+                    <div className="d-flex justify-content-between align-items-center" >
                         <h4 style={{ fontSize: '1.2rem' }}>Registro de Participantes</h4>
                         {/* Selector de rango de fechas */}
                         <Form.Select 
@@ -1305,7 +1290,7 @@ const ShowDatos = () => {
                         </Form.Select>
                     </div>
                     
-                    <ResponsiveContainer  width={700} height={400}>
+                    <ResponsiveContainer  width="100%" height={400}>
                         <AreaChart data={getFilteredDataByDate()} margin={{  right: 30, left: -20}}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="fecha" />

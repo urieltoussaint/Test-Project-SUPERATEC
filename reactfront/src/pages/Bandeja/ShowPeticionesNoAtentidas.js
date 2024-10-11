@@ -13,6 +13,8 @@ import './ShowPeticiones.css';
 import { FaCheckCircle, FaSync, FaUserFriends, } from 'react-icons/fa';
 import { ProgressBar } from 'react-bootstrap';
 import { RiCheckboxBlankCircleFill, RiCheckboxIndeterminateFill } from "react-icons/ri";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -31,6 +33,9 @@ const ShowPeticionesNoAtendidas = () => {
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [attendedPeticiones, setAttendedPeticiones] = useState([]);
     const [selectedDateRange, setSelectedDateRange] = useState('');
+    const [graphData, setGraphData] = useState([]);
+    const [allPeticiones, setAllPeticiones] = useState([]);
+
 
 
     useEffect(() => {
@@ -76,6 +81,8 @@ const ShowPeticionesNoAtendidas = () => {
             setFilteredPeticiones(sortedPeticiones);  // Actualiza el estado de peticiones no atendidas
             setAttendedPeticiones(noattended);          // Actualiza el estado de peticiones atendidas
             setCurrentPage(1);
+            generateGraphData(allPeticiones); 
+            setAllPeticiones(allPeticiones);
             
         } catch (error) {
             setError('Error fetching data');
@@ -83,7 +90,12 @@ const ShowPeticionesNoAtendidas = () => {
         }
     };
     
-
+    // UseEffect para regenerar grafica
+    useEffect(() => {
+        if (allPeticiones.length > 0) {
+            generateGraphData(allPeticiones);  
+        }
+    }, [selectedDateRange, allPeticiones]); 
    
 
     const renderStatusDot = (created_at, status) => {
@@ -154,11 +166,66 @@ const ShowPeticionesNoAtendidas = () => {
         }
     };
 
+    const generateGraphData = (allPeticiones) => {
+        const now = moment().endOf('day'); 
+        let startDate;
+    
+       
+        switch (selectedDateRange) {
+            case '7d':
+                startDate = now.clone().subtract(7, 'days').startOf('day');
+                break;
+            case '15d':
+                startDate = now.clone().subtract(15, 'days').startOf('day');
+                break;
+            case '30d':
+                startDate = now.clone().subtract(30, 'days').startOf('day');
+                break;
+            case '60d':
+                startDate = now.clone().subtract(60, 'days').startOf('day');
+                break;
+            default:
+                startDate = now.clone().subtract(7, 'days').startOf('day'); // Default to last 7 days
+                break;
+        }
+    
+        // filtra peticiones segun fecha
+        const filteredPeticiones = allPeticiones.filter(p => 
+            moment(p.created_at).isSameOrAfter(startDate) && moment(p.created_at).isSameOrBefore(now)
+        );
+    
+        const graphData = [];
+    
+        
+        for (let m = startDate.clone(); m.isSameOrBefore(now); m.add(1, 'days')) {
+            const day = m.format('YYYY-MM-DD');
+    
+            // cuenta las peticiones no atendidas
+            const peticionesCount = filteredPeticiones.filter(p => moment(p.created_at).isSame(day, 'day')).length;
+    
+            // cuenta las peticiones atendidas
+            const attendedCount = filteredPeticiones.filter(p => p.finish_time && moment(p.finish_time).isSame(day, 'day')).length;
+    
+            // Add the data point to the graph data
+            graphData.push({
+                date: day,
+                received: peticionesCount,
+                attended: attendedCount,
+            });
+        }
+    
+        // actualiza la grafica
+        setGraphData(graphData);
+    };
+
+
+
+
 
     return (
 
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
-            <div className="stat-box mx-auto col-lg-9" style={{ maxWidth: '100%' }}> 
+            <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
                 {/* Total de Participantes */}
                 <div className="stat-card" style={{  }}>
                     <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><RiCheckboxBlankCircleFill /></div>
@@ -195,7 +262,7 @@ const ShowPeticionesNoAtendidas = () => {
 
         <div className="row" style={{ marginTop: '10px' }}> 
                 {/* Columna para la tabla */}
-                <div className="col-lg-9 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
+                <div className="col-lg-11 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
                     <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}> 
                     <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
                         <h1 style={{ marginRight: '10px' }}>Bandeja de Entrada</h1>
@@ -242,19 +309,58 @@ const ShowPeticionesNoAtendidas = () => {
                             <option value="60dias">Últimos 60 días</option>
                         </Form.Select>
                     </div>
-            <PaginationTable
-            data={filteredPeticiones}
-            itemsPerPage={itemsPerPage}
-            columns={columns}
-            renderItem={renderItem}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            />
+                        <PaginationTable
+                        data={filteredPeticiones}
+                        itemsPerPage={itemsPerPage}
+                        columns={columns}
+                        renderItem={renderItem}
+                        currentPage={currentPage}
+                        onPageChange={setCurrentPage}
+                        />
 
             
 
-            <ToastContainer />
-        </div>
+                        <ToastContainer />
+
+            
+                </div>
+                <div className="col-lg-11 mx-auto">
+                <div className="chart-box" style={{ marginRight: '10px', marginTop:'30px' }}>
+                    <h4>Comparativa de Peticiones Recibidas vs. Atendidas</h4>
+                    <div className="d-flex justify-content-start align-items-center mb-3">
+        
+
+                    <Form.Select
+                        value={selectedDateRange}
+                        onChange={(e) => {
+                            setSelectedDateRange(e.target.value);
+                            generateGraphData(allPeticiones);  // Call the graph generation with the updated date range
+                        }}
+                        className="me-1"
+                        style={{ width: 'auto' }}
+                    >
+                        <option value="7d">Últimos 7 días</option>  
+                        <option value="15d">Últimos 15 días</option>
+                        <option value="30d">Últimos 30 días</option>
+                        <option value="60d">Últimos 60 días</option>
+                    </Form.Select>
+
+
+                        </div>
+                        <ResponsiveContainer width="100%" height={400}>
+                            <LineChart data={graphData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Line type="monotone" dataKey="received" stroke="#8884d8" activeDot={{ r: 8 }} name="Recibidas" />
+                                <Line type="monotone" dataKey="attended" stroke="#82ca9d" name="Atendidas" />
+                            </LineChart>
+                        </ResponsiveContainer>
+                </div>
+            </div>
+                
         </div>
         </div>
         </div>

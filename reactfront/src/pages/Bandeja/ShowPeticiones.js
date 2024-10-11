@@ -38,7 +38,7 @@ const ShowPeticiones = () => {
     const userId = parseInt(localStorage.getItem('user'));
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [attendedPeticiones, setAttendedPeticiones] = useState([]);
-    const [selectedDateRange, setSelectedDateRange] = useState('7dias');
+    const [selectedDateRange, setSelectedDateRange] = useState('7d');
     const [graphData, setGraphData] = useState([]);
     const [allPeticiones, setAllPeticiones] = useState([]);
 
@@ -88,6 +88,7 @@ const ShowPeticiones = () => {
             setAttendedPeticiones(attended);          // Actualiza el estado de peticiones atendidas
             generateGraphData(allPeticiones); 
             setAllPeticiones(allPeticiones);
+            setCurrentPage(1);
 
 
         } catch (error) {
@@ -340,7 +341,7 @@ const ShowPeticiones = () => {
 
     return (
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
-            <div className="stat-box mx-auto col-lg-9" style={{ maxWidth: '100%' }}> 
+            <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
                 {/* Total de Participantes */}
                 <div className="stat-card" style={{  }}>
                     <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><RiCheckboxBlankCircleFill /></div>
@@ -431,7 +432,7 @@ const ShowPeticiones = () => {
         
                 <div className="row" style={{ marginTop: '10px' }}>
                 {/* Columna para la tabla */}
-                <div className="col-lg-9 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
+                <div className="col-lg-11 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
                     <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}> 
                     <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
                         <h1 style={{ marginRight: '10px' }}>Bandeja de Entrada</h1>
@@ -537,7 +538,7 @@ const ShowPeticiones = () => {
 
             <ToastContainer />
             </div>
-            <div className="col-lg-9 mx-auto">
+            <div className="col-lg-11 mx-auto">
                 <div className="chart-box" style={{ marginRight: '10px', marginTop:'30px' }}>
                     <h4>Comparativa de Peticiones Recibidas vs. Atendidas</h4>
                     <div className="d-flex justify-content-start align-items-center mb-3">
@@ -549,7 +550,7 @@ const ShowPeticiones = () => {
                             setSelectedDateRange(e.target.value);
                             generateGraphData(allPeticiones);  // Call the graph generation with the updated date range
                         }}
-                        className="me-0"
+                        className="me-1"
                         style={{ width: 'auto' }}
                     >
                         <option value="7d">Últimos 7 días</option>  
@@ -573,7 +574,9 @@ const ShowPeticiones = () => {
                         </ResponsiveContainer>
                 </div>
             </div>
-            </div>
+        
+        
+        </div>
 
 
             

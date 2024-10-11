@@ -44,7 +44,7 @@ import { useLocation } from 'react-router-dom'; // Importa useLocation
 function App() {
   return (
     <LoadingProvider>
-      <LoadingOverlay>
+      
         <Router>
           <Routes>
             <Route path="/" element={<Login />} />
@@ -70,7 +70,6 @@ function App() {
             <Route path="/pagos/:cedula/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:id" element={<AuthenticatedLayout><ShowMorePagos /></AuthenticatedLayout>} />
             <Route path="/pagos/curso/:inscripcion_curso_id" element={<AuthenticatedLayout><ShowPagosCursos /></AuthenticatedLayout>} />
-
             <Route path="/voluntariados" element={<AuthenticatedLayout><ShowVoluntariados /></AuthenticatedLayout>} />
             <Route path="/voluntariados/:id" element={<AuthenticatedLayout><ShowMoreVoluntariados /></AuthenticatedLayout>} />
             <Route path="/voluntariados/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateVoluntariados /></AuthenticatedLayout></ProtectedRoute>}  />
@@ -81,7 +80,7 @@ function App() {
             <Route path="/promocion/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditPromocion /></AuthenticatedLayout></ProtectedRoute>}  />
           </Routes>
         </Router>
-      </LoadingOverlay>
+      
     </LoadingProvider>
   );
 }
@@ -124,6 +123,12 @@ const AuthenticatedLayout = ({ children }) => {
 
 
     switch (location.pathname) {
+      case '/datos':
+        setPageTitle('Participantes');
+        break;
+        case '/peticiones':
+        setPageTitle('Bandeja de Entrada');
+        break;
       case '/cursos':
         setPageTitle('Cursos');
         break;
@@ -155,9 +160,7 @@ const AuthenticatedLayout = ({ children }) => {
     }
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  
 
   const toggleDropdowns = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -197,9 +200,6 @@ const AuthenticatedLayout = ({ children }) => {
       </li>
     </ul>
   </div>
-
-  
-
 
 
       <div className="header">
@@ -245,11 +245,11 @@ const AuthenticatedLayout = ({ children }) => {
         </div>
       </div>
 
-
-
       {/* Main content */}
-      <div className={`content ${isSidebarOpen ? '' : 'closed'}`}>
+      <div className={`content `}>
+      <LoadingOverlay>
         {children} {/* Aquí va el contenido principal */}
+        </LoadingOverlay>
       </div>
     </div>
   );
@@ -260,7 +260,7 @@ const LoadingOverlay = ({ children }) => {
 
   return (
     <>
-      {loading && <Loader />}
+      {loading && <Loader /> }
       {children}
     </>
   );
