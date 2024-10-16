@@ -188,7 +188,11 @@ const ShowPeticiones = () => {
             navigate(`/cursos/${peticiones.key}/edit`);
         } else if (id === 3) {
             navigate(`/pagos/curso/${peticiones.key}`);
-        } else {
+        } 
+         else if (id === 4) {
+        navigate(`/cursos/${peticiones.key}/pagos`);
+        }
+        else {
             toast.error('Zona no válida');
         }
     };
@@ -312,7 +316,7 @@ const ShowPeticiones = () => {
     const renderItem = (peticiones) => (
         <tr key={peticiones.id}>
             <td className="status">{renderStatusDot(peticiones.created_at)}</td>
-            <td className="usuario">{peticiones.user?.name}</td>
+            <td className="usuario">{peticiones.user?.username}</td>
             <td className="key">{peticiones.key}</td>
             <td className="zona">{peticiones.zonas?.name}</td>
             <td className="fecha">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
@@ -453,7 +457,7 @@ const ShowPeticiones = () => {
                             </Button>
                             
                             <Button 
-                            variant="info" 
+                            variant="succes" 
                             onClick={() => navigate('/peticiones/Noat')} 
                             className="custom-eye-button" 
                             style={{ padding: '8px 16px', width: '200px' }} // Añadimos padding más amplio

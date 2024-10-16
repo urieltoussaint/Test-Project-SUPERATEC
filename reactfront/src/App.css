@@ -578,6 +578,11 @@ body {
 }
 
 
+.custom-gutter .row {
+  gap: 0.5rem; /* Ajusta según lo que necesites */
+}
+
+
 
 
 

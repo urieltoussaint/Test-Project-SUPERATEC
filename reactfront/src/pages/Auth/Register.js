@@ -5,7 +5,7 @@ import './Register.css';
 
 const Register = () => {
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState(''); // Nuevo estado para la confirmación de contraseña
   const [error, setError] = useState('');
@@ -22,9 +22,9 @@ const Register = () => {
 
     try {
       await axios.get('http://localhost:8000/sanctum/csrf-cookie'); // Obtener el token CSRF
-      const response = await axios.post('http://localhost:8000/api/register', { name, email, password });
+      const response = await axios.post('http://localhost:8000/api/register', { username, email, password });
       localStorage.setItem('token', response.data.access_token);
-      navigate('/datos'); // Redirige a la página principal después de iniciar sesión
+      navigate('/login'); // Redirige a la página principal después de iniciar sesión
     } catch (error) {
       setError('Error al registrarse. Intente de nuevo.');
     }
@@ -43,8 +43,8 @@ const Register = () => {
               className="form-control" 
               placeholder="Nombre de Usuario" 
               required 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
             />
           </div>
           <div className="form-group">

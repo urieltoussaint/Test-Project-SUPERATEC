@@ -27,6 +27,7 @@ use App\Http\Controllers\TurnosController;
 use App\Http\Controllers\UnidadController;
 use App\Models\TipoVoluntariado;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CargoController;
 use App\Http\Controllers\InscripcionCursosController;
 use App\Http\Controllers\PeticionesController;
 use App\Http\Controllers\PromocionController;
@@ -54,6 +55,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::delete('users/{id}', [AuthController::class, 'destroy'])->middleware('role:admin'); // Solo admin 
     Route::get('users-with-roles', [AuthController::class, 'getAllUsersWithRoles'])->middleware('role:admin,superuser,invitado'); 
     Route::get('role', [RoleController::class, 'index'])->middleware('role:admin,superuser,invitado'); 
+    Route::get('/validate-username/{username}', [AuthController::class, 'validateUsername'])->middleware('role:admin,superuser,invitado'); 
+
     
     // Datos Identificación
     Route::get('datos', [DatosIdentificacionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos'); // Todos pueden ver
@@ -64,10 +67,11 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
 
     // Cursos
     Route::get('cursos', [CursosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
-    Route::post('cursos', [CursosController::class, 'store'])->middleware('role:admin,superuser');
-    Route::get('cursos/{id}', [CursosController::class, 'show'])->middleware('role:admin,superuser,invitado');
-    Route::put('cursos/{id}', [CursosController::class, 'update'])->middleware('role:admin,superuser');
+    Route::post('cursos', [CursosController::class, 'store'])->middleware('role:admin,superuser, pagos');
+    Route::get('cursos/{id}', [CursosController::class, 'show'])->middleware('role:admin,superuser,invitad,pagos');
+    Route::put('cursos/{id}', [CursosController::class, 'update'])->middleware('role:admin,superuser ,pagos');
     Route::delete('cursos/{id}', [CursosController::class, 'destroy'])->middleware('role:admin');
+    
 
     // Inscripción Cursos
     Route::get('cursos_inscripcion', [InscripcionCursosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
@@ -143,6 +147,13 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('tipo_voluntariado', [TipoVoluntariadoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('status_process', [StatusProcessController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('cargo', [CargoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+
+    //filtros
+    Route::get('roles-and-cargos', [RoleController::class, 'getRolesAndCargos'])->middleware('role:admin');
+    Route::get('filtros-cursos', [CursosController::class, 'getFiltrosCursos'])->middleware('role:admin,superuser,invitado,pagos');
+
+
     
     
    

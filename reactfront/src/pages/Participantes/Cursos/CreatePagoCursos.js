@@ -13,23 +13,16 @@ const userId = parseInt(localStorage.getItem('user'));  // ID del usuario loguea
 const endpoint = 'http://localhost:8000/api';
 
 
-const EditCursos = () => {
+const CreatePagoCursos = () => {
   const [formData, setFormData] = useState({
-    descripcion: '',
-    cantidad_horas: '',
-    fecha_inicio: '',
-    area_id: '',
-    unidad_id:'',
-    nivel_id:'',
-    modalidad_id:'',
-    tipo_programa_id:'',
+    costo:'',
+    cuotas:''
   });
 
   const { id } = useParams(); // Obtener el id del curso de la URL
   const { setLoading } = useLoading();
   const navigate = useNavigate();
   const [curso,setCurso]=useState('');
- 
 
 
   useEffect(() => {
@@ -50,16 +43,12 @@ const EditCursos = () => {
       const curso = response.data;
       setCurso(curso);
       setFormData({
-      descripcion: curso.descripcion || '',
-      cantidad_horas: curso.cantidad_horas || '',
-      fecha_inicio: curso.fecha_inicio || '',
-      area_id: curso.area_id || '',
-      nivel_id: curso.nivel_id || '',
-      unidad_id: curso.unidad_id || '',  
-      modalidad_id: curso.modalidad_id || '',  
-      tipo_programa_id: curso.tipo_programa_id || ''
-    });
+        cuotas: curso.cuotas || '',
+        costo: curso.costo || '',
+        
+        
 
+      });
     } catch (error) {
       setError('Error fetching course');
       console.error('Error fetching course:', error);
@@ -76,7 +65,7 @@ const EditCursos = () => {
     }));
   };
 
-  // const curso=formData.curso.cod;
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -129,7 +118,7 @@ const EditCursos = () => {
   
         // 4. Filtrar las peticiones por key = cursoId, zona_id = 2, y status = false
         const peticionesFiltradas = allPeticiones.filter(peticion =>
-          peticion.key === String(cursoId) && peticion.zona_id === 2 && peticion.status === false
+          peticion.key === String(cursoId) && peticion.zona_id === 4 && peticion.status === false
         );
   
         if (peticionesFiltradas.length > 0) {
@@ -173,105 +162,30 @@ const EditCursos = () => {
     <div className="row" style={{ marginTop: '50px' }}>
     <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
       <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
-        <h2 className="mb-2">Actualizar Curso {curso.cod}</h2>
+        <h2 className="mb-2">Actualizar Costo de Curso {curso.cod}</h2>
         <Form onSubmit={handleSubmit} className="custom-gutter">
-              <Form.Group controlId="descripcion">
-                <Form.Label>Nombre del Curso</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleChange}
-                  maxLength={40}
-                  required
-                />
-              </Form.Group>
-  
-            <Row className="g-2">
-            <Col md={6}>
-              <Form.Group controlId="cantidad_horas">
-                <Form.Label>Cantidad de Horas</Form.Label>
+              <Form.Group controlId="costo">
+                <Form.Label>Costo en $</Form.Label>
                 <Form.Control
                   type="number"
-                  name="cantidad_horas"
-                  value={formData.cantidad_horas}
+                  name="costo"
+                  value={formData.costo}
                   onChange={handleChange}
-                  maxLength={4}
+                  maxLength={40}
                 />
               </Form.Group>
-            </Col>
-  
-            <Col md={6}>
-            <SelectComponent
-                endpoint={`${endpoint}/nivel`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.nivel_id}
-                handleChange={handleChange}
-                controlId="nivel_id"
-                label="Nivel"
-              />
-            </Col>
-            </Row>
-            <Row className="g-2">
-            <Col md={6}>
-            <SelectComponent
-                endpoint={`${endpoint}/area`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.area_id}
-                handleChange={handleChange}
-                controlId="area_id"
-                label="Área"
-              />
-              </Col>
-  
-            <Col md={6}>
-              <SelectComponent
-                endpoint={`${endpoint}/unidad`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.unidad_id}
-                handleChange={handleChange}
-                controlId="unidad_id"
-                label="Unidad"
-              />
-            </Col>
-            </Row>
-            <Row className="g-2">
-            <Col md={6}>
-            <SelectComponent
-                endpoint={`${endpoint}/modalidad`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.modalidad_id}
-                handleChange={handleChange}
-                controlId="modalidad_id"
-                label="Modalidad"
-              />
-            </Col>
-            <Col md={6}>
-            <SelectComponent
-                endpoint={`${endpoint}/tipo_programa`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.tipo_programa_id}
-                handleChange={handleChange}
-                controlId="tipo_programa_id"
-                label="Tipo de Programa"
-              />
-            </Col>
-          </Row>
-          
-          <Form.Group controlId="fecha_inicio">
-                <Form.Label>Fecha de Inicio</Form.Label>
+              <Form.Group controlId="cuotas">
+                <Form.Label>Número de Cuotas</Form.Label>
                 <Form.Control
-                  type="date"
-                  name="fecha_inicio"
-                  value={formData.fecha_inicio}
+                  type="number"
+                  name="cuotas"
+                  value={formData.cuotas}
                   onChange={handleChange}
+                  maxLength={40}
                 />
               </Form.Group>
+  
+            
 
         <Button variant="success" type="submit">
           Guardar
@@ -290,4 +204,4 @@ const EditCursos = () => {
   );
 };
 
-export default EditCursos;
+export default CreatePagoCursos;

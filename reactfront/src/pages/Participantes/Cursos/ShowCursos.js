@@ -10,9 +10,10 @@ import { useLoading } from '../../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../../components/PaginationTable';
-import { ResponsiveContainer,PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer,PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,PolarRadiusAxis,PolarAngleAxis,Radar,RadarChart,PolarGrid } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';  // Importa ProgressBar
+
 
 
 
@@ -44,47 +45,72 @@ const ShowCursos = () => {
     const [ingresosPorCurso, setIngresosPorCurso] = useState([]);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
+    const [unidadOptions, setUnidadOptions] = useState([]);
+    const [selectedUnidad, setSelectedUnidad] = useState('');
+
+    const [nivelOptions, setNivelOptions] = useState([]);
+    const [selectedNivel, setSelectedNivel] = useState('');
+
+    const [tipoProgramaOptions, setTipoProgramaOptions] = useState([]);
+    const [selectedTipoPrograma, setSelectedTipoPrograma] = useState('');
+
+    const [modalidadOptions, setModalidadOptions] = useState([]);
+    const [selectedModalidad, setSelectedModalidad] = useState('');
+    const [inscritosPorCurso, setInscritosPorCurso] = useState({});
 
 
 
 
 
-      // useEffect que llama a todas las promesas
-      useEffect(() => {
-        setLoading(true);
-      
-        // Resetea el estado antes de cargar
-        setCursos([]);
-        setInscripciones([]);
-      
-        Promise.all([getAllCursos(), fetchAreaOptions(), getInscritos()])
-          .then(([cursosData, areaOptionsData, { inscritosPorCurso, allInscripciones, statusPayCounts }]) => { 
-            setCursos(cursosData);
-            setFilteredCursos(cursosData); // Si es necesario filtrar
-            setAreaOptions(areaOptionsData);
-            setInscripciones(allInscripciones);
-            setStatusPayCounts(statusPayCounts); 
-      
-            // Calcular total de cursos y promedio de costos
-            const totalCursos = cursosData.length;
-            const totalCost = cursosData.reduce((acc, curso) => acc + parseFloat(curso.costo), 0);
-            const avgCost = totalCursos > 0 ? totalCost / totalCursos : 0;
-      
-            // Actualizar los estados con estos valores
-            setTotalCursos(totalCursos); // Total de cursos
-            setAvgCost(avgCost); // Promedio de costos por curso
-      
-            // Calcular las métricas usando todas las inscripciones
-            calculateMetricsInscritos(inscritosPorCurso, cursosData, allInscripciones);
-          })
-          .catch((error) => {
-            console.error('Error al obtener los datos:', error);
-            setError('Error al obtener los datos');
-          })
-          .finally(() => {
-            setLoading(false); // Desactivar pantalla de carga
-          });
-      }, []);
+
+
+    useEffect(() => {
+      setLoading(true);
+    
+      // Resetea el estado antes de cargar
+      setCursos([]);
+      setInscripciones([]);
+    
+      // Unificamos la carga de los datos de filtros en una sola solicitud
+      Promise.all([getAllCursos(), fetchFilterOptions(), getInscritos()])
+        .then(([cursosData, filterOptionsData, { inscritosPorCurso, allInscripciones, statusPayCounts }]) => { 
+          setCursos(cursosData);
+          setFilteredCursos(cursosData); // Si es necesario filtrar
+          
+          // Desestructuramos las opciones de filtros desde el objeto retornado
+          const { areaOptions, unidadOptions, nivelOptions, tipoProgramaOptions, modalidadOptions } = filterOptionsData;
+    
+          // Asignamos las opciones a los estados respectivos
+          setAreaOptions(areaOptions);
+          setUnidadOptions(unidadOptions);
+          setNivelOptions(nivelOptions);
+          setTipoProgramaOptions(tipoProgramaOptions);
+          setModalidadOptions(modalidadOptions);
+    
+          setInscripciones(allInscripciones);
+          setStatusPayCounts(statusPayCounts); 
+    
+          // Calcular total de cursos y promedio de costos
+          const totalCursos = cursosData.length;
+          const totalCost = cursosData.reduce((acc, curso) => acc + parseFloat(curso.costo), 0);
+          const avgCost = totalCursos > 0 ? totalCost / totalCursos : 0;
+    
+          // Actualizar los estados con estos valores
+          setTotalCursos(totalCursos); // Total de cursos
+          setAvgCost(avgCost); // Promedio de costos por curso
+    
+          // Calcular las métricas usando todas las inscripciones
+          calculateMetricsInscritos(inscritosPorCurso, cursosData, allInscripciones);
+        })
+        .catch((error) => {
+          console.error('Error al obtener los datos:', error);
+          setError('Error al obtener los datos');
+        })
+        .finally(() => {
+          setLoading(false); // Desactivar pantalla de carga
+        });
+    }, []);
+    
       
       
       
@@ -117,7 +143,13 @@ const ShowCursos = () => {
             },
           });
     
-          allCursos = [...allCursos, ...response.data.data];
+          // Aquí es donde puedes validar que 'costo' esté presente y sea válido.
+          const cleanedCursos = response.data.data.map(curso => ({
+            ...curso,
+            costo: curso.costo ? parseFloat(curso.costo) : 0 // Reemplazar null/undefined con 0
+          }));
+    
+          allCursos = [...allCursos, ...cleanedCursos];
           totalPages = response.data.last_page;
           currentPage++;
         }
@@ -128,6 +160,7 @@ const ShowCursos = () => {
         return [];
       }
     };
+    
     
     const getInscritos = async () => {
       try {
@@ -148,7 +181,6 @@ const ShowCursos = () => {
           currentPage++;
         }
     
-        // Agrupamos las inscripciones por curso_id
         const inscritosPorCurso = allInscripciones.reduce((acc, inscripcion) => {
           const cursoId = inscripcion.curso_id;
           if (!acc[cursoId]) acc[cursoId] = 0;
@@ -162,6 +194,8 @@ const ShowCursos = () => {
           return acc;
         }, {});
     
+        setInscritosPorCurso(inscritosPorCurso); // Update state here
+        setStatusPayCounts(statusPayCounts);
         return { inscritosPorCurso, allInscripciones, statusPayCounts };
       } catch (error) {
         console.error('Error fetching inscripciones:', error);
@@ -170,18 +204,38 @@ const ShowCursos = () => {
     };
     
     
-
+    const fetchFilterOptions = async () => {
+  try {
+    const token = localStorage.getItem('token');
     
-    const fetchAreaOptions = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } });
-        return response.data.data;
-      } catch (error) {
-        console.error('Error fetching area options:', error);
-        return [];
-      }
+    // Suponiendo que el endpoint unificado sea `/filtros-cursos`
+    const response = await axios.get(`${endpoint}/filtros-cursos`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    // Desestructuramos los datos que vienen en la respuesta
+    const { area, unidad, nivel, tipo_programa, modalidad } = response.data;
+
+    // Retornamos las opciones en un solo objeto
+    return {
+      areaOptions: area,
+      unidadOptions: unidad,
+      nivelOptions: nivel,
+      tipoProgramaOptions: tipo_programa,
+      modalidadOptions: modalidad,
     };
+  } catch (error) {
+    console.error('Error fetching filter options:', error);
+    return {
+      areaOptions: [],
+      unidadOptions: [],
+      nivelOptions: [],
+      tipoProgramaOptions: [],
+      modalidadOptions: [],
+    };
+  }
+};
+
     
     // Calculo de Metricas
     const calculateMetrics = (cursosData, inscripcionesData) => {
@@ -252,12 +306,7 @@ const ShowCursos = () => {
       console.log("Estado de pagos filtrado:", filteredStatusPayCounts);
     };
     
-    
-
-    
-    
-    
-
+ 
 
     const handleShowModal = (id) => {
         setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
@@ -305,56 +354,135 @@ const ShowCursos = () => {
         setSelectedArea(value);
         applyFilters(searchCurso, searchCod, value);
     };
-
-    const applyFilters = (searchValue, codValue, areaValue) => {
-      let filtered = cursos; // Iniciar con todos los cursos
+    const handleUnidadChange = (e) => {
+      const value = e.target.value;
+      setSelectedUnidad(value);
+      applyFilters(searchCurso, searchCod, selectedArea, value, selectedNivel, selectedTipoPrograma, selectedModalidad);
+    };
     
-      // Filtrar por el valor de búsqueda en la descripción del curso
+    const handleNivelChange = (e) => {
+      const value = e.target.value;
+      setSelectedNivel(value);
+      applyFilters(searchCurso, searchCod, selectedArea, selectedUnidad, value, selectedTipoPrograma, selectedModalidad);
+    };
+    
+    const handleTipoProgramaChange = (e) => {
+      const value = e.target.value;
+      setSelectedTipoPrograma(value);
+      applyFilters(searchCurso, searchCod, selectedArea, selectedUnidad, selectedNivel, value, selectedModalidad);
+    };
+    
+    const handleModalidadChange = (e) => {
+      const value = e.target.value;
+      setSelectedModalidad(value);
+      applyFilters(searchCurso, searchCod, selectedArea, selectedUnidad, selectedNivel, selectedTipoPrograma, value);
+    };
+    
+
+    const applyFilters = (searchValue, codValue, areaValue, unidadValue, nivelValue, tipoProgramaValue, modalidadValue) => {
+      let filtered = cursos;
+    
       if (searchValue) {
         filtered = filtered.filter(curso =>
           curso.descripcion.toLowerCase().includes(searchValue.toLowerCase())
         );
       }
     
-      // Filtrar por el código del curso
       if (codValue) {
         filtered = filtered.filter(curso =>
           curso.cod.toLowerCase().includes(codValue.toLowerCase())
         );
       }
     
-      // Filtrar por el área del curso
       if (areaValue) {
-        filtered = filtered.filter(curso =>
-          curso.area_id === parseInt(areaValue)
-        );
+        filtered = filtered.filter(curso => curso.area_id === parseInt(areaValue));
       }
     
-      // Actualizar la lista de cursos filtrados
+      if (unidadValue) {
+        filtered = filtered.filter(curso => curso.unidad_id === parseInt(unidadValue));
+      }
+    
+      if (nivelValue) {
+        filtered = filtered.filter(curso => curso.nivel_id === parseInt(nivelValue));
+      }
+    
+      if (tipoProgramaValue) {
+        filtered = filtered.filter(curso => curso.tipo_programa_id === parseInt(tipoProgramaValue));
+      }
+    
+      if (modalidadValue) {
+        filtered = filtered.filter(curso => curso.modalidad_id === parseInt(modalidadValue));
+      }
+    
       setFilteredCursos(filtered);
       setCurrentPage(1);
     
-      // Obtener todas las inscripciones y filtrar según los cursos filtrados
-      getInscritos().then(({ inscritosPorCurso, allInscripciones }) => {
-        // Calcular las métricas usando los cursos filtrados y todas las inscripciones
-        calculateMetricsInscritos(inscritosPorCurso, filtered, allInscripciones);
-        // Recalcular las métricas para los cursos filtrados
-    calculateMetrics(filtered, allInscripciones);
-
-
-    // **Calcular el promedio de costo de los cursos filtrados**
-    const totalCostFiltered = filtered.reduce((acc, curso) => acc + parseFloat(curso.costo), 0);
-    const avgCostFiltered = filtered.length > 0 ? totalCostFiltered / filtered.length : 0;
-    // Actualizar el estado del promedio de costos
-    setAvgCost(avgCostFiltered);
-    animateValue(avgCost, avgCostFiltered, setAvgCost, 2000); // Duración de 2 segundos para la animación
-
-      });
+      // Calcular métricas locales con los cursos filtrados e inscripciones ya cargadas
+      calculateMetricsInscritos(inscritosPorCurso, filtered, inscripciones);
+      calculateMetrics(filtered, inscripciones);
+    
+      // Validar costos, reemplazar null o valores inválidos por 0
+      const totalCostFiltered = filtered.reduce((acc, curso) => {
+        const costo = curso.costo ? parseFloat(curso.costo) : 0; // Si el costo es null o no válido, lo tratamos como 0
+        return acc + (!isNaN(costo) && costo >= 0 ? costo : 0);
+      }, 0);
+    
+      // Asegurarse de no dividir si el array está vacío
+      const avgCostFiltered = filtered.length > 0 ? totalCostFiltered / filtered.length : 0;
+      
+      
+      
+    
+      // Establecer el promedio evitando NaN
+      setAvgCost(isNaN(avgCostFiltered) ? 0 : avgCostFiltered);
+    
+      // Animación del valor del promedio de costos
+      animateValue(avgCost, avgCostFiltered, setAvgCost, 2000);
     };
+    const coursesByNivel = filteredCursos.reduce((acc, curso) => {
+      const nivel = nivelOptions.find(n => n.id === curso.nivel_id)?.descripcion || 'Unknown';
+      acc[nivel] = (acc[nivel] || 0) + 1;
+      return acc;
+    }, {});
     
+    const barChartDataNivel = Object.entries(coursesByNivel).map(([name, value]) => ({ name, value }));
     
+
+    const coursesByUnidad = filteredCursos.reduce((acc, curso) => {
+      const unidad = unidadOptions.find(u => u.id === curso.unidad_id)?.descripcion || 'Unknown';
+      acc[unidad] = (acc[unidad] || 0) + 1;
+      return acc;
+    }, {});
     
+    // Convertir a un formato adecuado para la gráfica
+    const pieChartDataUnidad = Object.entries(coursesByUnidad).map(([name, value]) => ({ name, value }));
     
+    // Calcular cantidad de cursos por tipo de programa
+    const coursesByTipoPrograma = filteredCursos.reduce((acc, curso) => {
+      const tipoPrograma = tipoProgramaOptions.find(tp => tp.id === curso.tipo_programa_id)?.descripcion || 'Desconocido';
+      acc[tipoPrograma] = (acc[tipoPrograma] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Convertir el objeto en un arreglo para el BarChart
+    const barChartDataTipoPrograma = Object.entries(coursesByTipoPrograma).map(([name, count]) => ({
+      name, count
+    }));
+
+    const radarChartDataModalidad = filteredCursos.reduce((acc, curso) => {
+      const modalidad = modalidadOptions.find(m => m.id === curso.modalidad_id)?.descripcion || 'Desconocido';
+      const index = acc.findIndex(item => item.name === modalidad);
+      
+      if (index !== -1) {
+        acc[index].count += 1;
+      } else {
+        acc.push({ name: modalidad, count: 1 });
+      }
+      
+      return acc;
+    }, []);
+    
+
 
     if (error) {
         return <div>{error}</div>;
@@ -430,20 +558,33 @@ const ShowCursos = () => {
             <td>
             <div className="d-flex justify-content-center align-items-center">
                   
-                  
-                    <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/${curso.id}`)} className="me-2">
-                        <i className="bi bi-eye"></i>
+                    <Button variant="btn btn-info" onClick={() => navigate(`/cursos/${curso.id}`)} className="me-2">
+                        <i className="bi bi-list-task"></i>
                     </Button>
-                    {userRole === 'admin' || userRole === 'superuser' ? (
+                    <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/${curso.id}`)} className="me-2">
+                        <i className="bi bi-person-lines-fill"></i>
+                    </Button>
+                    {userRole === 'admin' || userRole === 'superuser'  || userRole === 'pagos' ? (
                         <>
                             <Button variant="btn btn-warning" onClick={() => navigate(`/cursos/${curso.id}/edit`)} className="me-2">
                                 <i className="bi bi-pencil-fill"></i>
                             </Button>
+
+                            <Button variant="btn btn-warning" onClick={() => navigate(`/cursos/${curso.id}/pagos`)} className="me-2">
+                                <i className="bi bi-coin"></i>
+                            </Button>
+                            
+                           
+                        </>
+                    ) :null}
+                      {userRole === 'admin'  || userRole === 'superuser' ? (
+                        <>
                             <Button variant="btn btn-success" onClick={() => navigate(`/inscribir/${curso.id}`)} className="me-2">
                                 <i className="bi bi-person-plus-fill"></i>
                             </Button>
                         </>
-                    ) : null}
+                    ) :null}
+                    
                     {userRole === 'admin' && (
                         <Button variant="btn btn-danger" onClick={() => handleShowModal(curso.id)} className="me-2">
                             <i className="bi bi-trash3-fill"></i>
@@ -524,7 +665,7 @@ const ShowCursos = () => {
               </div>
     
               {/* Filtros */}
-              <div className="d-flex mb-3 custom-width">
+              <div className="d-flex ">
                 <Form.Control
                   type="text"
                   placeholder="Buscar por COD"
@@ -544,6 +685,55 @@ const ShowCursos = () => {
                     <option key={option.id} value={option.id}>{option.descripcion}</option>
                   ))}
                 </Form.Select>
+
+                <Form.Select
+                  value={selectedUnidad}
+                  onChange={handleUnidadChange}
+                  className="me-2"
+                  style={{ fontSize: '0.9rem' }}
+                >
+                  <option value="">Filtrar por Unidad</option>
+                  {unidadOptions.map(option => (
+                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                  ))}
+                </Form.Select>
+
+                <Form.Select
+                  value={selectedNivel}
+                  onChange={handleNivelChange}
+                  className="me-2"
+                  style={{ fontSize: '0.9rem' }}
+                >
+                  <option value="">Filtrar por Nivel</option>
+                  {nivelOptions.map(option => (
+                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                  ))}
+                </Form.Select>
+
+                <Form.Select
+                  value={selectedTipoPrograma}
+                  onChange={handleTipoProgramaChange}
+                  className="me-2"
+                  style={{ fontSize: '0.9rem' }}
+                >
+                  <option value="">Filtrar por Tipo de Programa</option>
+                  {tipoProgramaOptions.map(option => (
+                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                  ))}
+                </Form.Select>
+
+                <Form.Select
+                  value={selectedModalidad}
+                  onChange={handleModalidadChange}
+                  className="me-2"
+                  style={{ fontSize: '0.9rem' }}
+                >
+                  <option value="">Filtrar por Modalidad</option>
+                  {modalidadOptions.map(option => (
+                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                  ))}
+                </Form.Select>
+
               </div>
     
               {/* Tabla paginada */}
@@ -584,24 +774,89 @@ const ShowCursos = () => {
               </ResponsiveContainer>
             </div>
     
-            <div className="chart-box mt-2"> {/* Reduce margen entre gráficas */}
-              <h4 style={{ fontSize: '1.2rem' }}>Horas y Costo por Curso</h4>
-              <ResponsiveContainer width="100%" height={250}>
-              <BarChart  data={barChartData}>
+            <div className="chart-box mt-2">
+            <h4 style={{ fontSize: '1.2rem' }}>Comparación de Cursos por Nivel</h4>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={barChartDataNivel}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
-                <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
-                <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
+                <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="hours" fill="#8884d8" name="Horas" />
-                <Bar yAxisId="right" dataKey="cost" fill="#82ca9d" name="Costo" />
+                <Bar dataKey="value" fill="#8884d8" name="Cantidad de Cursos" />
               </BarChart>
-              </ResponsiveContainer>
-            </div>
+            </ResponsiveContainer>
+          </div>
 
           </div>
         </div>
+         {/* Gráfica de Estado de Pagos justo debajo de la tabla */}
+         <div className="col-lg-12 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
+                <div className="chart-box" style={{ flex: '1 1 30%', maxWidth: '30%', marginRight: '10px' }}>
+                <h4 style={{ fontSize: '1.2rem' }}>Porcentaje de Cursos por Unidad</h4>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={pieChartDataUnidad}
+                        cx="50%"
+                        cy="50%" // Posiciona el centro
+                        innerRadius={60} // Agujero del centro
+                        outerRadius={80} // Radio externo
+                        fill="#8884d8"
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} // Mostrar nombre y porcentaje
+                      >
+                        {pieChartDataUnidad.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                </div>
+                <div className="chart-box" style={{ flex: '1 1 30%', maxWidth: '30%', marginRight: '10px' }}>
+                  <h4 style={{ fontSize: '1.2rem' }}>Comparación de Cursos por Tipo de Programa</h4>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={barChartDataTipoPrograma} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={70} // Aumenta el ancho del eje Y
+                          tick={{ fontSize: 11 }} // Ajusta el tamaño de la fuente
+                        />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="count" fill="#FF8042" stroke="#FF5722" barSize={20} name="Cantidad de Cursos" />
+                      </BarChart>
+                    </ResponsiveContainer>
+
+                </div>
+                <div className="chart-box" style={{ flex: '1 1 30%', maxWidth: '30%', marginRight: '10px' }}>
+                  <h4 style={{ fontSize: '1.2rem' }}>Comparación de Cursos por Modalidad</h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <RadarChart data={radarChartDataModalidad}>
+                          <PolarGrid />
+                          <PolarAngleAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
+                          <Radar
+                            name="Cantidad de Cursos"
+                            dataKey="count"
+                            stroke="#FF8042"
+                            fill="#FF8042"
+                            fillOpacity={0.6}
+                          />
+                          <Tooltip />
+                          <Legend />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                </div>
+              </div>
+
               {/* Gráfica de Estado de Pagos justo debajo de la tabla */}
               <div className="col-lg-12 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
                 <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px' }}>

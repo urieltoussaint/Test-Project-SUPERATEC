@@ -5,7 +5,7 @@ import './Login.css'; // Asegúrate de que esta hoja de estilo contiene las clas
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importa los íconos de Font Awesome
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false); // Controla la visibilidad de la contraseña
   const [error, setError] = useState('');
@@ -15,11 +15,13 @@ const Login = () => {
     e.preventDefault();
     try {
         await axios.get('http://localhost:8000/sanctum/csrf-cookie');  // Obtener el token CSRF
-      const response = await axios.post('http://localhost:8000/api/login', { email, password });
+      const response = await axios.post('http://localhost:8000/api/login', { username, password });
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('role', response.data.role);
       localStorage.setItem('user', response.data.user);
       localStorage.setItem('role_id', response.data.role_id);
+      localStorage.setItem('user_data', JSON.stringify(response.data.user)); // Almacena datos del usuario
+
 
       navigate('/peticiones'); // Redirige a la página principal después de iniciar sesión
     } catch (error) {
@@ -40,14 +42,14 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="form-signin">
           <div className="form-group">
             <input 
-              type="email" 
-              id="inputEmail" 
+              type="text" 
+              id="inputUser" 
               className="form-control" 
-              placeholder="Email" 
+              placeholder="Nombre de Usuario" 
               required 
               autoFocus 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
             />
           </div>
           <div className="form-group password-wrapper">
@@ -69,12 +71,12 @@ const Login = () => {
           <button className="btn btn-lg btn-primary btn-block" type="submit">Iniciar Sesión</button>
         </form>
 
-        <p className="register-text mt-3">
+        {/* <p className="register-text mt-3">
           ¿No tienes una cuenta?{' '}
           <Link to="/register" className="register-link">
             Crear nueva Cuenta
           </Link>
-        </p>
+        </p> */}
       </div>
     </div>
   );

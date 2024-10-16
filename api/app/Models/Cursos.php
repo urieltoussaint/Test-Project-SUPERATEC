@@ -6,8 +6,8 @@ use Illuminate\Support\Str;
 class Cursos extends Model
 {
     protected $table = 'cursos';
-    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas'];
-    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas'];
+    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id'];
+    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id'];
 
     // Relación con InscripcionCursos (un curso puede tener muchas inscripciones)
     public function InscripcionCursos()
@@ -15,6 +15,27 @@ class Cursos extends Model
         // Aquí usamos 'curso_id' en lugar de 'cursos_id'
         return $this->hasMany(InscripcionCursos::class, 'curso_id');
     }
+
+    public function Unidad()
+    {
+        return $this->belongsTo(Unidad::class, 'unidad_id');
+    }
+
+    public function Modalidad()
+    {
+        return $this->belongsTo(Modalidad::class, 'modalidad_id');
+    }
+
+    public function TipoPrograma()
+    {
+        return $this->belongsTo(TipoPrograma::class, 'tipo_programa_id');
+    }
+
+    public function Nivel()
+    {
+        return $this->belongsTo(Nivel::class, 'nivel_id');
+    }
+
 
     protected static function boot()
     {
@@ -54,5 +75,9 @@ public static function generateCourseCode($nombre)
     // Combinamos todos para crear el código
     return $prefix . $randomNumber . $suffix;
 }
+
+
+
+
     
 }

@@ -5,40 +5,55 @@ import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../components/SelectComponent';
 import { useLoading } from '../../components/LoadingContext'; 
 import { ToastContainer, toast } from 'react-toastify';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Card, Row, Col } from 'react-bootstrap'; 
 
 const endpoint = 'http://localhost:8000/api';
 
 const EditUsers = () => {
-    const [formData, setFormData] = useState({
-        name: '',        // Asegúrate de que estos campos tengan un valor predeterminado
-        email: '',
-        role_id: '',
-    });
+  const [formData, setFormData] = useState({
+    username: '',
+    nombre: '',
+    apellido: '',
+    email: '',
+    role_id: '',
+    cargo_id: '',
+    password: '',  // Añadir campo para la contraseña
+    password_confirmation: '' // Añadir campo para la confirmación de la contraseña
+  });
+  
+  const [originalUsername, setOriginalUsername] = useState('');
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { setLoading } = useLoading();
+  const [usernameError, setUsernameError] = useState('');
+  const [isUsernameValid, setIsUsernameValid] = useState(true);
+  const [showPassword, setShowPassword] = useState(false); // Control de visibilidad de la contraseña
+  const [passwordError, setPasswordError] = useState(''); // Control de errores de contraseña
 
-    const navigate = useNavigate();
-    const { id } = useParams(); // Obtener el ID desde la ruta
-    const { setLoading } = useLoading();
-
-    useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let relationsArray = ['role']; // Asumiendo que role es la única relación que deseas
-        const relations = relationsArray.join(',');
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${endpoint}/users/${id}?with=${relations}`, {
+        const response = await axios.get(`${endpoint}/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        // Actualiza el estado con los datos correctos del backend
-        const userData = response.data.user; // Accede a los datos dentro de "user"
+        const userData = response.data.user;
         setFormData({
-          name: userData.name || '', // Valores predeterminados vacíos en caso de que falten
+          username: userData.username || '',
           email: userData.email || '',
-          role_id: userData.role_id || '', // Role ID también debe ser actualizado correctamente
+          role_id: userData.role_id || '',
+          cargo_id: userData.cargo_id || '',
+          nombre: userData.nombre || '',
+          apellido: userData.apellido || '',
+          password: '',  // El campo de la contraseña queda vacío
+          password_confirmation: '' 
         });
+        setOriginalUsername(userData.username);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -47,99 +62,256 @@ const EditUsers = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, setLoading]);
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
-    // Manejar cambios en los inputs del formulario
-    const handleChange = (event) => {
-        const { name, value } = event.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value || '', // Asegurarse de que siempre haya un valor
-        }));
-    };
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value || '',
+    }));
+  };
 
-    // Manejar el envío del formulario
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem('token');
-
-            console.log('Enviando datos al backend:', formData); // Verificar los datos que se están enviando
-
-            await axios.put(`${endpoint}/users/${id}`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            toast.success('Actualización exitosa');
-            navigate('/users');
-        } catch (error) {
-            console.error('Error al actualizar los datos:', error);
-            toast.error('Error al actualizar');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    // Validar longitud de la contraseña (mínimo 8 caracteres)
+    if (formData.password && formData.password.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+  
+    // Validar si las contraseñas coinciden
+    if (formData.password && formData.password !== formData.password_confirmation) {
+      setPasswordError('Las contraseñas no coinciden.');
+      return;
+    }
+  
+    try {
+      const token = localStorage.getItem('token');
+      
+      const updatedData = {
+        username: formData.username,
+        email: formData.email,
+        role_id: formData.role_id,
+        cargo_id: formData.cargo_id,
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+      };
+  
+      // Solo incluir la contraseña y la confirmación si el campo no está vacío
+      if (formData.password) {
+        updatedData.password = formData.password;
+        updatedData.password_confirmation = formData.password_confirmation; // Agregar este campo
+      }
+  
+      await axios.put(`${endpoint}/users/${id}`, updatedData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      toast.success('Actualización exitosa');
+      navigate('/users');
+    } catch (error) {
+      console.error('Error al actualizar los datos:', error);
+      toast.error('Error al actualizar el usuario');
+    }
+  };
+  
+  const handleUsernameBlur = async () => {
+    if (formData.username && formData.username !== originalUsername) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.get(`${endpoint}/validate-username/${formData.username}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsernameError('El username ya está en uso.');
+        setIsUsernameValid(false);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          setUsernameError('');
+          setIsUsernameValid(true);
+        } else {
+          console.error('Error al verificar el username:', error);
+          setUsernameError('Error verificando el username.');
+          setIsUsernameValid(false);
         }
-    };
+      }
+    } else {
+      setUsernameError('');
+      setIsUsernameValid(true);
+    }
+  };
 
-    return (
-        <div className="container">
-            <meta name="csrf-token" content="{{ csrf_token() }}" />
-            <h1>Actualizar Usuario</h1>
-            <Form onSubmit={handleSubmit}>
-                <div className="row">
-                    <div className="col-md-6">
-                        {/* Input para el nombre de usuario */}
-                        <Form.Group controlId="name">
-                            <Form.Label>Nombre de Usuario</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name="name"
-                                value={formData.name || ''}   // Evitar que sea undefined
-                                onChange={handleChange}
-                                required
-                            />
-                        </Form.Group>
+  return (
+    <div className="row" style={{ marginTop: '50px' }}>
+      {/* Columna para la tabla */}
+      <div className="col-lg-6 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
+        <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
+          <h2 className="mb-2">Actualizar Usuario</h2>
+          <Form onSubmit={handleSubmit} className="custom-gutter">
+            <Form.Group controlId="username">
+              <Form.Label>Nombre de Usuario</Form.Label>
+              <Form.Control
+                type="text"
+                name="username"
+                value={formData.username || ''}
+                onChange={(e) =>
+                  setFormData((prevState) => ({
+                    ...prevState,
+                    username: e.target.value.toLowerCase(),
+                  }))
+                }
+                onBlur={handleUsernameBlur}
+                maxLength={40}
+                required
+                className={usernameError ? 'is-invalid' : isUsernameValid ? 'is-valid' : ''}
+              />
+              {usernameError && (
+                <Form.Control.Feedback type="invalid">
+                  {usernameError}
+                </Form.Control.Feedback>
+              )}
+              {!usernameError && isUsernameValid && (
+                <Form.Control.Feedback type="valid">
+                  Nombre de Usuario disponible.
+                </Form.Control.Feedback>
+              )}
+            </Form.Group>
+  
+            <Row className="g-2">
+              <Col md={6}>
+                <Form.Group controlId="nombre">
+                  <Form.Label>Nombre</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="nombre"
+                    value={formData.nombre || ''}
+                    onChange={handleChange}
+                    maxLength={40}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+  
+              <Col md={6}>
+                <Form.Group controlId="apellido">
+                  <Form.Label>Apellido</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="apellido"
+                    value={formData.apellido || ''}
+                    onChange={handleChange}
+                    maxLength={40}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+  
+            <Form.Group controlId="email">
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                name="email"
+                value={formData.email || ''}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+  
+            <Row className="g-1">
+              <Col md={6}>
+                <SelectComponent
+                  endpoint={`${endpoint}/role`}
+                  nameField="name"
+                  valueField="id"
+                  selectedValue={formData.role_id || ''}
+                  handleChange={handleChange}
+                  controlId="role_id"
+                  label="Role"
+                  required
+                />
+              </Col>
+  
+              <Col md={6}>
+                <SelectComponent
+                  endpoint={`${endpoint}/cargo`}
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.cargo_id || ''}
+                  handleChange={handleChange}
+                  controlId="cargo_id"
+                  label="Cargo"
+                  required
+                />
+              </Col>
+            </Row>
+  
+            <Row className="g-2">
+              <Col md={6}>
+                <Form.Group controlId="password">
+                  <Form.Label>Contraseña</Form.Label>
+                  <div className="password-wrapper">
+                    <Form.Control
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Dejar en blanco si no se desea cambiar"
+                    />
+                    <span className="password-toggle-icon" onClick={togglePasswordVisibility}>
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                  </div>
+                  {passwordError && <p className="text-danger">{passwordError}</p>}
+                </Form.Group>
+              </Col>
+  
+            </Row>
 
-                        {/* Input para el email */}
-                        <Form.Group controlId="email">
-                            <Form.Label>Email</Form.Label>
-                            <Form.Control
-                                type="email"
-                                name="email"
-                                value={formData.email || ''}  // Evitar que sea undefined
-                                onChange={handleChange}
-                                required
-                            />
-                        </Form.Group>
 
-                        {/* Componente Select para el rol */}
-                        <SelectComponent
-                            endpoint={`${endpoint}/role`}
-                            nameField="name"
-                            valueField="id"
-                            selectedValue={formData.role_id || ''} // Evitar que sea undefined
-                            handleChange={handleChange}
-                            controlId="role_id"
-                            label="Rol"
-                        />
+            <Row className="g-2">
+              
+              {formData.password && (
+                <Col md={6}>
+                  <Form.Group controlId="password_confirmation">
+                    <Form.Label>Confirmar Contraseña</Form.Label>
+                    <div className="password-wrapper">
+                      <Form.Control
+                        type={showPassword ? 'text' : 'password'}
+                        name="password_confirmation"
+                        value={formData.password_confirmation}
+                        onChange={handleChange}
+                        placeholder="Confirma la nueva contraseña"
+                      />
                     </div>
-                </div>
-
-                {/* Botones para guardar o volver */}
-                <Button variant="success" type="submit">
-                    Guardar
-                </Button>
-                <Button 
-                    variant="secondary" 
-                    onClick={() => navigate('/users')}
-                    className="ms-2"
-                >
-                    Volver
-                </Button>
-            </Form>
-            <ToastContainer />
+                  </Form.Group>
+                </Col>
+              )}
+            </Row>
+  
+            <div className="d-flex justify-content-end mt-3">
+              <Button variant="secondary" onClick={() => navigate('/users')} className="me-2">
+                Volver
+              </Button>
+              <Button variant="success" type="submit">
+                Guardar
+              </Button>
+            </div>
+          </Form>
         </div>
-    );
+      </div>
+    </div>
+  );
+  
 };
 
 export default EditUsers;

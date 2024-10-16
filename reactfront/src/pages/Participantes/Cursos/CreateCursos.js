@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import { useLoading } from '../../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
+import { Card, Row, Col } from 'react-bootstrap'; 
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
@@ -31,7 +32,10 @@ const CreateCursos = () => {
     cantidad_horas: '',
     fecha_inicio: '',
     area_id: '',
-    costo: ''
+    unidad_id:'',
+    nivel_id:'',
+    modalidad_id:'',
+    tipo_programa_id:'',
   });
   const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
   const navigate = useNavigate();
@@ -39,15 +43,6 @@ const CreateCursos = () => {
   useEffect(() => {
     const fetchSelectData = async () => {
       setLoading(true); // Inicia la animación de carga
-      try {
-        const token = localStorage.getItem('token');
-        await axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } });
-        setSelectDataLoaded(true); // Indica que los datos han sido cargados
-      } catch (error) {
-        console.error('Error fetching select data:', error);
-      } finally {
-        setLoading(false); // Detiene la animación de carga
-      }
     };
     if (showUserSearchModal) {
       getAllUsers();
@@ -119,52 +114,70 @@ const getAllRoles = async () => {
     setLoading(true);
 
     const emptyFields = Object.keys(formData).filter(key => {
-      if (key === 'realiza_aporte' || key === 'es_patrocinado') {
-        return false;
-      }
-      return !formData[key];
+        return !formData[key];
     });
 
     if (emptyFields.length > 0) {
-      setShowConfirmModal(true);
-      setLoading(false);
-      return;
+        // Si hay campos vacíos, mostramos el modal de confirmación
+        setShowConfirmModal(true);
+        setLoading(false);
+        return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Error: Token no encontrado');
-        setLoading(false);
-        return;
-      }
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast.error('Error: Token no encontrado');
+            setLoading(false);
+            return;
+        }
 
-      const formDataWithStatus = {
-        ...formData,
-        status: true,
-      };
+        const formDataWithStatus = {
+            ...formData,
+            status: true,
+        };
 
-      await axios.post(`${endpoint}/cursos`, formDataWithStatus, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        // 1. Crear el curso primero
+        const cursoResponse = await axios.post(`${endpoint}/cursos`, formDataWithStatus, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
 
-      toast.success('Nuevo Curso agregado con Éxito');
-      if (redirectToCursos) {
-        navigate(`/inscribir-cursos/${formData.id}`);
-      } else {
-        navigate('/cursos');
-      }
+        toast.success('Nuevo Curso agregado con Éxito');
+
+        // 2. Si todos los campos están llenos, enviamos la petición adicional
+        const requestData = {
+            user_id: userId,  // ID del usuario actual
+            role_id: 4,       // ID del rol
+            zona_id: 4,       // ID de la zona
+            status: false,
+            key: cursoResponse.data.id, // ID del curso recién creado
+            comentario: "agregar monto de curso"
+        };
+
+        await axios.post(`${endpoint}/peticiones`, requestData, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        toast.success('Petición enviada para agregar monto de curso');
+
+        // Redirigir según la opción
+        if (redirectToCursos) {
+            navigate(`/inscribir-cursos/${cursoResponse.data.id}`);
+        } else {
+            navigate('/cursos');
+        }
     } catch (error) {
-      toast.error('Error al crear Curso');
-      console.error('Error creando curso:', error);
+        toast.error('Error al crear Curso o enviar la Petición');
+        console.error('Error creando curso o enviando petición:', error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
 
   const handleSelectUser = (user) => {
     setSelectedUserId(user.id);
-    setSelectedUserName(user.name);
+    setSelectedUserName(user.username);
     setSelectedRoleId(null); // Limpiar selección de rol al seleccionar usuario
     setSelectedRoleName('');
     setShowUserSearchModal(false);
@@ -220,7 +233,7 @@ const getAllRoles = async () => {
   const handleUserSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchName(value);
-    const filtered = users.filter(user => user.name.toLowerCase().includes(value));
+    const filtered = users.filter(user => user.username.toLowerCase().includes(value));
     setFilteredUsers(filtered);
   };
 
@@ -232,11 +245,11 @@ const getAllRoles = async () => {
   };
 
   return (
-    <div className="container">
-      <h1>Agregar Nuevo Curso</h1>
-      <Form onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-md-6">
+    <div className="row" style={{ marginTop: '50px' }}>
+  <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
+    <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
+      <h2 className="mb-2">Agregar Nuevo Curso</h2>
+      <Form onSubmit={handleSubmit} className="custom-gutter">
             <Form.Group controlId="descripcion">
               <Form.Label>Nombre del Curso</Form.Label>
               <Form.Control
@@ -245,8 +258,12 @@ const getAllRoles = async () => {
                 value={formData.descripcion}
                 onChange={handleChange}
                 maxLength={40}
+                required
               />
             </Form.Group>
+
+          <Row className="g-2">
+          <Col md={6}>
             <Form.Group controlId="cantidad_horas">
               <Form.Label>Cantidad de Horas</Form.Label>
               <Form.Control
@@ -257,7 +274,71 @@ const getAllRoles = async () => {
                 maxLength={4}
               />
             </Form.Group>
-            <Form.Group controlId="fecha_inicio">
+          </Col>
+
+          <Col md={6}>
+          <SelectComponent
+              endpoint={`${endpoint}/nivel`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.nivel_id}
+              handleChange={handleChange}
+              controlId="nivel_id"
+              label="Nivel"
+            />
+          </Col>
+          </Row>
+          <Row className="g-2">
+          <Col md={6}>
+          <SelectComponent
+              endpoint={`${endpoint}/area`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.area_id}
+              handleChange={handleChange}
+              controlId="area_id"
+              label="Área"
+            />
+            </Col>
+
+          <Col md={6}>
+            <SelectComponent
+              endpoint={`${endpoint}/unidad`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.unidad_id}
+              handleChange={handleChange}
+              controlId="unidad_id"
+              label="Unidad"
+            />
+          </Col>
+          </Row>
+          <Row className="g-2">
+          <Col md={6}>
+          <SelectComponent
+              endpoint={`${endpoint}/modalidad`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.modalidad_id}
+              handleChange={handleChange}
+              controlId="modalidad_id"
+              label="Modalidad"
+            />
+          </Col>
+          <Col md={6}>
+          <SelectComponent
+              endpoint={`${endpoint}/tipo_programa`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.tipo_programa_id}
+              handleChange={handleChange}
+              controlId="tipo_programa_id"
+              label="Tipo de Programa"
+            />
+          </Col>
+        </Row>
+        
+        <Form.Group controlId="fecha_inicio">
               <Form.Label>Fecha de Inicio</Form.Label>
               <Form.Control
                 type="date"
@@ -266,53 +347,19 @@ const getAllRoles = async () => {
                 onChange={handleChange}
               />
             </Form.Group>
-            
-            <Form.Group controlId="cuotas">
-              <Form.Label>Cantidad de Cuotas</Form.Label>
-              <Form.Control
-                type="number"
-                name="cuotas"
-                value={formData.cuotas}
-                onChange={handleChange}
-                maxLength={4}
-              />
-            </Form.Group>
-            
-              <SelectComponent
-                endpoint={`${endpoint}/area`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.area_id}
-                handleChange={handleChange}
-                controlId="area_id"
-                label="Área"
-              />
-           
 
-            <Form.Group controlId="costo">
-              <Form.Label>Costo del curso ($)</Form.Label>
-              <Form.Control
-                type="number"
-                name="costo"
-                value={formData.costo}
-                onChange={handleChange}
-                maxLength={20}
-              />
-            </Form.Group>
-          </div>
+
+        <div className="d-flex justify-content-end mt-3">
+          <Button variant="secondary" onClick={() => navigate('/cursos')} className="me-2">
+            Volver
+          </Button>
+          <Button variant="success" type="submit">
+            Guardar
+          </Button>
         </div>
-
-        <Button variant="success" type="submit">
-          Guardar
-        </Button>
-        <Button 
-          variant="secondary" 
-          onClick={() => navigate('/cursos')}
-          className="ms-2"
-        >
-          Volver
-        </Button>
       </Form>
+ 
+
 
       {/* Modal de confirmación si hay campos vacíos */}
       <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
@@ -387,7 +434,7 @@ const getAllRoles = async () => {
                 filteredUsers.map(user => (
                   <tr key={user.id}>
                     <td>{user.id}</td>
-                    <td>{user.name}</td>
+                    <td>{user.username}</td>
                     <td>
                       <Button
                         variant="primary"
@@ -540,6 +587,8 @@ const getAllRoles = async () => {
         </Modal.Footer>
       </Modal>
 
+    </div>
+    </div>
     </div>
   );
 };

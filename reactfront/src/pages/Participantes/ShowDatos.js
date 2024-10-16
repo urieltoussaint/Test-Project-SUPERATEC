@@ -39,9 +39,6 @@ const ShowDatos = () => {
     const [SuperatecOptions, setSuperatecOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
 
-
-
-
     const [showModal, setShowModal] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga

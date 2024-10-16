@@ -39,6 +39,9 @@ import ShowPeticionesNoAtentidas from './pages/Bandeja/ShowPeticionesNoAtentidas
 import ShowPagosCursos from './pages/Participantes/ReportePagos/ShowPagosCursos';
 import Dashboard from './Dashboard';
 import { useLocation } from 'react-router-dom'; // Importa useLocation
+import CreateUsers from './pages/Users/CreateUsers';
+import CreatePagoCursos from './pages/Participantes/Cursos/CreatePagoCursos';
+import ShowMoreCursos from './pages/Participantes/Cursos/ShowMoreCursos';
 
 
 function App() {
@@ -55,6 +58,7 @@ function App() {
             <Route path="/peticiones/Noat" element={<AuthenticatedLayout><ShowPeticionesNoAtentidas /></AuthenticatedLayout>} />
             <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><ShowUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="users/:id" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><EditUsers /></AuthenticatedLayout></ProtectedRoute>} />
+            <Route path="users/create" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><CreateUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos" element={<AuthenticatedLayout><ShowDatos /></AuthenticatedLayout>} />
             <Route path="/formulario/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateDatos /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditDatos /></AuthenticatedLayout></ProtectedRoute>} />
@@ -64,7 +68,10 @@ function App() {
             <Route path="/inscritos/:cursoId" element={<AuthenticatedLayout><ShowInscritos /></AuthenticatedLayout>} />
             <Route path="/cursos" element={<AuthenticatedLayout><ShowCursos /></AuthenticatedLayout>} />
             <Route path="/cursos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateCursos /></AuthenticatedLayout></ProtectedRoute>}  />
-            <Route path="/cursos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditCursos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/cursos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditCursos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/cursos/:id/pagos" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagoCursos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/cursos/:id" element={<AuthenticatedLayout><ShowMoreCursos /></AuthenticatedLayout>}  />
+
             <Route path="/pagos" element={<AuthenticatedLayout><ShowPagos /></AuthenticatedLayout>} />
             <Route path="/pagos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:cedula/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout></ProtectedRoute>}  />
@@ -97,11 +104,13 @@ const AuthenticatedLayout = ({ children }) => {
   const navigate = useNavigate();
   const userRole = localStorage.getItem('role');
 
-  useEffect(() => {
-
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem('token');
+  const fetchUser = async () => {
+    try {
+      const storedUser = sessionStorage.getItem('user'); // Verifica si el usuario ya está almacenado en sessionStorage
+      if (storedUser) {
+        setUser(JSON.parse(storedUser)); // Si ya hay datos guardados, los usa
+      } else {
+        const token = localStorage.getItem('token'); // Sigue usando localStorage para el token
         if (!token) {
           throw new Error("No token found");
         }
@@ -111,16 +120,21 @@ const AuthenticatedLayout = ({ children }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-        
-        setUser(response.data);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        navigate('/');
-      }
-    };
   
-    fetchUser();
+        setUser(response.data);
+        sessionStorage.setItem('user', JSON.stringify(response.data)); // Almacena los datos del usuario en sessionStorage
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      navigate('/'); // Redirige al login si falla
+    }
+  };
+  
 
+  useEffect(() => {
+
+    fetchUser();
+    
 
     switch (location.pathname) {
       case '/datos':
@@ -223,14 +237,14 @@ const AuthenticatedLayout = ({ children }) => {
             {/* Nombre de Rol y Círculo */}
             <span className="user-role  ">{userRole}</span>
             <div className="user-circle" onClick={toggleDropdowns}>
-              <span className="user-initial">{user?.name?.charAt(0).toUpperCase()}</span>
+              <span className="user-initial">{user?.username?.charAt(0).toUpperCase()}</span>
             </div>
 
             {/* Menú Desplegable de Logout */}
             {isDropdownOpen && (
             <div className="dropdown-menux">
               <div className="logout-options " >
-              <span >Usuario: {user.name}</span>
+              <span >Usuario: {user.username}</span>
               </div>
               <div className="logout-option" onClick={handleLogout}>
 

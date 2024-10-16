@@ -142,7 +142,7 @@ const ShowPeticionesNoAtendidas = () => {
     const renderItem = (peticiones) => (
         <tr key={peticiones.id} className={peticiones.status ? "attended-row" : ""}>
             <td className="text-center">{renderStatusDot(peticiones.created_at, peticiones.status)}</td>
-            <td className="text-center">{peticiones.user?.name}</td>
+            <td className="text-center">{peticiones.user?.username}</td>
             <td className="text-center">{peticiones.key}</td>
             <td className="text-center">{peticiones.zonas?.name}</td>
             <td className="text-center">{moment(peticiones.finish_time).format('YYYY-MM-DD')}</td>
@@ -150,7 +150,7 @@ const ShowPeticionesNoAtendidas = () => {
             <td className="text-center actions-column">
                 <span>{moment(peticiones.finish_time).format('YYYY-MM-DD HH:mm')}</span>
             </td>
-            <td className="text-center">{peticiones.user_success?.name}</td> {/* Mostrar el nombre del usuario que atendió la petición */}
+            <td className="text-center">{peticiones.user_success?.username}</td> {/* Mostrar el nombre del usuario que atendió la petición */}
         </tr>
     );
     

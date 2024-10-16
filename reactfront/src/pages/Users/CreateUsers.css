@@ -1,0 +1,17 @@
+.password-wrapper {
+    position: relative;
+  }
+  
+  .password-wrapper .form-control {
+    padding-right: 40px; /* Espacio para el ícono */
+  }
+  
+  .password-toggle-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d;
+  }
+  

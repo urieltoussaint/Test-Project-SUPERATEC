@@ -1,8 +1,13 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Area;
 use App\Models\Cursos as Model;
 use App\Models\InscripcionCursos;
+use App\Models\Modalidad;
+use App\Models\Nivel;
+use App\Models\TipoPrograma;
+use App\Models\Unidad;
 
 class CursosController extends Controller
 {
@@ -24,6 +29,24 @@ class CursosController extends Controller
         }
 
         return response()->json($inscripciones);
+    }
+
+    public function getFiltrosCursos()
+    {
+        $nivel = Nivel::all(); 
+        $tipoPrograma = TipoPrograma::all(); 
+        $modalidad = Modalidad::all(); 
+        $area = Area::all(); 
+        $unidad = Unidad::all(); 
+
+        return response()->json([
+            'nivel' => $nivel,
+            'tipo_programa' => $tipoPrograma,
+            'modalidad' => $modalidad,
+            'area' => $area,
+            'unidad' => $unidad,
+
+        ]);
     }
 }
 

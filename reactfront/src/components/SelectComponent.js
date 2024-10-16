@@ -8,15 +8,7 @@ const SelectComponent = ({ endpoint, nameField, valueField, selectedValue, handl
   return (
     <Form.Group controlId={controlId}>
       <Form.Label>{label}</Form.Label>
-      {loading ? (
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </Spinner>
-      ) : error ? (
-        <Alert variant="danger">
-          Error al cargar opciones: {error.message}
-        </Alert>
-      ) : (
+      
         <Form.Control as="select" name={controlId} value={selectedValue} onChange={handleChange} >
           <option value="">Seleccione</option>
           {options.map(option => (
@@ -25,7 +17,6 @@ const SelectComponent = ({ endpoint, nameField, valueField, selectedValue, handl
             </option>
           ))}
         </Form.Control>
-      )}
     </Form.Group>
   );
 };

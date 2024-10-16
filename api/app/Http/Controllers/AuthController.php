@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+
 
 
 class AuthController extends Controller
@@ -30,17 +32,22 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed', // Valida la confirmación de contraseña
+            
             
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role_id' => 3, // Asigna el rol de "invitado" (rol con ID 3) por defecto
+            'role_id' => $request->role_id, // Asigna el rol de "invitado" (rol con ID 3) por defecto
+            'cargo_id'=> $request->cargo_id,
+            'nombre'=> $request->nombre,
+            'apellido'=> $request->apellido,
+
         ]);
 
         // Genera y almacena el token en la columna remember_token
@@ -52,11 +59,11 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|string|email',
+            'username' => 'required|string|max:255',
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (!Auth::attempt($request->only('username', 'password'))) {
             return response()->json(['message' => 'Crendenciales incorrectas'], 401);
         }
 
@@ -104,7 +111,7 @@ class AuthController extends Controller
     public function getAllUsersWithRoles(Request $request)
 {
     // Usa paginación para limitar la cantidad de registros por solicitud
-    $users = User::with('role')
+    $users = User::with('role','cargo')
         ->paginate(10); // Cambia el número de registros por página según tu necesidad
 
     return response()->json($users, 200);
@@ -117,7 +124,7 @@ class AuthController extends Controller
             $user = User::findOrFail($id);
             
             // Verifica si el usuario es el último administrador
-            if ($user->role->name === 'admin' && User::where('role_id', $user->role_id)->count() === 1) {
+            if ($user->role->username === 'admin' && User::where('role_id', $user->role_id)->count() === 1) {
                 return response()->json(['message' => 'No se puede eliminar el último administrador'], 403);
             }
     
@@ -130,38 +137,76 @@ class AuthController extends Controller
     
 
 
-public function update(Request $request, $id)
-{
-    // Validar los datos recibidos en la solicitud
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
-        'role_id' => 'required|integer|exists:role,id', // Valida que role_id sea un rol existente
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 400);
+    public function update(Request $request, $id)
+    {
+        // Validar los datos recibidos en la solicitud
+        $validator = Validator::make($request->all(), [
+            'username' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('users')->ignore($id), // Ignorar el ID actual para la unicidad
+            ],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($id), // Ignorar el ID actual para la unicidad
+            ],
+            'role_id' => 'required|integer|exists:role,id', // Valida que role_id sea un rol existente
+            'cargo_id'=> 'required|integer|exists:cargo_users,id', // Valida que role_id sea un rol existente
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'password' => 'nullable|string|min:8|confirmed', // Contraseña opcional, mínimo 8 caracteres y debe confirmarse
+            'password_confirmation' => 'nullable|string|min:8', // Confirmación opcional también
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+    
+        try {
+            // Encontrar el usuario por su ID
+            $user = User::findOrFail($id);
+    
+            // Actualizar los campos del usuario
+            $user->username = $request->input('username');
+            $user->email = $request->input('email');
+            $user->role_id = $request->input('role_id');
+            $user->cargo_id = $request->input('cargo_id');
+            $user->nombre = $request->input('nombre');
+            $user->apellido = $request->input('apellido');
+    
+            // Actualizar la contraseña solo si se proporciona una nueva
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->input('password'));
+            }
+    
+            // Guardar los cambios
+            $user->save();
+    
+            // Respuesta de éxito
+            return response()->json(['message' => 'Usuario actualizado correctamente', 'user' => $user], 200);
+        } catch (\Exception $e) {
+            // Manejo de errores si ocurre un problema
+            return response()->json(['message' => 'Error al actualizar el usuario', 'error' => $e->getMessage()], 500);
+        }
     }
+    
 
-    try {
-        // Encontrar el usuario por su ID
-        $user = User::findOrFail($id);
 
-        // Actualizar los campos del usuario
-        $user->name = $request->input('name');
-        $user->email = $request->input('email');
-        $user->role_id = $request->input('role_id');
+public function validateUsername($username)
+{
+    $user = User::where('username', $username)->first();
 
-        // Guardar los cambios
-        $user->save();
-
-        // Respuesta de éxito
-        return response()->json(['message' => 'Usuario actualizado correctamente', 'user' => $user], 200);
-    } catch (\Exception $e) {
-        // Manejo de errores si ocurre un problema
-        return response()->json(['message' => 'Error al actualizar el usuario', 'error' => $e->getMessage()], 500);
+    if ($user) {
+        return response()->json(['message' => 'Username exists'], 200);
+    } else {
+        return response()->json(['message' => 'Username not found'], 404);
     }
 }
+
 
     
 

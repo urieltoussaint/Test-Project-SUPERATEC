@@ -14,10 +14,10 @@ class User extends Authenticatable
 
     // Campos que pueden ser llenados mediante asignación masiva
     protected $fillable = [
-        'name', 'email', 'password','role_id'
+        'username', 'email', 'password','role_id','nombre','apellido','cargo_id'
     ];
     protected $listable = [
-        'name', 'email','role_id'
+        'username', 'email','role_id','nombre','apellido','cargo_id','password'
     ];
 
     // Campos que deben estar ocultos cuando el modelo se convierte a JSON
@@ -29,6 +29,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+
+    public function Cargo()
+    {
+        return $this->belongsTo(Cargo::class, 'cargo_id');
+    }
    
     public function role()
 {
