@@ -3,6 +3,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Area;
 use App\Models\Cursos as Model;
+use App\Models\Cursos;
+use App\Models\InformacionInscripcion;
 use App\Models\InscripcionCursos;
 use App\Models\Modalidad;
 use App\Models\Nivel;
@@ -15,12 +17,31 @@ class CursosController extends Controller
 
     protected $class = Model::class;
 
+
+    public function show($id)
+    {
+        return response()->json(
+            $this->find(
+                $this->class,
+                $id
+            )
+        );
+
+        $curso = Cursos::find($id);
+        if (!$curso) {
+            return response()->json(['message' => 'Curso no encontrado'], 404);
+        }
+    
+        return response()->json($curso);
+    }
+
+
     public function obtenerCursosPorCedula($cedula)
     {
         // Obtener inscripciones que coincidan con la cédula proporcionada y cargar la relación con cursos
-        $inscripciones = InscripcionCursos::where('cedula_identidad', $cedula)
-                        ->join('cursos', 'inscripcion_cursos.curso_id', '=', 'cursos.id')
-                        ->select('inscripcion_cursos.*', 'cursos.descripcion', 'cursos.costo')
+        $inscripciones = InformacionInscripcion::where('cedula_identidad', $cedula)
+                        ->join('cursos', 'informacion_inscripcion.curso_id', '=', 'cursos.id')
+                        ->select('informacion_inscripcion.*', 'cursos.descripcion', 'cursos.costo')
                         ->get();
 
         // Verificar si no se encontraron inscripciones

@@ -3,9 +3,9 @@ import axios from 'axios';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useLoading } from '../../../components/LoadingContext'; 
+import { useLoading } from '../../components/LoadingContext'; 
 import { ToastContainer, toast } from 'react-toastify';
-import PaginationTable from '../../../components/PaginationTable'; // Importa el componente
+import PaginationTable from '../../components/PaginationTable'; // Importa el componente
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';

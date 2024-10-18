@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
-import { useLoading } from '../../../components/LoadingContext';
+import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';

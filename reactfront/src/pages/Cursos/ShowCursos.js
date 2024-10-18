@@ -6,10 +6,10 @@ import Button from 'react-bootstrap/Button';
 import { Modal,Card } from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import './ShowCursos.css';
-import { useLoading } from '../../../components/LoadingContext';
+import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import PaginationTable from '../../../components/PaginationTable';
+import PaginationTable from '../../components/PaginationTable';
 import { ResponsiveContainer,PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,PolarRadiusAxis,PolarAngleAxis,Radar,RadarChart,PolarGrid } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';  // Importa ProgressBar

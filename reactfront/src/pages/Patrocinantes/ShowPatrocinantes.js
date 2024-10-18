@@ -43,8 +43,12 @@ const ShowPatrocinantes = () => {
         pais_id: '',
         tipo_patrocinante_id: '',
         tipo_industria_id: '',
-        empresa_persona: '' // Nuevo filtro para Empresa o Persona
+        empresa_persona: '',
+        es_patrocinante: '',  // Nuevo filtro
+        exterior: '',         // Nuevo filtro
+        bolsa_empleo: ''      // Nuevo filtro
     });
+    
     
     const itemsPerPage = 7; // Número de elementos por página
     const { setLoading } = useLoading();
@@ -106,11 +110,7 @@ const ShowPatrocinantes = () => {
             }
         }
     };
-    
-
-    
-    
-
+ 
     const deletePatrocinantes = async () => {
         const token = localStorage.getItem('token');
         try {
@@ -204,13 +204,32 @@ const ShowPatrocinantes = () => {
                 dato.empresa_persona === filters.empresa_persona
             );
         }
-        
-        
-
-
+    
+        // Filtrado por es_patrocinante
+        if (filters.es_patrocinante !== '') {
+            filtered = filtered.filter(dato =>
+                dato.es_patrocinante === (filters.es_patrocinante === 'true')
+            );
+        }
+    
+        // Filtrado por bolsa_empleo
+        if (filters.bolsa_empleo !== '') {
+            filtered = filtered.filter(dato =>
+                dato.bolsa_empleo === (filters.bolsa_empleo === 'true')
+            );
+        }
+    
+        // Filtrado por exterior
+        if (filters.exterior !== '') {
+            filtered = filtered.filter(dato =>
+                dato.exterior === (filters.exterior === 'true')
+            );
+        }
+    
         setFilteredPatrocinantes(filtered);
         setCurrentPage(1);  // Resetear a la primera página tras aplicar los filtros
     };
+    
     
 
     if (error) {
@@ -244,6 +263,28 @@ const ShowPatrocinantes = () => {
     const porcentajeEmpresa = total > 0 ? (totalEmpresas / total) * 100 : 0;
     const porcentajePersona = total > 0 ? (totalPersonas / total) * 100 : 0;
 
+    // Filtrar los datos según el valor de bolsa_empleo (true o false)
+    const bolsaEmpleoTrueCount = filteredPatrocinantes.filter(dato => dato.bolsa_empleo === true).length;
+    const bolsaEmpleoFalseCount = filteredPatrocinantes.filter(dato => dato.bolsa_empleo === false).length;
+
+    // Datos para el gráfico de barras
+    const bolsa = [
+        { name: 'Sí', value: bolsaEmpleoTrueCount },
+        { name: 'No', value: bolsaEmpleoFalseCount },
+    ];
+    const colors = ['#0088FE', 'rgba(255, 74, 74, 0.9)']; // Azul para true, naranja para false
+
+     // Filtrar los datos según el valor de es_patrocinante (true o false)
+     const esPatrocinanteTrueCount = filteredPatrocinantes.filter(dato => dato.es_patrocinante === true).length;
+     const esPatrocinanteFalseCount = filteredPatrocinantes.filter(dato => dato.es_patrocinante === false).length;
+ 
+     // Datos para el gráfico de dona
+     const patrocinante = [
+         { name: 'Es Patrocinante (Sí)', value: esPatrocinanteTrueCount },
+         { name: 'Es Patrocinante (No)', value: esPatrocinanteFalseCount },
+     ];
+
+
     
 
     const getFilteredDataByDate = () => {
@@ -266,6 +307,118 @@ const ShowPatrocinantes = () => {
         }));
     };
 
+    // Función para procesar los datos de patrocinantes y agruparlos por tipo de industria
+    const getTipoIndustriaChartData = () => {
+
+        // mapea tipo_industria_id con la descripción
+        const industriaDict = tipoIndustriaOptions.reduce((acc, industria) => {
+            acc[industria.id] = industria.descripcion;
+            return acc;
+        }, {});
+    
+        // Agrupar los datos filtrados por tipo de industria
+        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
+            // Asegúrate de que el dato tenga el campo `tipo_industria_id`
+            const industriaId = dato?.tipo_industria_id || 'Desconocido'; 
+            const industriaName = industriaDict[industriaId] || 'Desconocido';
+    
+            if (!acc[industriaName]) {
+                acc[industriaName] = { name: industriaName, count: 0 };
+            }
+            acc[industriaName].count += 1;
+            return acc;
+        }, {});
+    
+        console.log("Agrupación por tipo de industria:", groupedData);
+    
+        const total = Object.values(groupedData).reduce((sum, dato) => sum + dato.count, 0); // Total de patrocinantes
+    
+        // Convertir el total a porcentaje para cada categoría
+        return Object.values(groupedData).map(item => ({
+            name: item.name,
+            value: parseFloat(((item.count / total) * 100).toFixed(2)), // Calcular el porcentaje
+        }));
+    };
+
+
+    const getTipoPatrocinanteChartData = () => {
+
+        // Crear un diccionario que mapea tipo_patrocinante_id con la descripción
+        const patrocinanteDict = tipoPatrocinanteOptions.reduce((acc, patrocinante) => {
+            acc[patrocinante.id] = patrocinante.descripcion;
+            return acc;
+        }, {});
+    
+        // Agrupar los datos filtrados por tipo de patrocinante
+        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
+            // Asegúrate de que el dato tenga el campo `tipo_patrocinante_id`
+            const patrocinanteId = dato?.tipo_patrocinante_id || 'Desconocido'; 
+            const patrocinanteName = patrocinanteDict[patrocinanteId] || 'Desconocido';
+    
+            if (!acc[patrocinanteName]) {
+                acc[patrocinanteName] = { name: patrocinanteName, count: 0 };
+            }
+            acc[patrocinanteName].count += 1;
+            return acc;
+        }, {});
+    
+        console.log("Agrupación por tipo de patrocinante:", groupedData);
+    
+        const total = Object.values(groupedData).reduce((sum, dato) => sum + dato.count, 0); // Total de patrocinantes
+    
+        // Convertir el total a porcentaje para cada categoría
+        return Object.values(groupedData).map(item => ({
+            name: item.name,
+            value: parseFloat(((item.count / total) * 100).toFixed(2)), // Calcular el porcentaje
+        }));
+    };
+
+
+    const getPatrocinantesByEstado = () => {
+        // Crear un diccionario que mapea estado_id con la descripción
+        const estadoDict = estadoOptions.reduce((acc, estado) => {
+            acc[estado.id] = estado.descripcion;
+            return acc;
+        }, {});
+    
+        // Agrupar los datos de participantes por estado_id
+        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
+            const estadoId = dato?.estado_id || 'Desconocido';
+            const estadoName = estadoDict[estadoId] || 'Desconocido';  // Obtiene el nombre del estado desde estadoDict
+    
+            if (!acc[estadoName]) {
+                acc[estadoName] = { name: estadoName, count: 0 };
+            }
+            acc[estadoName].count += 1;
+            return acc;
+        }, {});
+    
+        // Convertir los datos en un array
+        return Object.values(groupedData);
+    };
+
+    const getPatrocinantesByPais = () => {
+        // Crear un diccionario que mapea estado_id con la descripción
+        const paisDict = paisOptions.reduce((acc, pais) => {
+            acc[pais.id] = pais.descripcion;
+            return acc;
+        }, {});
+    
+        // Agrupar los datos de participantes por pais_id
+        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
+            const paisId = dato?.pais_id || 'Desconocido';
+            const paisName = paisDict[paisId] || 'Desconocido';  // Obtiene el nombre del estado desde estadoDict
+    
+            if (!acc[paisName]) {
+                acc[paisName] = { name: paisName, count: 0 };
+            }
+            acc[paisName].count += 1;
+            return acc;
+        }, {});
+    
+        // Convertir los datos en un array
+        return Object.values(groupedData);
+    };
 
     const columns = ["Rif/Cedula", "Nombre", "Telefono","Email","Web", "Acciones"];
 
@@ -320,8 +473,6 @@ const ShowPatrocinantes = () => {
         </tr>
         
     );
-    
-    
 
     return (
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
@@ -330,7 +481,7 @@ const ShowPatrocinantes = () => {
                 <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%' }}>
                     <div className="stat-icon"><FaBuilding  /></div>
                     <div className="stat-number" style={{ color: '#58c765', fontSize: '1.8rem' }}>{totalPatrocinados}</div>
-                    <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total de Patrocinados</h4>
+                    <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total de Patrocinantes</h4>
                 </div>
 
                 <div className="stat-card" style={{ padding: '0', margin: '0 10px', width: '100%', maxWidth: '300px' }}>
@@ -371,15 +522,23 @@ const ShowPatrocinantes = () => {
                     </ResponsiveContainer>
                 </div>
 
-
-
-
-                {/* Promedio de Aporte y Patrocinado */}
+                {/* Total Empresa y persona */}
                 <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%', textAlign: 'center' }}>
-                <h4 style={{ fontSize: '1.1rem', color:'gray' }} className='mt-3'>Distribución por Rango de Edad</h4>
-                    
+                    <div className="d-flex justify-content-between mx-auto" style={{ marginTop: '17px' }}>
+                        <div style={{ textAlign: 'center', marginLeft: '40px' }}>
+                            <h4 style={{ fontSize: '1.1rem', color: 'gray' }}>Exterior</h4>
+                            <div className="stat-number" style={{ color: '#8884d8', fontSize: '1.8rem' }}>
+                                {filteredPatrocinantes.filter(dato => dato.exterior === true).length}
+                            </div>
+                        </div>
+                        <div style={{ textAlign: 'center', marginRight: '40px' }}>
+                            <h4 style={{ fontSize: '1.1rem', color: 'gray' }}>No Exterior</h4>
+                            <div className="stat-number" style={{ color: '#82ca9d', fontSize: '1.8rem' }}>
+                                {filteredPatrocinantes.filter(dato => dato.exterior === false).length}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
 
             </div>
 
@@ -486,12 +645,49 @@ const ShowPatrocinantes = () => {
                                     <option key={option.id} value={option.id}>{option.descripcion}</option>
                                 ))}
                             </Form.Select>
-                            
+
 
                             
-
-                            
+   
                         </div>
+                        <div className="d-flex mb-3" style={{ gap: '10px', flexWrap: 'wrap' }}>
+                                
+
+                                {/* Filtros booleanos adicionales */}
+                                <Form.Select name="es_patrocinante" 
+                                value={filters.es_patrocinante}
+                                 onChange={handleFilterChange}
+                                  className="me-2" 
+                                  style={{ width: '30%' }}  
+>
+                                    <option value="">¿Es patrocinante actualmente?</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </Form.Select>
+
+                                <Form.Select name="bolsa_empleo"
+                                 value={filters.bolsa_empleo} 
+                                 onChange={handleFilterChange} 
+                                 className="me-2"
+                                 style={{ width: '30%' }} 
+>
+                                    <option value="">¿Posible para bolsa de Empleo?</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </Form.Select>
+
+                                <Form.Select name="exterior" 
+                                value={filters.exterior} 
+                                onChange={handleFilterChange} 
+                                className="me-2"
+                                style={{ width: '30%' }} >
+                                    <option value="">¿Exterior?</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </Form.Select>
+                            </div>        
+
+                        
                         
                             
                         {/* Tabla paginada */}
@@ -529,49 +725,171 @@ const ShowPatrocinantes = () => {
             </div>
             <div className="col-lg-3" style={{ marginLeft: '-100px'}}> {/* Reduce espacio entre columnas */}
                 <div className="chart-box" style={{ marginRight: '10px' }}>
-                        <h4 style={{ fontSize: '1.2rem' }}>¿Cómo se enteró de Superatec?</h4>
-
-                        
+                        <h4 style={{ fontSize: '1.2rem' }}>Distribución Por Tipo de Industria</h4>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={getTipoIndustriaChartData()} // Los datos procesados
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={80}
+                                    innerRadius={60}
+                                    fill="#8884d8"
+                                    label={({ value }) => ` ${value}%`} // Etiquetas que muestran el nombre y valor
+                                    labelLine={false}
+                                >
+                                    {getTipoIndustriaChartData().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                   
+                                </Pie>
+                                <Legend/>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
 
                     </div>
 
 
                 <div className="chart-box" style={{ marginRight: '10px', paddingTop: '0px', paddingBottom: '0px' }}>
 
-                    <h4 style={{ fontSize: '1.2rem' }}>Nivel de Instrucción</h4>
-
-                    <ResponsiveContainer width="100%" height={300}>
-                       
-                    </ResponsiveContainer>
+                <h4 style={{ fontSize: '1.2rem' }}>Distribución Por Tipo de Patrocinante</h4>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={getTipoPatrocinanteChartData()} // Los datos procesados
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    label={({ value }) => ` ${value}%`} // Etiquetas que muestran el nombre y valor
+                                    labelLine={false}
+                                >
+                                    {getTipoPatrocinanteChartData().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                   
+                                </Pie>
+                                <Legend/>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
                 </div>
 
             </div>
             </div>
             {/* Gráfica  justo debajo de la tabla */}
-           
+            <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
+                <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+                <h4 style={{ fontSize: '1.2rem' }}>¿Actualmente es Patrocinante?</h4>
+                    
+                <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                        <Pie
+                            data={patrocinante}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={140}
+                            innerRadius={50} 
+                            fill="#8884d8"
+                            label={({  value }) => ` ${value}`} // Muestra el nombre y valor en la etiqueta
+                            labelLine={false}
+                        >
+                            {/* Asignamos los colores según el índice */}
+                            {patrocinante.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                            ))}
+                        </Pie>
+                        <Legend />
+                        <Tooltip />
+                    </PieChart>
+                </ResponsiveContainer>
+                </div>
+data
+                <div className="chart-box " style={{flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+                <   h4 style={{ fontSize: '1.2rem' }}>¿Posible para bolsa de Empleo </h4>
+                {paisOptions.length > 0 && (
+                        <ResponsiveContainer width="100%" height={400}>
+                            <BarChart
+                                width={500}
+                                height={300}
+                                data={bolsa}
+                                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Bar dataKey="value" fill="#8884d8">
+                                    {/* Asignamos los colores según el índice */}
+                                    {bolsa.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
+                
+                
+                        
 
+                </div>
 
-
+            </div>    
+            {/* segunda fila de graficos                        */}
             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
 
 
-                <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+                <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
 
-                <   h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Estado</h4>
-    
+                <   h4 style={{ fontSize: '1.2rem' }}>Cantidad de Patrocinados por País</h4>
+                {paisOptions.length > 0 && (
+                        <ResponsiveContainer width="100%" height={400}>
+                            <BarChart data={getPatrocinantesByPais()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="count" name="Participantes">
+                                    {getPatrocinantesByPais().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
                   
                 </div>
 
-                <div className="chart-box " style={{flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
-                <h4 style={{ fontSize: '1.2rem' }}>CPorcentaje por Grupo Prioritario</h4>
+                <div className="chart-box " style={{flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+                <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Patrocinados por Estados/Venezuela</h4>
+                {estadoOptions.length > 0 && (
+                        <ResponsiveContainer width="100%" height={400}>
+                            <BarChart data={getPatrocinantesByEstado()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="count" name="Participantes">
+                                    {getPatrocinantesByEstado().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
                    
                         
 
                 </div>
-                <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
-                <h4 style={{ fontSize: '1.2rem' }}>Participantes por Status Selección</h4>
-                    
-                </div>
+                
             </div>
 
 
@@ -579,10 +897,6 @@ const ShowPatrocinantes = () => {
 
              {/* Gráfica tercera fila*/}
              <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
-
-
-              
-
                 <div className="chart-box" style={{flex: '1 1 100%', maxWidth: '100%', marginRight: '10px'}}>
                     <div className="d-flex justify-content-between align-items-center" >
                         <h4 style={{ fontSize: '1.2rem' }}>Registro de Patrocinantes</h4>

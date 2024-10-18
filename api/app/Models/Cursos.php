@@ -10,10 +10,10 @@ class Cursos extends Model
     protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id'];
 
     // Relación con InscripcionCursos (un curso puede tener muchas inscripciones)
-    public function InscripcionCursos()
+    public function InformacionInscripcion()
     {
         // Aquí usamos 'curso_id' en lugar de 'cursos_id'
-        return $this->hasMany(InscripcionCursos::class, 'curso_id');
+        return $this->hasMany(InformacionInscripcion::class, 'curso_id');
     }
 
     public function Unidad()

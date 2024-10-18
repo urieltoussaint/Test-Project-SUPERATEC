@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Button, Modal, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import SelectComponent from '../../../components/SelectComponent';
-import { useLoading } from '../../../components/LoadingContext';
+import SelectComponent from '../../components/SelectComponent';
+import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
 import { Card, Row, Col } from 'react-bootstrap'; 
 

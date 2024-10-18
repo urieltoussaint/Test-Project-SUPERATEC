@@ -3,9 +3,9 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Alert, Button, Form, Modal } from 'react-bootstrap';
 import moment from 'moment';
-import { useLoading } from '../../../components/LoadingContext';
+import { useLoading } from '../../components/LoadingContext';
 import { toast, ToastContainer } from 'react-toastify';
-import PaginationTable from '../../../components/PaginationTable';
+import PaginationTable from '../../components/PaginationTable';
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -37,25 +37,16 @@ const ShowInscritos = () => {
   const getCursoCod = async () => {
     try {
       const token = localStorage.getItem('token');
-      let allCursos = [];
-      let currentPage = 1;
-      let totalPages = 1;
 
-      // Obtener los cursos con paginación
-      while (currentPage <= totalPages) {
-        const response = await axios.get(`${endpoint}/cursos?page=${currentPage}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      // Hacer una solicitud solo para el curso específico
+      const response = await axios.get(`${endpoint}/cursos/${cursoId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        allCursos = [...allCursos, ...response.data.data];
-        totalPages = response.data.last_page;
-        currentPage++;
-      }
+      const curso = response.data;
 
-      // Filtrar el curso que coincide con el ID
-      const curso = allCursos.find((curso) => curso.id === parseInt(cursoId, 10));
       if (curso) {
         setCursoCod(curso.cod); // Guardar el código del curso en el estado
       } else {
@@ -73,42 +64,28 @@ const ShowInscritos = () => {
       let allInscripciones = [];
       let currentPage = 1;
       let totalPages = 1;
-
-      // Loop para obtener todas las páginas de inscripciones
+  
+      // Loop para obtener todas las páginas de inscripciones relacionadas con el curso
       while (currentPage <= totalPages) {
-        const response = await axios.get(`${endpoint}/cursos_inscripcion?curso_id=${cursoId}&page=${currentPage}`, {
+        const response = await axios.get(`${endpoint}/cursos_inscripcion?curso_id=${cursoId}&page=${currentPage}`, { // Aquí pasas cursoId
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
+  
         allInscripciones = [...allInscripciones, ...response.data.data];
         totalPages = response.data.last_page;
         currentPage++;
       }
-
-      // Agregamos los detalles de identificación a cada inscripción
-      const inscripcionesConDetalles = await Promise.all(allInscripciones.map(async (inscripcion) => {
-        try {
-          const detallesResponse = await axios.get(`${endpoint}/identificacion/${inscripcion.cedula_identidad}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          return { ...inscripcion, ...detallesResponse.data };
-        } catch (error) {
-          console.error('Error fetching detalles:', error);
-          return { ...inscripcion, nombres: 'N/A', apellidos: 'N/A' };
-        }
-      }));
-
-      setInscripciones(inscripcionesConDetalles);
-      setFilteredInscripciones(inscripcionesConDetalles);
+  
+      setInscripciones(allInscripciones);
+      setFilteredInscripciones(allInscripciones);
     } catch (error) {
       setError('Error fetching data');
       console.error('Error fetching data:', error);
     }
   };
+
 
   const getStatusPayColor = (status_pay) => {
     if (status_pay === '1') return 'red'; // No pagado

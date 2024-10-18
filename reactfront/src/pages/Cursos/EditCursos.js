@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useLoading } from '../../../components/LoadingContext';
+import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer,toast } from 'react-toastify';
 import { Card, Row, Col } from 'react-bootstrap'; 
-import SelectComponent from '../../../components/SelectComponent';
+import SelectComponent from '../../components/SelectComponent';
 
 
 

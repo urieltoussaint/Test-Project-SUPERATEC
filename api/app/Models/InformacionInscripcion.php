@@ -2,16 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
 class InformacionInscripcion extends Model
 {
     protected $table = 'informacion_inscripcion';
-    public $timestamps = false; // Desactiva las marcas de tiempo automáticas
-    protected $primaryKey='id';
-
     protected $fillable = [
-        'como_entero_superatec_id',
+        'curso_id',
         'cohorte_id',
         'centro_id',
         'periodo_id',
@@ -21,26 +17,50 @@ class InformacionInscripcion extends Model
         'modalidad_id',
         'nivel_id',
         'tipo_programa_id',
-        'realiza_aporte',
         'es_patrocinado',
         'grupo',
         'observaciones',
-        'cedula_identidad'
+        'cedula_identidad',
+        'status_pay',
+        'datos_identificacion_id'
+
     ];
     protected $listable = [
-        'descripcion','id','cedula_identidad'
+        'id',
+        'curso_id',
+        'cohorte_id',
+        'centro_id',
+        'periodo_id',
+        'fecha_inscripcion',
+        'area_id',
+        'unidad_id',
+        'modalidad_id',
+        'nivel_id',
+        'tipo_programa_id',
+        'es_patrocinado',
+        'grupo',
+        'observaciones',
+        'cedula_identidad',
+        'status_pay',
+        'datos_identificacion_id'
     ];
 
     // Definir relaciones
-    public function comoEnteroSuperatec()
+    public function DatosIdentificacion()
     {
-        return $this->belongsTo(ComoEnteroSuperatec::class, 'como_entero_superatec_id');
+        return $this->hasOne(DatosIdentificacion::class, 'datos_identificacion_id', 'id');
+    }
+   
+    public function curso()
+    {
+            return $this->belongsTo(Cursos::class, 'curso_id','id');
     }
 
     public function cohorte()
     {
         return $this->belongsTo(Cohorte::class, 'cohorte_id');
     }
+
 
     public function centro()
     {
@@ -75,5 +95,10 @@ class InformacionInscripcion extends Model
     public function tipoPrograma()
     {
         return $this->belongsTo(TipoPrograma::class, 'tipo_programa_id');
+    }
+
+    public function ReportePagos()
+    {
+        return $this->hasMany(ReportePagos::class, 'informacion_inscripcion_id');
     }
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom'; // Importa useNavigate
 import { Card, ListGroup, Button } from 'react-bootstrap';
-import { useLoading } from '../../../components/LoadingContext';
+import { useLoading } from '../../components/LoadingContext';
 
 const endpoint = 'http://localhost:8000/api';
 

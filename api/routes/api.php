@@ -36,6 +36,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StatusProcessController;
 use App\Http\Controllers\TipoIndustriaController;
 use App\Http\Controllers\TipoPatrocinanteController;
+use App\Http\Controllers\InformacionInscripcionController;
 
 // Rutas definidas en routes/api.php
 
@@ -79,13 +80,15 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     
 
     // Inscripción Cursos
-    Route::get('cursos_inscripcion', [InscripcionCursosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
-    Route::post('cursos_inscripcion', [InscripcionCursosController::class, 'store'])->middleware('role:admin,superuser');
-    Route::get('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
-    Route::delete('cursos_inscripcion/{id}', [InscripcionCursosController::class, 'destroy'])->middleware('role:admin');
-    Route::put('inscripcion_cursos/{id}', [InscripcionCursosController::class, 'update'])->middleware('role:admin,superuser,pagos');
-   
-    Route::put('inscripcion_cursos/{cedula}/status', [InscripcionCursosController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
+    Route::get('cursos_inscripcion', [InformacionInscripcionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::post('cursos_inscripcion', [InformacionInscripcionController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('cursos_inscripcion/{curso_id}', [InformacionInscripcionController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::delete('cursos_inscripcion/{id}', [InformacionInscripcionController::class, 'destroy'])->middleware('role:admin');
+    Route::put('inscripcion_cursos/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
+    Route::put('inscripcion_cursos/{cedula}/status', [InformacionInscripcionController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
+    Route::get('/cursos/{id}', [CursosController::class, 'show']);
+
+
 
 
     // Reporte Pagos
@@ -129,9 +132,6 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
      Route::delete('patrocinantes/{id}', [PatrocinanteController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
      Route::get('patrocinantes/rif-cedula/{rif_cedula}', [PatrocinanteController::class, 'searchByRifCedula'])->middleware('role:admin,superuser,invitado');
      Route::get('patrocinantes/{id}', [PatrocinanteController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
-
-
-
 
 
     // Rutas solo para ver (invitado, superuser y admin)
