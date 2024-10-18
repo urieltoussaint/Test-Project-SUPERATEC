@@ -74,35 +74,17 @@ body {
   color: #333; /* Color del texto */
   align-self: center; /* Asegura que esté alineado correctamente con los otros elementos */
 }
-.toggle-sidebar-button {
-  position: fixed;
-  top: 10%; /* Para centrar verticalmente */
-  transform: translateY(-50%);
-  background-color: #eaeaea;
-  border-radius: 30%;
-  padding: 1px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  z-index: 1000;
-  transition: left 0.3s ease; /* Transición suave */
-}
 
-.toggle-sidebar-button i {
-  font-size: 24px;
-  color: #000;
-}
+
+
 
 
 /* Estilos del dropdown */
-.dropdown-menux {
+.dropdown-menu {
   position: absolute;
-  top: 50px;
-  right: 0;
-  background-color: white;
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  border-radius: 8px;
-  z-index: 1000;
+  top: auto;
+  down:auto;
+  
 }
 
 .logout-option {
@@ -140,7 +122,7 @@ body {
   top: 0;
   height: 100%; /* Ocupa toda la altura de la pantalla */
   width: 200px; /* Ancho fijo del sidebar */
-  background-color: #f8f9fa; /* Color de fondo */
+  background-color: #f9f9f9; /* Color de fondo */
   padding: 20px 10px; /* Ajusta el padding interno */
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Sombras */
   z-index: 1000; /* Asegura que esté por encima del contenido principal */
@@ -174,30 +156,13 @@ body {
 }
 
 .sidebar ul li a:hover {
-  color: rgb(22, 54, 96); /* Letras más oscuras al pasar el mouse */
+  color: rgb(102, 105, 110); /* Letras más oscuras al pasar el mouse */
 }
 
-/* Estilo para el contenido principal adaptarse al sidebar */
-
-
-
-/* Estilo del enlace activo en la sidebar */
-.sidebar a.active {
-  background-color: #eeeeee; /* Color de fondo para el enlace activo */
-  color:rgb(17, 39, 66); /* Color del texto activo */
-  font-weight: bold; /* Texto más destacado */
-  padding-left: 15px; /* Mayor espacio de sangría */
-  border-radius: 15px; /* Bordes redondeados */
-}
 
 .sidebar a.active i {
   color:rgb(17, 39, 66); /* Cambiar el color del ícono cuando el enlace está activo */
 }
-
-
-
-
-
 
 
 .user-info {
@@ -302,9 +267,7 @@ body {
 }
 
 
-.mt-3 {
-  margin-top: 1rem;
-}
+
 /* Estilo del botón del menú desplegable */
 /* Estilo del botón del menú desplegable */
 .dropdown-button {
@@ -315,7 +278,7 @@ body {
   cursor: pointer;
   width: 100%;
   text-align: left;
-  padding: 10px 5px;
+  padding: 3px 5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -331,22 +294,21 @@ body {
   overflow: hidden;
   max-height: 0; /* Altura inicial 0 */
   opacity: 0;
-  transition: max-height 0.4s ease, opacity 0.3s ease;
 }
 
 /* Mostrar menú desplegable con animación */
 .dropdown-menu.show {
-  max-height: 500px; /* Altura suficiente para mostrar contenido */
+  max-height: 600px; /* Altura suficiente para mostrar contenido */
   opacity: 1;
 }
 
 /* Transición y espacio para li que contiene el dropdown */
 .sidebar li {
-  transition: margin-bottom 0.4s ease;
+  transition: margin-bottom 0.2s ease;
 }
 
 .sidebar li.expanded {
-  margin-bottom: 200px; /* Ajusta el espacio entre módulos cuando está expandido */
+  margin-bottom: 240px; /* Ajusta el espacio entre módulos cuando está expandido */
 }
 
 

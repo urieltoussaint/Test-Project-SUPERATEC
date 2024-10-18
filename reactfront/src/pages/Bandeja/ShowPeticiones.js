@@ -192,6 +192,9 @@ const ShowPeticiones = () => {
          else if (id === 4) {
         navigate(`/cursos/${peticiones.key}/pagos`);
         }
+        else if (id === 6) {
+            navigate(`/patrocinantes/${peticiones.key}/edit`);
+            }
         else {
             toast.error('Zona no válida');
         }

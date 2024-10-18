@@ -1,9 +1,15 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\ComoEnteroSuperatec;
 use App\Models\DatosIdentificacion as Model;
 use App\Models\DatosIdentificacion;
+use App\Models\Estado;
+use App\Models\Genero;
+use App\Models\GrupoPrioritario;
 use App\Models\InformacionInscripcion;
+use App\Models\NivelInstruccion;
+use App\Models\StatusSeleccion;
 use Illuminate\Http\Request;
 
 class DatosIdentificacionController extends Controller
@@ -13,59 +19,39 @@ class DatosIdentificacionController extends Controller
     use ApiResourceTrait, ApiCrudTrait;
     protected $class = Model::class;
 
-    public function store(Request $request)
-    {
-        $resource = $this->new(
-            $this->class,
-            $request
-        );
-        $informacion_inscripcion = $this->new(
-            InformacionInscripcion::class,
-            $request
-        );
-        return response($resource, 201);
-        
-    }
-    public function getDatos($id) {
-        $datos = DatosIdentificacion::with('informacionInscripcion')->find($id);
-        return response()->json($datos);
+
+    public function searchByCedula($cedula_identidad)
+{
+    $dato = DatosIdentificacion::where('cedula_identidad', $cedula_identidad)->first();
+
+    if (!$dato) {
+        return response()->json(['message' => 'No se encontró la cédula'], 404);
     }
 
-    public function update($id, Request $request)
-    {
-        $resource = $this->edit(
-            $this->class::findOrFail($id),
-            $request
+    return response()->json($dato);
+}
 
-        );
+public function fetchFilterOptions()
+{
+   
+        $nivelInstruccion = NivelInstruccion::all();
+        $generos = Genero::all();
+        $estados = Estado::all();
+        $superatec = ComoEnteroSuperatec::all();
+        $grupo_priotario= GrupoPrioritario::all();
+        $status_seleccion= StatusSeleccion::all();
 
-        $datos = DatosIdentificacion::with('informacionInscripcion')->find($id);
-
-        $informacion_inscripcion = InformacionInscripcion::where('id', $datos->informacionInscripcion->id)->first();
-        $newRequest = new Request($request->informacion_inscripcion);
-        $update_info_desc = $this->edit(
-            $informacion_inscripcion,
-            $newRequest
-        );
-
-
-
-        return response($resource);
-
-    }
-
-    public function searchCedulas(Request $request)
-    {
-        $query = $request->input('query');
-        $cedulas = DatosIdentificacion::where('cedula_identidad', 'LIKE', "%{$query}%")
-            ->limit(10)
-            ->get(['cedula_identidad']);
-
-        return response()->json($cedulas);
-    }
+        return response()->json([
+            'nivel_instruccion' => $nivelInstruccion,
+            'genero' => $generos,
+            'estado' => $estados,
+            'superatec' => $superatec,
+            'grupo_prioritario' =>$grupo_priotario,
+            'status_seleccion'=>$status_seleccion,
+        ]);
     
-    
-    
+}  
+
     
     
 }

@@ -6,6 +6,10 @@ import SelectComponent from '../../components/SelectComponent';
 import './CreateDatos.css';
 import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
+import { Card, Row, Col } from 'react-bootstrap'; 
+import estadosMunicipios from '../../components/estadosMunicipios.json';
+
+
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
@@ -32,6 +36,9 @@ const CreateDatos = () => {
   const [searchRoleName, setSearchRoleName] = useState(''); // Estado específico para la búsqueda de roles
   const [previousModal, setPreviousModal] = useState(null);
   const [comentario, setComentario] = useState('');
+  const [municipiosDisponibles, setMunicipiosDisponibles] = useState([]);  // Municipios que se mostrarán según el estado seleccionado
+
+  
 
 
   const [formData, setFormData] = useState({
@@ -39,7 +46,6 @@ const CreateDatos = () => {
     nombres: '',
     apellidos: '',
     fecha_nacimiento: '',
-    edad: '',
     direccion: '',
     direccion_email: '',
     telefono_casa: '',
@@ -48,22 +54,11 @@ const CreateDatos = () => {
     nacionalidad_id: null,
     genero_id: null,
     grupo_prioritario_id: null,
-    estado_id: null,
+    estado_id: '',
     procedencia_id: null,
     nivel_instruccion_id: null,
     como_entero_superatec_id: null,
-    cohorte_id: null,
-    centro_id: null,
-    periodo_id: null,
-    area_id: null,
-    unidad_id: null,
-    modalidad_id: null,
-    nivel_id: null,
-    tipo_programa_id: null,
-    realiza_aporte: false,
-    es_patrocinado: false,
-    grupo: '',
-    observaciones: '',
+    municipio:''
   });
 
   useEffect(() => {
@@ -122,7 +117,36 @@ const CreateDatos = () => {
       console.error('Error fetching roles:', error);
     }
   };
+
+  const calcularEdad = (fechaNacimiento) => {
+    const hoy = new Date();
+    const fechaNac = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const mes = hoy.getMonth() - fechaNac.getMonth();
   
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+      edad--;
+    }
+    return edad;
+  };
+  
+  
+  const handleEstadoChange = (e) => {
+    const estadoId = e.target.value;
+    
+    // Encuentra el estado seleccionado en el JSON
+    const estadoSeleccionado = estadosMunicipios.find(estado => estado.id_estado === parseInt(estadoId));
+    
+    // Actualiza los municipios disponibles
+    setMunicipiosDisponibles(estadoSeleccionado ? estadoSeleccionado.municipios : []);
+    
+    // Actualiza el estado seleccionado en formData
+    setFormData({
+      ...formData,
+      estado_id: estadoId,
+      municipio: ''  // Reseteamos el municipio al cambiar de estado
+    });
+  };
   
   
   
@@ -130,7 +154,7 @@ const CreateDatos = () => {
   const handleUserSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchName(value);
-    const filtered = users.filter(user => user.name.toLowerCase().includes(value));
+    const filtered = users.filter(user => user.username.toLowerCase().includes(value));
     setFilteredUsers(filtered);
   };
 
@@ -151,7 +175,7 @@ const CreateDatos = () => {
 
   const handleSelectUser = (user) => {
     setSelectedUserId(user.id); // Guardar ID del usuario seleccionado
-    setSelectedUserName(user.name); // Guardar nombre del usuario seleccionado
+    setSelectedUserName(user.username); // Guardar nombre del usuario seleccionado
     setShowUserSearchModal(false); // Cerrar modal de búsqueda
     setShowConfirmModal(true); // Mostrar el modal de confirmación después de seleccionar un usuario
   };
@@ -167,6 +191,17 @@ const CreateDatos = () => {
   const handleConfirmSendRequest = async () => {
     try {
       const token = localStorage.getItem('token');
+  
+      // 1. Crear el nuevo participante primero
+      const response = await axios.post(`${endpoint}/datos`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const newParticipantId = response.data.id;  // Obtener el ID del nuevo participante
+  
+      // 2. Usar el ID del nuevo participante como clave en la petición
       const requestData = {
         user_id: userId,  // Usuario logueado que envía la solicitud
         destinatario_id: selectedUserId || null,  // Usuario destinatario seleccionado (si existe)
@@ -174,17 +209,12 @@ const CreateDatos = () => {
         zona_id: 1,  // Valor fijo
         status: false,  // Estado de la petición
         finish_time: null,  // No hay finish_time al momento de creación
-        key: formData.cedula_identidad,  // Enviar la cédula de identidad como key
-        comentario:comentario
+        key: newParticipantId,  // Usar el ID del nuevo participante como clave
+        comentario: comentario
       };
   
+      // 3. Enviar la petición
       await axios.post(`${endpoint}/peticiones`, requestData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      await axios.post(`${endpoint}/datos`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -192,11 +222,13 @@ const CreateDatos = () => {
   
       toast.success('Solicitud y datos enviados exitosamente');
       navigate('/datos');
+  
     } catch (error) {
       toast.error('Error al enviar la solicitud o los datos');
       console.error('Error al enviar la solicitud o los datos:', error);
     }
   };
+  
  
   
 
@@ -230,60 +262,64 @@ const CreateDatos = () => {
   };
 
   const handleSubmit = async (e, redirectToCursos) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    setLoading(true);
+  setLoading(true);
+  // Calcular la edad y agregarla a los datos del formulario
+  const edadCalculada = calcularEdad(formData.fecha_nacimiento);
+  const dataToSend = {
+    ...formData,
+    edad: edadCalculada // Agregar la edad calculada
+  };
 
-    const emptyFields = Object.keys(formData).filter(key => {
-      if (key === 'realiza_aporte' || key === 'es_patrocinado') {
-        return false;
-      }
-      return !formData[key];
-    });
+  const emptyFields = Object.keys(formData).filter(key => {
+    return !formData[key];
+  });
 
-    if (emptyFields.length > 0) {
-      setShowConfirmModal(true);
+  if (emptyFields.length > 0) {
+    setShowConfirmModal(true);
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token'); 
+
+    if (!token) {
+      toast.error('Error: Token no encontrado');
       setLoading(false);
       return;
     }
 
-    try {
-      const token = localStorage.getItem('token'); 
+    await axios.post(`${endpoint}/datos`, dataToSend, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      if (!token) {
-        toast.error('Error: Token no encontrado');
-        setLoading(false);
-        return;
-      }
+    toast.success('Nuevo Participante agregado con Éxito');
 
-      await axios.post(`${endpoint}/datos`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      toast.success('Nuevo Participante agregado con Éxito');
-
-      if (redirectToCursos) {
-        navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
-      } else {
-        navigate('/datos');
-      }
-
-    } catch (error) {
-      toast.error('Error al crear Participante');
-      console.error('Error creating data:', error);
-
-    } finally {
-      setLoading(false);
+    if (redirectToCursos) {
+      navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
+    } else {
+      navigate('/datos');
     }
-  };
+
+  } catch (error) {
+    toast.error('Error al crear Participante');
+    console.error('Error creating data:', error);
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleBlur = async () => {
     if (formData.cedula_identidad) {
       try {
         const token = localStorage.getItem('token'); 
-        const response = await axios.get(`${endpoint}/datos/${formData.cedula_identidad}`, {
+        const response = await axios.get(`${endpoint}/datos/cedula/${formData.cedula_identidad}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -304,12 +340,16 @@ const CreateDatos = () => {
   };
   return (
     
-    <div className="container">
+    <div className="row" style={{ marginTop: '50px' }}>
+  <div className="col-lg-7 mx-auto"> {/* Centrado del contenido */}
+    <div className="card-box" style={{ padding: '20px', width: '80%', margin: '0 auto' }}>
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Agregar Nuevo Participante</h1>
-      <Form onSubmit={(e) => handleSubmit(e, false)}>
-        <div className="row">
-          <div className="col-md-6">
+      <h2 className="mb-2">Agregar Nuevo Participante</h2>
+
+      <Form onSubmit={(e) => handleSubmit(e, false)}
+        className="custom-gutter">
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="cedula_identidad">
               <Form.Label>Cédula de Identidad</Form.Label>
               <Form.Control
@@ -335,29 +375,15 @@ const CreateDatos = () => {
                 </Form.Control.Feedback>
               )}
             </Form.Group>
+            </Col>
             
 
-            <SelectComponent
-              endpoint={`${endpoint}/status_seleccion`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.status_seleccion_id}
-              handleChange={handleChange}
-              controlId="status_seleccion_id"
-              label="Status Selección"
-              allowEmpty={true}  // Permitir que el campo esté vacío
-            />
 
-            <SelectComponent
-              endpoint={`${endpoint}/nacionalidad_seleccion`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.nacionalidad_id}
-              handleChange={handleChange}
-              controlId="nacionalidad_id"
-              label="Nacionalidad"
-            />
+            </Row>
 
+
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="nombres">
               <Form.Label>Nombres</Form.Label>
               <Form.Control
@@ -369,7 +395,8 @@ const CreateDatos = () => {
                 
               />
             </Form.Group>
-
+            </Col>
+            <Col md={6}>
             <Form.Group controlId="apellidos">
               <Form.Label>Apellidos</Form.Label>
               <Form.Control
@@ -381,7 +408,9 @@ const CreateDatos = () => {
                 
               />
             </Form.Group>
+            </Col>
 
+            </Row>
             <Form.Group controlId="fecha_nacimiento">
               <Form.Label>Fecha de Nacimiento</Form.Label>
               <Form.Control
@@ -392,19 +421,9 @@ const CreateDatos = () => {
                 
               />
             </Form.Group>
-
-            <Form.Group controlId="edad">
-              <Form.Label>Edad</Form.Label>
-              <Form.Control
-                type="number"
-                name="edad"
-                value={formData.edad}
-                onChange={handleChange}
-                
-                maxLength={2}
-              />
-            </Form.Group>
-
+            
+            <Row className="g-2"> 
+            <Col md={6}>
             <SelectComponent
               endpoint={`${endpoint}/genero`}
               nameField="descripcion"
@@ -414,16 +433,58 @@ const CreateDatos = () => {
               controlId="genero_id"
               label="Género"
             />
-
+            </Col>
+            <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/grupo_prioritario`}
+              endpoint={`${endpoint}/nacionalidad_seleccion`}
               nameField="descripcion"
               valueField="id"
-              selectedValue={formData.grupo_prioritario_id}
+              selectedValue={formData.nacionalidad_id}
               handleChange={handleChange}
-              controlId="grupo_prioritario_id"
-              label="Grupo Prioritario"
+              controlId="nacionalidad_id"
+              label="Nacionalidad"
             />
+            
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+              <Form.Group controlId="estado">
+                <Form.Label>Estado</Form.Label>
+                <Form.Select
+                  name="estado_id"
+                  value={formData.estado_id}
+                  onChange={handleEstadoChange}
+                >
+                  <option value="">Seleccione </option>
+                  {estadosMunicipios.map(estado => (
+                    <option key={estado.id_estado} value={estado.id_estado}>
+                      {estado.estado}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            
+            <Col md={6}>
+              <Form.Group controlId="municipio">
+                <Form.Label>Municipio</Form.Label>
+                <Form.Select
+                  name="municipio"
+                  value={formData.municipio}
+                  onChange={(e) => setFormData({ ...formData, municipio: e.target.value })}
+                  disabled={!municipiosDisponibles.length}  // Deshabilita si no hay municipios disponibles
+                >
+                  <option value="">Seleccione un Municipio</option>
+                  {municipiosDisponibles.map((municipio, index) => (
+                    <option key={index} value={municipio.municipio}>
+                      {municipio.municipio}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
 
             <Form.Group controlId="direccion">
               <Form.Label>Dirección</Form.Label>
@@ -437,15 +498,55 @@ const CreateDatos = () => {
               />
             </Form.Group>
 
+            <Row className="g-2"> 
+            <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/estado`}
+              endpoint={`${endpoint}/status_seleccion`}
               nameField="descripcion"
               valueField="id"
-              selectedValue={formData.estado_id}
+              selectedValue={formData.status_seleccion_id}
               handleChange={handleChange}
-              controlId="estado_id"
-              label="Estado"
+              controlId="status_seleccion_id"
+              label="Status"
+              allowEmpty={true}  // Permitir que el campo esté vacío
             />
+            </Col>
+            <Col md={6}>
+            <SelectComponent
+              endpoint={`${endpoint}/grupo_prioritario`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.grupo_prioritario_id}
+              handleChange={handleChange}
+              controlId="grupo_prioritario_id"
+              label="Grupo Prioritario"
+            />
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+            <SelectComponent
+              endpoint={`${endpoint}/procedencia`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.procedencia_id}
+              handleChange={handleChange}
+              controlId="procedencia_id"
+              label="Procedencia"
+            />
+            </Col>
+            <Col md={6}>
+            <SelectComponent
+              endpoint={`${endpoint}/nivel_instruccion`}
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.nivel_instruccion_id}
+              handleChange={handleChange}
+              controlId="nivel_instruccion_id"
+              label="Nivel de Instrucción"
+            />
+            </Col>
+            </Row>
 
             <Form.Group controlId="direccion_email">
               <Form.Label>Dirección Email</Form.Label>
@@ -457,17 +558,9 @@ const CreateDatos = () => {
                 
               />
             </Form.Group>
-
-            <SelectComponent
-              endpoint={`${endpoint}/procedencia`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.procedencia_id}
-              handleChange={handleChange}
-              controlId="procedencia_id"
-              label="Procedencia"
-            />
-
+            
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="telefono_casa">
               <Form.Label>Teléfono de Casa</Form.Label>
               <Form.Control
@@ -478,7 +571,8 @@ const CreateDatos = () => {
                 maxLength={10}
               />
             </Form.Group>
-
+            </Col>
+            <Col md={6}>
             <Form.Group controlId="telefono_celular">
               <Form.Label>Teléfono Celular</Form.Label>
               <Form.Control
@@ -489,19 +583,8 @@ const CreateDatos = () => {
                 maxLength={10}
               />
             </Form.Group>
-
-            <SelectComponent
-              endpoint={`${endpoint}/nivel_instruccion`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.nivel_instruccion_id}
-              handleChange={handleChange}
-              controlId="nivel_instruccion_id"
-              label="Nivel de Instrucción"
-            />
-          </div>
-          <div className="col-md-6">
-            <h2>Información de Inscripción</h2>
+            </Col>
+            </Row>
             <SelectComponent
               endpoint={`${endpoint}/como_entero_superatec`}
               nameField="descripcion"
@@ -509,159 +592,39 @@ const CreateDatos = () => {
               selectedValue={formData.como_entero_superatec_id}
               handleChange={handleChange}
               controlId="como_entero_superatec_id"
-              label="¿Cómo se enteró de SUPERATEC?"
+              label="¿Cómo se enteró de Superatec?"
             />
+            
+        <div className="button-container mt-3"  >
+            <Button 
+                variant="info"
+                type="submit"
+                className="ms-2"
+            >
+                Guardar
+            </Button>
 
-            <SelectComponent
-              endpoint={`${endpoint}/cohorte`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.cohorte_id}
-              handleChange={handleChange}
-              controlId="cohorte_id"
-              label="Cohorte"
-            />
+            <Button 
+                variant="secondary" 
+                onClick={() => navigate('/datos')}
+                className="ms-2"
+            >
+                Volver
+            </Button>
 
-            <SelectComponent
-              endpoint={`${endpoint}/centro`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.centro_id}
-              handleChange={handleChange}
-              controlId="centro_id"
-              label="Centro"
-            />
-
-            <SelectComponent
-              endpoint={`${endpoint}/periodo`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.periodo_id}
-              handleChange={handleChange}
-              controlId="periodo_id"
-              label="Periodo"
-            />
-
-            <SelectComponent
-              endpoint={`${endpoint}/area`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.area_id}
-              handleChange={handleChange}
-              controlId="area_id"
-              label="Área"
-            />
-
-            <SelectComponent
-              endpoint={`${endpoint}/unidad`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.unidad_id}
-              handleChange={handleChange}
-              controlId="unidad_id"
-              label="Unidad"
-            />
-
-            <SelectComponent
-              endpoint={`${endpoint}/modalidad`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.modalidad_id}
-              handleChange={handleChange}
-              controlId="modalidad_id"
-              label="Modalidad"
-            />
-
-            <SelectComponent
-              endpoint={`${endpoint}/nivel`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.nivel_id}
-              handleChange={handleChange}
-              controlId="nivel_id"
-              label="Nivel"
-            />
-
-            <SelectComponent
-              endpoint={`${endpoint}/tipo_programa`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.tipo_programa_id}
-              handleChange={handleChange}
-              controlId="tipo_programa_id"
-              label="Tipo de Programa"
-            />
-
-            <Form.Group controlId="realiza_aporte">
-              <Form.Check
-                type="checkbox"
-                name="realiza_aporte"
-                label="Realiza Aporte"
-                checked={formData.realiza_aporte}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group controlId="es_patrocinado">
-              <Form.Check
-                type="checkbox"
-                name="es_patrocinado"
-                label="Es Patrocinado"
-                checked={formData.es_patrocinado}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group controlId="grupo">
-              <Form.Label>Grupo</Form.Label>
-              <Form.Control
-                type="text"
-                name="grupo"
-                value={formData.grupo}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group controlId="observaciones">
-              <Form.Label>Observaciones</Form.Label>
-              <Form.Control
-                as="textarea"
-                name="observaciones"
-                value={formData.observaciones}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </div>
+            <Button 
+                variant="success" 
+                onClick={(e) => handleSubmit(e, true)}
+                className="ms-2"
+            >
+                Siguiente
+            </Button>
         </div>
-
-        <div className="button-container">
-    <Button 
-        variant="info"
-        type="submit"
-        className="ms-2"
-    >
-        Guardar
-    </Button>
-
-    <Button 
-        variant="secondary" 
-        onClick={() => navigate('/datos')}
-        className="ms-2"
-    >
-        Volver
-    </Button>
-
-    <Button 
-        variant="success" 
-        onClick={(e) => handleSubmit(e, true)}
-        className="ms-2"
-    >
-        Siguiente
-    </Button>
-</div>
-
-        
+    
       </Form>
+
+      </div>
+      </div>
        {/* Modal de confirmación si hay campos vacíos */}
        <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
         <Modal.Header closeButton>
@@ -735,7 +698,7 @@ const CreateDatos = () => {
                 filteredUsers.map(user => (
                   <tr key={user.id}>
                     <td>{user.id}</td>
-                    <td>{user.name}</td>
+                    <td>{user.username}</td>
                     <td>
                       <Button
                         variant="primary"

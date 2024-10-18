@@ -42,6 +42,10 @@ import { useLocation } from 'react-router-dom'; // Importa useLocation
 import CreateUsers from './pages/Users/CreateUsers';
 import CreatePagoCursos from './pages/Participantes/Cursos/CreatePagoCursos';
 import ShowMoreCursos from './pages/Participantes/Cursos/ShowMoreCursos';
+import ShowPatrocinantes from './pages/Patrocinantes/ShowPatrocinantes';
+import CreatePatrocinantes from './pages/Patrocinantes/CreatePatrocinantes';
+import EditPatrocinantes from './pages/Patrocinantes/EditPatrocinantes';
+import ShowMorePatrocinantes from './pages/Patrocinantes/ShowMorePatrocinantes';
 
 
 function App() {
@@ -71,7 +75,6 @@ function App() {
             <Route path="/cursos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/cursos/:id/pagos" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagoCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/cursos/:id" element={<AuthenticatedLayout><ShowMoreCursos /></AuthenticatedLayout>}  />
-
             <Route path="/pagos" element={<AuthenticatedLayout><ShowPagos /></AuthenticatedLayout>} />
             <Route path="/pagos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:cedula/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout></ProtectedRoute>}  />
@@ -85,6 +88,15 @@ function App() {
             <Route path="/promocion/:id" element={<AuthenticatedLayout><ShowMorePromocion /></AuthenticatedLayout>} />
             <Route path="/promocion/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreatePromocion /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/promocion/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditPromocion /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/patrocinantes" element={<AuthenticatedLayout><ShowPatrocinantes /></AuthenticatedLayout>} />
+            <Route path="/patrocinantes/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser',]}><AuthenticatedLayout><CreatePatrocinantes /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/patrocinantes/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser',]}><AuthenticatedLayout><EditPatrocinantes /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/patrocinantes/:id" element={<AuthenticatedLayout><ShowMorePatrocinantes /></AuthenticatedLayout>}  />
+
+
+
+
+
           </Routes>
         </Router>
       
@@ -200,11 +212,12 @@ const AuthenticatedLayout = ({ children }) => {
           <li><NavLink to="/datos"><i className="bi bi-person-circle"></i> Participantes</NavLink></li>
           <li><NavLink to="/cursos"><i className="bi bi-book-half"></i> Cursos</NavLink></li>
           <li><NavLink to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</NavLink></li>
+          <li><NavLink to="/patrocinantes"><i className="bi bi-building"></i> Patrocinantes</NavLink></li>
           <li><NavLink to="/promocion"><i className="bi bi-star-fill"></i> Promoción</NavLink></li>
         </ul>
       </li>
       <li className={openDropdown === 2 ? 'expanded' : ''}>
-        <div className="dropdown-button" onClick={() => toggleDropdown(2)}>
+        <div className="dropdown-button " onClick={() => toggleDropdown(2)}>
           <i className="bi bi-bookmark-fill"></i> Módulo 2
           <i className={`bi ${openDropdown === 2 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
         </div>

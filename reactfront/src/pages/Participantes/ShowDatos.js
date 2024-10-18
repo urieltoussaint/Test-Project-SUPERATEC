@@ -18,7 +18,6 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import moment from 'moment';  // Asegúrate de tener moment.js instalado para manejar fechas
 
 
-
 const endpoint = 'http://localhost:8000/api';
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F', '#FFBB28'];
 
@@ -28,23 +27,20 @@ const ShowDatos = () => {
     const [searchCedula, setSearchCedula] = useState('');
     const [nivelInstruccionOptions, setNivelInstruccionOptions] = useState([]);
     const [generoOptions, setGeneroOptions] = useState([]);
-    const [centroOptions, setCentroOptions] = useState([]);
-    const [areaOptions, setAreaOptions] = useState([]);
-    const [periodoOptions, setPeriodoOptions] = useState([]);
     const [estadoOptions, setEstadoOptions] = useState([]);
-    const [modalidadOptions, setModalidadOptions] = useState([]);
-    const [tipoProgramaOptions, setTipoProgramaOptions] = useState([]);
-    const [unidadOptions, setUnidadOptions] = useState([]);
-    const [cohorteOptions, setCohorteOptions] = useState([]);
     const [SuperatecOptions, setSuperatecOptions] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
+    const [grupoPrioritarioOptions, setgrupoPrioritarioOptions] = useState([]);
+    const [StatusOptions, setStatusOptions] = useState([]);
 
+    
+
+
+    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const [showModal, setShowModal] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [range, setRange] = useState(30); // Estado por defecto a 30 días
 
-    
 
     const [filters, setFilters] = useState({
         nivel_instruccion_id: '',
@@ -93,7 +89,7 @@ const ShowDatos = () => {
     
             // Loop para obtener todas las páginas
             while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/datos?with=statusSeleccion,informacionInscripcion,NivelInstruccion,genero,estado&page=${currentPage}`, {
+                const response = await axios.get(`${endpoint}/datos?${currentPage}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     }
@@ -121,39 +117,8 @@ const ShowDatos = () => {
     };
     
 
-    const fetchFilterOptions = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const [nivelRes, generoRes, centroRes, areaRes, periodoRes, estadoRes, modalidadRes, tipoProgramaRes, unidadRes, cohorteRes,superatecRes] = await Promise.all([
-                axios.get(`${endpoint}/nivel_instruccion`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/genero`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/centro`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/periodo`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/estado`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/modalidad`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/tipo_programa`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/unidad`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/cohorte`, { headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${endpoint}/como_entero_superatec`, { headers: { Authorization: `Bearer ${token}` } }),
-            ]);
-            setNivelInstruccionOptions(nivelRes.data.data);
-            setGeneroOptions(generoRes.data.data);
-            setCentroOptions(centroRes.data.data);
-            setAreaOptions(areaRes.data.data);
-            setPeriodoOptions(periodoRes.data.data);
-            setEstadoOptions(estadoRes.data.data);
-            setModalidadOptions(modalidadRes.data.data);
-            setTipoProgramaOptions(tipoProgramaRes.data.data);
-            setUnidadOptions(unidadRes.data.data);
-            setCohorteOptions(cohorteRes.data.data);
-            setSuperatecOptions(superatecRes.data.data);
-
-        } catch (error) {
-            setError('Error fetching filter options');
-            console.error('Error fetching filter options:', error);
-        }
-    };
+    
+    
 
     const deleteDatos = async () => {
         const token = localStorage.getItem('token');
@@ -171,6 +136,25 @@ const ShowDatos = () => {
             console.error('Error deleting data:', error);
             toast.error('Error al eliminar Participante');
             setShowModal(false); // Cierra el modal tras el error
+        }
+    };
+    const fetchFilterOptions = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/filter-datos`, { headers: { Authorization: `Bearer ${token}` } });
+            
+            setNivelInstruccionOptions(response.data.nivel_instruccion);
+            setGeneroOptions(response.data.genero);
+            setEstadoOptions(response.data.estado);
+            setSuperatecOptions(response.data.superatec);
+            setgrupoPrioritarioOptions(response.data.grupo_prioritario);
+            setStatusOptions(response.data.status_seleccion);
+
+
+    
+        } catch (error) {
+            setError('Error fetching filter options');
+            console.error('Error fetching filter options:', error);
         }
     };
 
@@ -210,54 +194,29 @@ const ShowDatos = () => {
             );
         }
 
-        if (filters.centro_id) {
-            filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.centro_id === parseInt(filters.centro_id)
-            );
-        }
-
-        if (filters.area_id) {
-            filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.area_id === parseInt(filters.area_id)
-            );
-        }
-
-        if (filters.periodo_id) {
-            filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.periodo_id === parseInt(filters.periodo_id)
-            );
-        }
         if (filters.estado_id) {
             filtered = filtered.filter(dato =>
                 dato.estado_id === parseInt(filters.estado_id)
             );
         }
-        if (filters.modalidad_id) {
-            filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.modalidad_id === parseInt(filters.modalidad_id)
-            );
-        }
-        if (filters.tipo_programa_id) {
-            filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.tipo_programa_id === parseInt(filters.tipo_programa_id)
-            );
-        }
-        if (filters.unidad_id) {
-            filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.unidad_id === parseInt(filters.unidad_id)
-            );
-        }
-        if (filters.cohorte_id) {
-            filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.cohorte_id === parseInt(filters.cohorte_id)
-            );
-        }
+      
 
         if (filters.como_entero_superatec_id) {
             filtered = filtered.filter(dato =>
-                dato.informacion_inscripcion?.como_entero_superatec_id === parseInt(filters.como_entero_superatec_id)
+                dato.como_entero_superatec_id === parseInt(filters.como_entero_superatec_id)
             );
         }
+        if (filters.grupo_prioritario_id) {
+            filtered = filtered.filter(dato =>
+                dato.grupo_prioritario_id === parseInt(filters.grupo_prioritario_id)
+            );
+        }
+        if (filters.status_seleccion_id) {
+            filtered = filtered.filter(dato =>
+                dato.status_seleccion_id === parseInt(filters.status_seleccion_id)
+            );
+        }
+
         
         setFilteredDatos(filtered);
         setCurrentPage(1);
@@ -304,24 +263,16 @@ const ShowDatos = () => {
     const mayorEdad = dataToUse.length > 0 ? Math.max(...dataToUse.map(d => d.edad)) : 0;
     const menorEdad = dataToUse.length > 0 ? Math.min(...dataToUse.map(d => d.edad)) : 0;
 
-
-    // Porcentaje de Aporte y Patrocinado basado en filtros activos
-    const totalAporte = dataToUse.filter(d => d.informacion_inscripcion.realiza_aporte).length;
-    const totalPatrocinado = dataToUse.filter(d => d.informacion_inscripcion.es_patrocinado).length;
-
-    const porcentajeAporte = totalAporte > 0 ? (totalAporte / dataToUse.length) * 100 : 0;
-    const porcentajePatrocinado = totalPatrocinado > 0 ? (totalPatrocinado / dataToUse.length) * 100 : 0;
-
     const getFilteredDataByDate = () => {
         const today = moment();
         const filteredData = dataToUse.filter(dato => {
-            const inscripcionDate = moment(dato.informacion_inscripcion.fecha_inscripcion);
+            const inscripcionDate = moment(dato.created_at);
             return inscripcionDate.isAfter(today.clone().subtract(range, 'days'));
         });
     
         // Agrupar por fecha
         const dateCounts = filteredData.reduce((acc, dato) => {
-            const fecha = moment(dato.informacion_inscripcion.fecha_inscripcion).format('YYYY-MM-DD');
+            const fecha = moment(dato.created_at).format('YYYY-MM-DD');
             acc[fecha] = (acc[fecha] || 0) + 1;
             return acc;
         }, {});
@@ -333,10 +284,16 @@ const ShowDatos = () => {
     };
 
     const getNivelInstruccionData = () => {
+        // Crear un diccionario que mapea nivel_instruccion_id a descripcion
+        const nivelDict = nivelInstruccionOptions.reduce((acc, nivel) => {
+            acc[nivel.id] = nivel.descripcion;
+            return acc;
+        }, {});
+    
         // Agrupar los datos filtrados por nivel de instrucción
         const groupedData = filteredDatos.reduce((acc, dato) => {
-            const nivel = dato.nivel_instruccion?.descripcion || 'Desconocido';
-            
+            const nivel = nivelDict[dato.nivel_instruccion_id] || 'Desconocido'; // Usar el nivelDict para obtener la descripción
+    
             if (!acc[nivel]) {
                 acc[nivel] = { name: nivel, count: 0 };
             }
@@ -349,97 +306,9 @@ const ShowDatos = () => {
         return Object.values(groupedData);
     };
     
-    
-    const getAreaDataForChart = () => {
-        const totalParticipantes = filteredDatos.length;
-    
-        // Crear un diccionario que mapea area_id con la descripción
-        const areaDict = areaOptions.reduce((acc, area) => {
-            acc[area.id] = area.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos de participantes por area_id y asociarlos con sus descripciones
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const areaId = dato.informacion_inscripcion?.area_id || 'Desconocido';
-            const areaName = areaDict[areaId] || 'Desconocido';  // Obtiene el nombre del área desde areaDict
-    
-            if (!acc[areaName]) {
-                acc[areaName] = { name: areaName, count: 0 };
-            }
-            acc[areaName].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un array y calcular el porcentaje
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            value: parseFloat(((item.count / totalParticipantes) * 100).toFixed(2)), // Convertir el porcentaje a número
-        }));
-    };
+    console.log('filteredDatos:', filteredDatos);
 
-
-    const getInscritosPorPeriodo = () => {
-        // Total de participantes filtrados
-        const totalParticipantes = filteredDatos.length;
     
-        // Crear un diccionario que mapea periodo_id con la descripción
-        const periodoDict = periodoOptions.reduce((acc, periodo) => {
-            acc[periodo.id] = periodo.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos de participantes por periodo_id y asociarlos con sus descripciones
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const periodoId = dato.informacion_inscripcion?.periodo_id || 'Desconocido';
-            const periodoName = periodoDict[periodoId] || 'Desconocido';  // Obtiene el nombre del periodo desde periodoDict
-    
-            if (!acc[periodoName]) {
-                acc[periodoName] = { name: periodoName, count: 0 };
-            }
-            acc[periodoName].count += 1;  // Incrementa el contador para ese periodo
-            return acc;
-        }, {});
-    
-        console.log("Agrupados por periodo", groupedData);
-    
-        // Convertir los datos en un array
-        return Object.values(groupedData).map(item => ({
-            name: item.name,   // Nombre del periodo
-            count: item.count  // Número total de inscritos en ese periodo
-        }));
-    };
-
-    const getInscritosPorModalidad = () => {
-        // Total de participantes filtrados
-        const totalParticipantes = filteredDatos.length;
-    
-        // Crear un diccionario que mapea modalidad_id con la descripción
-        const modalidadDict = modalidadOptions.reduce((acc, modalidad) => {
-            acc[modalidad.id] = modalidad.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos de participantes por modalidad_id y asociarlos con sus descripciones
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const modalidadId = dato.informacion_inscripcion?.modalidad_id || 'Desconocido';
-            const modalidadName = modalidadDict[modalidadId] || 'Desconocido';  // Obtiene el nombre de la modalidad desde modalidadDict
-    
-            if (!acc[modalidadName]) {
-                acc[modalidadName] = { name: modalidadName, count: 0 };
-            }
-            acc[modalidadName].count += 1;  // Incrementa el contador para esa modalidad
-            return acc;
-        }, {});
-    
-        console.log("Agrupados por modalidad", groupedData);
-    
-        // Convertir los datos en un array
-        return Object.values(groupedData).map(item => ({
-            name: item.name,   // Nombre de la modalidad
-            count: item.count  // Número total de inscritos en esa modalidad
-        }));
-    };
     
 
     const getParticipantsByEstado = () => {
@@ -466,90 +335,6 @@ const ShowDatos = () => {
     };
     
     
-    const getParticipantesPorTipoPrograma = () => {
-        const totalParticipantes = filteredDatos.length;
-    
-        // Crear un diccionario que mapea tipo_programa_id con la descripción
-        const tipoProgramaDict = tipoProgramaOptions.reduce((acc, tipo) => {
-            acc[tipo.id] = tipo.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos de participantes por tipo_programa_id
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const tipoProgramaId = dato.informacion_inscripcion?.tipo_programa_id || 'Desconocido';
-            const tipoProgramaName = tipoProgramaDict[tipoProgramaId] || 'Desconocido';
-    
-            if (!acc[tipoProgramaName]) {
-                acc[tipoProgramaName] = { name: tipoProgramaName, count: 0 };
-            }
-            acc[tipoProgramaName].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un array
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            value: item.count, // Cantidad de participantes
-        }));
-    };
-
-    const getUnidadDataForChart = () => {
-        const totalParticipantes = filteredDatos.length;
-    
-        // Crear un diccionario que mapea unidad_id con la descripción
-        const unidadDict = unidadOptions.reduce((acc, unidad) => {
-            acc[unidad.id] = unidad.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los filteredDatos de participantes por unidad_id y asociarlos con sus descripciones
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const unidadId = dato.informacion_inscripcion?.unidad_id || 'Desconocido';
-            const unidadName = unidadDict[unidadId] || 'Desconocido';
-    
-            if (!acc[unidadName]) {
-                acc[unidadName] = { name: unidadName, count: 0 };
-            }
-            acc[unidadName].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un array y calcular el porcentaje
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            value: parseFloat(((item.count / totalParticipantes) * 100).toFixed(2)), // Convertir el porcentaje a número
-        }));
-    };
-    
-    const getCohorteDataForChart = () => {
-        const totalParticipantes = filteredDatos.length;
-        // Crear un diccionario que mapea cohorte_id con la descripción
-        const cohorteDict = cohorteOptions.reduce((acc, cohorte) => {
-            acc[cohorte.id] = cohorte.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los filteredDatos de participantes por cohorte_id y asociarlos con sus descripciones
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const cohorteId = dato.informacion_inscripcion?.cohorte_id || 'Desconocido';
-            const cohorteName = cohorteDict[cohorteId] || 'Desconocido';
-    
-            if (!acc[cohorteName]) {
-                acc[cohorteName] = { name: cohorteName, count: 0 };
-            }
-            acc[cohorteName].count += 1;
-            return acc;
-        }, {});
-        
-    
-        // Convertir los datos en un array
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            count: item.count, // Total de participantes en la cohorte
-        }));
-    };
-    
    // Función para procesar y agrupar los datos de como_entero_superatec
    const getComoEnteroSuperatecChartData = () => {
 
@@ -562,7 +347,7 @@ const ShowDatos = () => {
     // Usar rawComoEnteroData, ya que contiene los datos de las personas
     const groupedData = filteredDatos.reduce((acc, dato) => {
         // Asegúrate de que el dato tenga el campo `como_entero_superatec_id`
-        const superatecId = dato?.informacion_inscripcion?.como_entero_superatec_id || 'Desconocido'; 
+        const superatecId = dato?.como_entero_superatec_id || 'Desconocido'; 
         const superatecName = superatecDict[superatecId] || 'Desconocido';
 
         if (!acc[superatecName]) {
@@ -583,17 +368,87 @@ const ShowDatos = () => {
     }));
 };
 
+const getGroupPrioritarioChartData = () => {
+    const grupoDict = grupoPrioritarioOptions.reduce((acc, grupo) => {
+        acc[grupo.id] = grupo.descripcion;
+        return acc;
+    }, {});
+
+    const groupedData = filteredDatos.reduce((acc, dato) => {
+        const grupoId = dato?.grupo_prioritario_id || 'Desconocido';
+        const grupoName = grupoDict[grupoId] || 'Desconocido';
+
+        if (!acc[grupoName]) {
+            acc[grupoName] = { name: grupoName, count: 0 };
+        }
+        acc[grupoName].count += 1;
+        return acc;
+    }, {});
+
+    const total = Object.values(groupedData).reduce((sum, dato) => sum + dato.count, 0);
+
+    return Object.values(groupedData).map(item => ({
+        name: item.name,
+        value: parseFloat(((item.count / total) * 100).toFixed(2)),
+    }));
+};
+
+const getStatusSeleccionBarChartData = () => {
+    const statusDict = StatusOptions.reduce((acc, status) => {
+        acc[status.id] = status.descripcion;
+        return acc;
+    }, {});
+
+    const groupedData = filteredDatos.reduce((acc, dato) => {
+        const statusId = dato?.status_seleccion_id || 'Desconocido';
+        const statusName = statusDict[statusId] || 'Desconocido';
+
+        if (!acc[statusName]) {
+            acc[statusName] = { name: statusName, count: 0 };
+        }
+        acc[statusName].count += 1;
+        return acc;
+    }, {});
+
+    return Object.values(groupedData);
+};
+const getAgeRangeData = () => {
+    const ageRanges = {
+        '6-12': 0,
+        '13-17': 0,
+        '18-25': 0,
+        '26-35': 0,
+        'Más de 35': 0,
+    };
+
+    filteredDatos.forEach(dato => {
+        const edad = dato.edad;
+
+        if (edad >= 6 && edad <= 12) {
+            ageRanges['6-12'] += 1;
+        } else if (edad >= 13 && edad <= 17) {
+            ageRanges['13-17'] += 1;
+        } else if (edad >= 18 && edad <= 25) {
+            ageRanges['18-25'] += 1;
+        } else if (edad >= 26 && edad <= 35) {
+            ageRanges['26-35'] += 1;
+        } else if (edad > 35) {
+            ageRanges['Más de 35'] += 1;
+        }
+    });
+
+    return Object.entries(ageRanges).map(([name, count]) => ({ name, count }));
+};
 
 
-    
-      
+
 
 
 
     const columns = ["Cédula", "Nombres", "Apellidos","Email","Tlf", "Acciones"];
 
     const renderItem = (dato) => (
-        <tr key={dato.cedula_identidad}>
+        <tr key={dato.id}>
             <td className="col-cedulas">{dato.cedula_identidad}</td>
             <td className="col-nombress">{dato.nombres}</td>
             <td className="col-apellidoss">{dato.apellidos}</td>
@@ -603,7 +458,7 @@ const ShowDatos = () => {
                 <div className="d-flex justify-content-around">
                 <Button
                     variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
-                    onClick={() => navigate(`/datos/${dato.cedula_identidad}`)}
+                    onClick={() => navigate(`/datos/${dato.id}`)}
                     className="me-2"
                 >
                     <i className="bi bi-list-task"></i>
@@ -614,7 +469,7 @@ const ShowDatos = () => {
                         <>
                             <Button
                                 variant="btn btn-warning"
-                                onClick={() => navigate(`/datos/${dato.cedula_identidad}/edit`)}
+                                onClick={() => navigate(`/datos/${dato.id}/edit`)}
                                 className="me-2 icon-white"
                             >
                                 <i className="bi bi-pencil-fill"></i>
@@ -627,7 +482,7 @@ const ShowDatos = () => {
 
                                 <Button
                                 variant="btn btn-danger"
-                                onClick={() => handleShowModal(dato.cedula_identidad)}
+                                onClick={() => handleShowModal(dato.id)}
                                 className="me-2"
                                 >
                                 <i className="bi bi-trash3-fill"></i>
@@ -652,15 +507,15 @@ const ShowDatos = () => {
                     <div className="stat-number" style={{ color: '#58c765', fontSize: '1.8rem' }}>{totalParticipantes}</div>
                     <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total de Participantes</h4>
                 </div>
-                        <div className="stat-card" style={{
-                            padding: '8px',
-                            margin: '0 10px',
-                            width: '22%',
-                            position: 'relative',
-                            backgroundColor: '#fff',
-                            borderRadius: '8px',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                        }}>
+                <div className="stat-card" style={{
+                    padding: '8px',
+                    margin: '0 10px',
+                    width: '22%',
+                    position: 'relative',
+                    backgroundColor: '#fff',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                }}>
 
                     {/* Menor y Mayor Edad - Distribuidos a los lados */}
                     <div style={{
@@ -701,7 +556,7 @@ const ShowDatos = () => {
                     {/* Barra de Progreso */}
                     <div style={{ width: '75%', margin: '0 auto' }}>
                         <ProgressBar
-                            now={(promedioEdad / 100) * 100} 
+                            now={(promedioEdad * 100) /mayorEdad} 
                             variant="warning"
                             style={{
                                 height: '8px',  // Reducimos la altura de la barra
@@ -759,64 +614,50 @@ const ShowDatos = () => {
 
                 {/* Promedio de Aporte y Patrocinado */}
                 <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%', textAlign: 'center' }}>
-                    {/* Barra Aporte */}
-                    <div style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Reducimos el marginBottom */}
-                        <span style={{ whiteSpace: 'nowrap', color: 'rgb(72, 205, 143)', marginBottom: '3px' }}> {/* Reducimos el marginBottom del texto */}
-                            {`${porcentajeAporte.toFixed(2)}% Realiza Aporte`}
-                        </span>
-                        <ProgressBar 
-                            now={porcentajeAporte} 
-                            style={{ 
-                                width: '60%', 
-                                backgroundColor: 'rgba(72, 205, 143, 0.2)', // Color de fondo
-                                height: '12px',  // Reducimos la altura de la barra
-                                borderRadius: '10px'  // Ajustamos el borde
-                            }} 
-                            variant=""
-                        >
-                            <div 
-                                style={{ 
-                                    width: `${porcentajeAporte}%`, 
-                                    backgroundColor: 'rgb(72, 205, 143)', // Color de la barra llenada
-                                    height: '100%',  // Aseguramos que el div interior ocupe toda la barra
-                                    borderRadius: '10px',
-                                }} 
-                            />
-                        </ProgressBar>
-                    </div>
+                <h4 style={{ fontSize: '1.1rem', color:'gray' }} className='mt-3'>Distribución por Rango de Edad</h4>
+                    {filteredDatos.length > 0 && (
+                        <>
+                            <div style={{width: '90%',  // Ajusta el ancho para reducir el espacio que ocupa
+                                height: '15px', 
+                                backgroundColor: '#f1f1f1', 
+                                borderRadius: '5px', 
+                                overflow: 'hidden', 
+                                margin: '0 auto'}}>
+                                {getAgeRangeData().map((item, index) => (
+                                    <div
+                                        key={item.name}
+                                        style={{
+                                            width: `${(item.count / filteredDatos.length) * 100}%`,
+                                            backgroundColor: COLORS[index % COLORS.length], // Usa diferentes colores para cada rango
+                                            height: '100%',
+                                            display: 'inline-block',
+                                        }}
+                                    ></div>
+                                ))}
+                            </div>
 
-                    {/* Barra Patrocinado */}
-                    <div style={{ marginBottom: '5px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Reducimos el marginBottom */}
-                        <span style={{ whiteSpace: 'nowrap', color: 'rgb(61, 128, 200)', marginBottom: '3px' }}> {/* Reducimos el marginBottom del texto */}
-                            {`${porcentajePatrocinado.toFixed(2)}% Es Patrocinado`}
-                        </span>
-                        <ProgressBar 
-                            now={porcentajePatrocinado} 
-                            style={{ 
-                                width: '60%', 
-                                backgroundColor: 'rgba(61, 128, 200, 0.2)', // Color de fondo
-                                height: '12px',  // Reducimos la altura de la barra
-                                borderRadius: '10px'  // Ajustamos el borde
-                            }} 
-                            variant=""
-                        >
-                            <div 
-                                style={{ 
-                                    width: `${porcentajePatrocinado}%`, 
-                                    backgroundColor: 'rgb(61, 128, 200)', // Color de la barra llenada
-                                    height: '100%',  // Aseguramos que el div interior ocupe toda la barra
-                                    borderRadius: '10px',
-                                }} 
-                            />
-                        </ProgressBar>
-                    </div>
+                            {/* Leyenda debajo de la barra */}
+                            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-around' }}>
+                                {getAgeRangeData().map((item, index) => (
+                                    <div key={item.name} style={{ display: 'flex', alignItems: 'center' }}>
+                                        <div
+                                            style={{
+                                                width: '15px',
+                                                height: '15px',
+                                                backgroundColor: COLORS[index % COLORS.length],
+                                                marginRight: '5px',
+                                            }}
+                                        ></div>
+                                        <span>{item.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
 
 
             </div>
-
-
-
 
 
             <div className="row" style={{ marginTop: '10px' }}>
@@ -865,7 +706,7 @@ const ShowDatos = () => {
                     </div>
 
                         {/* Filtros */}
-                        <div className="d-flex ">
+                        <div className="d-flex mb-3 ">
                         <Form.Select
                                 name="nivel_instruccion_id"
                                 value={filters.nivel_instruccion_id}
@@ -902,88 +743,6 @@ const ShowDatos = () => {
                             </Form.Select>
 
                             <Form.Select
-                                name="centro_id"
-                                value={filters.centro_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Centro</option>
-                                {centroOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select>
-
-                            <Form.Select
-                                name="area_id"
-                                value={filters.area_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Área</option>
-                                {areaOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select>
-
-                            <Form.Select
-                                name="periodo_id"
-                                value={filters.periodo_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Periodo</option>
-                                {periodoOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select>
-                        </div>
-                        <div className="d-flex mb-3"> 
-                            <Form.Select
-                                name="modalidad_id"
-                                value={filters.modalidad_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Modalidad</option>
-                                {modalidadOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select>
-                            <Form.Select
-                                name="tipo_programa_id"
-                                value={filters.tipo_programa_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Tipo de Programa</option>
-                                {tipoProgramaOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select> 
-                            <Form.Select
-                                name="unidad_id"
-                                value={filters.unidad_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Unidad</option>
-                                {unidadOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select>
-                            <Form.Select
-                                name="cohorte_id"
-                                value={filters.cohorte_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Cohorte</option>
-                                {cohorteOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select>
-
-                            <Form.Select
                                 name="como_entero_superatec_id"
                                 value={filters.como_entero_superatec_id}
                                 onChange={handleFilterChange}
@@ -995,10 +754,33 @@ const ShowDatos = () => {
                                 ))}
                             </Form.Select>
 
+                            
+                            <Form.Select 
+                                name="grupo_prioritario_id"
+                                value={filters.grupo_prioritario_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Grupo Prioritario</option>
+                                {grupoPrioritarioOptions.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+                            </Form.Select>
 
-
+                            <Form.Select
+                                name="status_seleccion_id"
+                                value={filters.status_seleccion_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Status</option>
+                                {StatusOptions.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+                            </Form.Select>
                         </div>
-
+                        
+                            
                         {/* Tabla paginada */}
                         <PaginationTable
                         data={filteredDatos}  // Datos filtrados
@@ -1063,9 +845,6 @@ const ShowDatos = () => {
                     </div>
 
 
-
-
-
                 <div className="chart-box" style={{ marginRight: '10px', paddingTop: '0px', paddingBottom: '0px' }}>
 
                     <h4 style={{ fontSize: '1.2rem' }}>Nivel de Instrucción</h4>
@@ -1085,72 +864,10 @@ const ShowDatos = () => {
             </div>
             </div>
             {/* Gráfica  justo debajo de la tabla */}
-            <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
-            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
-                <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Inscritos por Periodo</h4>
-                {periodoOptions.length > 0 && (
-                    <ResponsiveContainer width="100%" height={400}>
-                    <ComposedChart data={getInscritosPorPeriodo()} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
-                        <CartesianGrid stroke="#f5f5f5" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="count" barSize={50} fill="#413ea0" name="Total Inscritos" />
-                        <Line type="monotone" dataKey="count" stroke="#ff7300" name="Evolución" />
-                    </ComposedChart>
-                    </ResponsiveContainer>
-                )}
-                </div>
-
-
-                <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'  }}>
-                    <h4 style={{ fontSize: '1.2rem' }}>Distribución por Área</h4>
-                    {areaOptions.length > 0 && (
-                    <ResponsiveContainer width="100%" height={400}>
-                        <PieChart>
-                        <Pie
-                            data={getAreaDataForChart()}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={70}
-                            outerRadius={125}
-                            fill="#8884d8"
-                            label={({ value }) => `${value}%`}
-                        >
-                            {getAreaDataForChart().map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    )}
-                </div>
-
-                <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
-                    <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Modalidad</h4>
-                    {modalidadOptions.length > 0 && (
-                    <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={getInscritosPorModalidad()} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
-                        <CartesianGrid stroke="#f5f5f5" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="count" barSize={35} fill="#82ca9d" name="Total Participantes" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                    )}
-                </div>
-                </div>
+           
 
 
 
-              {/* Gráfica segunda fila*/}
             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
 
 
@@ -1176,66 +893,45 @@ const ShowDatos = () => {
                 </div>
 
                 <div className="chart-box " style={{flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
-                    <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Tipo de Programa</h4>
-
-                        {SuperatecOptions.length > 0 && (
-                        <ResponsiveContainer width="100%" height={400}>
-                            <RadarChart
-                                cx="50%"
-                                cy="50%"
-                                outerRadius="80%"
-                                data={getParticipantesPorTipoPrograma()}
-                            >
-                                <PolarGrid />
-                                <PolarAngleAxis dataKey="name" />
-                                <PolarRadiusAxis />
-                                <Radar
-                                    name="Participantes"
+                <h4 style={{ fontSize: '1.2rem' }}>Porcentaje por Grupo Prioritario</h4>
+                    {grupoPrioritarioOptions.length > 0 && (
+                        <ResponsiveContainer width='100%' height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={getGroupPrioritarioChartData()}
                                     dataKey="value"
-                                    stroke="#8884d8"
-                                    fill="#8884d8"
-                                    fillOpacity={0.6}
-                                />
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={120}
+                                    fill="#82ca9d"
+                                    label={({ value }) => `${value}%`}
+                                >
+                                    {getGroupPrioritarioChartData().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
                                 <Tooltip />
-                            </RadarChart>
+                            </PieChart>
                         </ResponsiveContainer>
                     )}
-
+                        
 
                 </div>
                 <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
-                    <h4 style={{ fontSize: '1.2rem' }}>Distribución por Unidad</h4>
-
-                        {unidadOptions.length > 0 && (
-                            <ResponsiveContainer width="100%" height={400}>
-                                <PieChart>
-                                    <Pie
-                                        data={getUnidadDataForChart()}
-                                        dataKey="value"
-                                        nameKey="name"
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={0}  // Hacer la dona más pequeña
-                                        outerRadius={120}
-                                        fill="#82ca9d"
-                                        label={({value }) => `${value}%`}  // Mostrar el valor con el símbolo de %
-                                    >
-                                        {getUnidadDataForChart().map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Legend />
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        )}
+                <h4 style={{ fontSize: '1.2rem' }}>Participantes por Status Selección</h4>
+                    {StatusOptions.length > 0 && (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={getStatusSeleccionBarChartData()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="count" fill="#82ca9d" name="Participantes" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
                 </div>
-
-
-
-                
-
-
             </div>
 
 
@@ -1245,34 +941,9 @@ const ShowDatos = () => {
              <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
 
 
-                <div className="chart-box" style={{flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+              
 
-                    <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Cohorte</h4>
-
-                        {cohorteOptions.length > 0 && (
-                            <ResponsiveContainer width="100%" height={400}>
-                                <AreaChart
-                                    data={getCohorteDataForChart()}
-                                    margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
-                                >
-                                    <CartesianGrid stroke="#f5f5f5" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="count"
-                                        stroke="#8884d8"
-                                        fillOpacity={0.3}
-                                        fill="#8884d8"
-                                        name="Total Participantes"
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        )}
-                </div>
-
-                <div className="chart-box" style={{flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+                <div className="chart-box" style={{flex: '1 1 100%', maxWidth: '100%', marginRight: '10px'}}>
                     <div className="d-flex justify-content-between align-items-center" >
                         <h4 style={{ fontSize: '1.2rem' }}>Registro de Participantes</h4>
                         {/* Selector de rango de fechas */}

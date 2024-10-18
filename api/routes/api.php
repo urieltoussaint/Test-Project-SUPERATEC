@@ -25,14 +25,17 @@ use App\Http\Controllers\TipoProgramaController;
 use App\Http\Controllers\TipoVoluntariadoController;
 use App\Http\Controllers\TurnosController;
 use App\Http\Controllers\UnidadController;
-use App\Models\TipoVoluntariado;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CargoController;
 use App\Http\Controllers\InscripcionCursosController;
+use App\Http\Controllers\PaisController;
+use App\Http\Controllers\PatrocinanteController;
 use App\Http\Controllers\PeticionesController;
 use App\Http\Controllers\PromocionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StatusProcessController;
+use App\Http\Controllers\TipoIndustriaController;
+use App\Http\Controllers\TipoPatrocinanteController;
 
 // Rutas definidas en routes/api.php
 
@@ -64,6 +67,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('datos/{id}', [DatosIdentificacionController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
     Route::put('datos/{id}', [DatosIdentificacionController::class, 'update'])->middleware('role:admin,superuser'); // Solo admin y superuser pueden editar
     Route::delete('datos/{id}', [DatosIdentificacionController::class, 'destroy'])->middleware('role:admin'); // Solo admin puede eliminar
+    Route::get('datos/cedula/{cedula_identidad}', [DatosIdentificacionController::class, 'searchByCedula'])->middleware('role:admin,superuser,invitado');
+
 
     // Cursos
     Route::get('cursos', [CursosController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
@@ -117,6 +122,17 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('peticiones/{id}', [PeticionesController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
     Route::delete('peticiones/{id}', [PeticionesController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
 
+     // Patrocinantes
+     Route::get('patrocinantes', [PatrocinanteController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::post('patrocinantes', [PatrocinanteController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::put('patrocinantes/{id}', [PatrocinanteController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::delete('patrocinantes/{id}', [PatrocinanteController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('patrocinantes/rif-cedula/{rif_cedula}', [PatrocinanteController::class, 'searchByRifCedula'])->middleware('role:admin,superuser,invitado');
+     Route::get('patrocinantes/{id}', [PatrocinanteController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
+
+
+
+
 
     // Rutas solo para ver (invitado, superuser y admin)
     Route::get('status_seleccion', [StatusSeleccionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
@@ -148,10 +164,19 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('mencion', [MencionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('status_process', [StatusProcessController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('cargo', [CargoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('pais', [PaisController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('tipo_industria', [TipoIndustriaController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('tipo_patrocinante', [TipoPatrocinanteController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+
+
 
     //filtros
     Route::get('roles-and-cargos', [RoleController::class, 'getRolesAndCargos'])->middleware('role:admin');
     Route::get('filtros-cursos', [CursosController::class, 'getFiltrosCursos'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('filter-datos', [DatosIdentificacionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('filter-patrocinantes', [PatrocinanteController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
+
+
 
 
     
