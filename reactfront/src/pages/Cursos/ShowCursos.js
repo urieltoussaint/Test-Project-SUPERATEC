@@ -64,6 +64,7 @@ const ShowCursos = () => {
 
 
 
+
     useEffect(() => {
       setLoading(true);
     
@@ -548,7 +549,7 @@ const ShowCursos = () => {
 
     const renderItem = (curso) => (
         
-        <tr key={curso.cod}>
+        <tr key={curso.cod} >
             <td className='col-cods'>{curso.cod}</td>
             <td className='col-descripcions'>{curso.descripcion}</td>
             <td className='col-horass'>{curso.cantidad_horas}</td>
@@ -594,7 +595,6 @@ const ShowCursos = () => {
             </td>
         </tr>
     );
-    // console.log("horas totales2",totalHours);
    
     return (
       <div className="container-fluid mt-2" style={{ fontSize: '0.85rem' }}>
@@ -737,7 +737,7 @@ const ShowCursos = () => {
               </div>
     
               {/* Tabla paginada */}
-              <PaginationTable
+              <PaginationTable 
                 data={filteredCursos}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}

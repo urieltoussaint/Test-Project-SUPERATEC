@@ -39,6 +39,7 @@ const CreateDatos = () => {
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState([]);  // Municipios que se mostrarán según el estado seleccionado
   const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
 
+
   
 
 
@@ -70,11 +71,16 @@ const CreateDatos = () => {
     nacionalidadOptions: [],
     procedenciaOptions: [],
     statusSeleccionOptions: [],
-    superatecOptions: [],  
+    superatecOptions: [],
+   
+    
+    
+   
 });
 
   useEffect(() => {
     handleSeleccionar();
+
     if (showUserSearchModal) {
       getAllUsers();
     } else if (showRoleSearchModal) {
@@ -243,7 +249,6 @@ const CreateDatos = () => {
   };
   
  
-  
   const handleSeleccionar = async () => {
     try {
         const token = localStorage.getItem('token');
@@ -263,12 +268,9 @@ const CreateDatos = () => {
             procedenciaOptions:procedencia,
             statusSeleccionOptions:status_seleccion,
             superatecOptions:superatec,
+            
 
         });
-
-        console.log("superatec",filterOptions.superatecOptions);
-        console.log("procedencia",filterOptions.procedenciaOptions);
-
 
         setSelectVisible(true);  // Mostrar los selectores
     } catch (error) {
@@ -276,31 +278,31 @@ const CreateDatos = () => {
     }
 };
 
+const handleChange = (event) => {
+  const { name, value, type, checked } = event.target;
 
+  let updatedValue = value;
 
-
-  const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
-
-    let updatedValue = value;
-
-    if (name === 'cedula_identidad') {
-      updatedValue = value.replace(/^V-/, '');  
-      updatedValue = updatedValue.replace(/\D/g, ''); 
-      if (updatedValue.length < 7) {
-        setCedulaLengthError('La cédula debe tener al menos 7 caracteres.');
-        setIsCedulaValid(false);
-      } else {
-        setCedulaLengthError('');
-        setIsCedulaValid(true);
-      }
+  // Si es cédula de identidad, aplicar las validaciones
+  if (name === 'cedula_identidad') {
+    updatedValue = value.replace(/^V-/, '');  
+    updatedValue = updatedValue.replace(/\D/g, ''); 
+    if (updatedValue.length < 7) {
+      setCedulaLengthError('La cédula debe tener al menos 7 caracteres.');
+      setIsCedulaValid(false);
+    } else {
+      setCedulaLengthError('');
+      setIsCedulaValid(true);
     }
+  }
 
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: type === 'checkbox' ? checked : updatedValue,
-    }));
-  };
+  // Manejar campos de tipo checkbox y select
+  setFormData(prevState => ({
+    ...prevState,
+    [name]: type === 'checkbox' ? checked : updatedValue,
+  }));
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && !/[0-9]/.test(e.key)) {
@@ -634,15 +636,13 @@ const CreateDatos = () => {
             </Col>
             </Row>
             <SelectComponent
-              options={filterOptions.superatecOptions}
-              nameField="descripcion"
+              options={filterOptions.superatecOptions}  // Usar el estado filterOptions        
               valueField="id"
               selectedValue={formData.como_entero_superatec_id}
               handleChange={handleChange}
               controlId="como_entero_superatec_id"
               label="¿Cómo se enteró de Superatec?"
             />
-
 
 
             

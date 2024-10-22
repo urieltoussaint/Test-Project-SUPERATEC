@@ -1,22 +1,18 @@
 import React from 'react';
-import { Form, Spinner, Alert } from 'react-bootstrap';
-import useFetchOptions from './useFetchOptions';
+import { Form } from 'react-bootstrap';
 
-const SelectComponent = ({ endpoint, nameField, valueField, selectedValue, handleChange, controlId, label }) => {
-  const { options, loading, error } = useFetchOptions(endpoint, nameField, valueField);
-
+const SelectComponent = ({ options, nameField, valueField, selectedValue, handleChange, controlId, label }) => {
   return (
     <Form.Group controlId={controlId}>
       <Form.Label>{label}</Form.Label>
-      
-        <Form.Control as="select" name={controlId} value={selectedValue} onChange={handleChange} >
-          <option value="">Seleccione</option>
-          {options.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.name}
-            </option>
-          ))}
-        </Form.Control>
+      <Form.Control as="select" name={controlId} value={selectedValue} onChange={handleChange}>
+        <option value="">Seleccione</option>
+        {options.map(option => (
+          <option key={option[valueField]} value={option[valueField]}>
+            {option[nameField]}
+          </option>
+        ))}
+      </Form.Control>
     </Form.Group>
   );
 };

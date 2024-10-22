@@ -22,7 +22,8 @@ class InformacionInscripcion extends Model
         'observaciones',
         'cedula_identidad',
         'status_pay',
-        'datos_identificacion_id'
+        'datos_identificacion_id',
+        'patrocinante_id'
 
     ];
     protected $listable = [
@@ -42,7 +43,8 @@ class InformacionInscripcion extends Model
         'observaciones',
         'cedula_identidad',
         'status_pay',
-        'datos_identificacion_id'
+        'datos_identificacion_id',
+        'patrocinante_id'
     ];
 
     // Definir relaciones
@@ -96,9 +98,28 @@ class InformacionInscripcion extends Model
     {
         return $this->belongsTo(TipoPrograma::class, 'tipo_programa_id');
     }
+    public function Patrocinante()
+    {
+        return $this->belongsTo(Patrocinante::class, 'patrocinante_id');
+    }
 
     public function ReportePagos()
     {
         return $this->hasMany(ReportePagos::class, 'informacion_inscripcion_id');
     }
+
+
+    protected static function boot()
+    {
+        parent::boot();
+    
+        static::deleting(function ($informacionInscripcion) {
+          
+            \App\Models\Peticiones::where('key', $informacionInscripcion->id)
+            ->where('zona_id', 3)
+            ->delete();
+
+        });
+    }
+
 }
