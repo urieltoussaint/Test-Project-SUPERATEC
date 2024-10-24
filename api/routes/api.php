@@ -89,6 +89,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('inscripcion_cursos/{cedula}/status', [InformacionInscripcionController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
     Route::get('/cursos/{id}', [CursosController::class, 'show']);
 
+    Route::put('informacion_inscripcion/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
+
 
 
     // Reporte Pagos

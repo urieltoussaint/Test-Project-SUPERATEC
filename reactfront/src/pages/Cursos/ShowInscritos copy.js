@@ -8,7 +8,6 @@ import { toast, ToastContainer } from 'react-toastify';
 import PaginationTable from '../../components/PaginationTable';
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
-import ProgressBar from 'react-bootstrap/ProgressBar';
 
 
 const endpoint = 'http://localhost:8000/api';
@@ -30,8 +29,6 @@ const ShowInscritos = () => {
   const [selectedCompleteId, setSelectedCompleteId] = useState(null); // Estado para guardar el ID de la inscripción a marcar como culminado
   const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
   const [range, setRange] = useState(30); // Estado para seleccionar rango de días
-  const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
-
 
   useEffect(() => {
     setLoading(true);
@@ -43,7 +40,6 @@ const ShowInscritos = () => {
   // Obtener los detalles del curso por ID
   const getCursoCod = async () => {
     try {
-      
       const token = localStorage.getItem('token');
 
       // Hacer una solicitud solo para el curso específico
@@ -68,36 +64,31 @@ const ShowInscritos = () => {
 
   const getInscritos = async () => {
     try {
-        let relationsArray = [
-            'datos_identificacion', // Añadir más relaciones si las necesitas
-        ];
-        const relations = relationsArray.join(','); // Relaciones concatenadas
-        const token = localStorage.getItem('token');
-        let allInscripciones = [];
-        let currentPage = 1;
-        let totalPages = 1;
-
-        // Loop para obtener todas las páginas de inscripciones relacionadas con el curso
-        while (currentPage <= totalPages) {
-            const response = await axios.get(`${endpoint}/cursos_inscripcion?curso_id=${cursoId}&with=${relations}&page=${currentPage}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            allInscripciones = [...allInscripciones, ...response.data.data];
-            totalPages = response.data.last_page;
-            currentPage++;
-        }
-
-        setInscripciones(allInscripciones);
-        setFilteredInscripciones(allInscripciones);
+      const token = localStorage.getItem('token');
+      let allInscripciones = [];
+      let currentPage = 1;
+      let totalPages = 1;
+  
+      // Loop para obtener todas las páginas de inscripciones relacionadas con el curso
+      while (currentPage <= totalPages) {
+        const response = await axios.get(`${endpoint}/cursos_inscripcion?curso_id=${cursoId}&page=${currentPage}`, { // Aquí pasas cursoId
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        allInscripciones = [...allInscripciones, ...response.data.data];
+        totalPages = response.data.last_page;
+        currentPage++;
+      }
+  
+      setInscripciones(allInscripciones);
+      setFilteredInscripciones(allInscripciones);
     } catch (error) {
-        setError('Error fetching data');
-        console.error('Error fetching data:', error);
+      setError('Error fetching data');
+      console.error('Error fetching data:', error);
     }
-};
-
+  };
 
 
   const getStatusPayColor = (status_pay) => {
@@ -170,21 +161,13 @@ const handleMarkAsComplete = async () => {
   };
 
   const applyPayStatusFilter = (statusValue) => {
-    let filtered = [...inscripciones];  // Inicializar `filtered` primero
-  
+    let filtered = [...inscripciones];
     if (statusValue) {
       filtered = filtered.filter(inscripcion => inscripcion.status_pay === statusValue);
     }
-  
-    if (filtered.length === 0) {
-      setFilteredInscripciones([]);  // Asegura que se actualice con un array vacío si no hay resultados
-    } else {
-      setFilteredInscripciones(filtered);  // Actualiza con los datos filtrados
-    }
-  
+    setFilteredInscripciones(filtered);
     setCurrentPage(1);
   };
-  
 
   // Mostrar el modal para confirmar la eliminación
   const handleShowModal = (id) => {
@@ -214,17 +197,6 @@ const handleMarkAsComplete = async () => {
     }
   };
 
-  const loadData = async () => {
-    setLoadingData(true); // Inicia el estado de carga
-    try {
-        await getInscritos(); // Espera a que getAllDatos haga la solicitud y actualice los datos
-    } catch (error) {
-        console.error('Error recargando los datos:', error); // Maneja el error si ocurre
-    } finally {
-        setLoadingData(false); // Detener el estado de carga cuando la solicitud haya terminado
-    }
-};
-
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchCedula(value);
@@ -240,59 +212,11 @@ const applyNonCulminadosFilter = () => {
   setFilteredInscripciones(filtered);
 };
 
+// Cálculo de datos según filtros
+const activeFilters = null;
+const dataToUse =  inscripciones ;  // Usar filteredUsers si hay filtros, de lo contrario usar users
 
-// Si hay filtros activos, usa los datos filtrados; de lo contrario, usa todos los datos
-const dataToUse = filteredInscripciones.length > 0 ? filteredInscripciones : [];
 const totalIns = dataToUse.length;
-const mayorEdad = dataToUse.length > 0 ? Math.max(...dataToUse.map(d => d?.datos_identificacion?.edad || 0)) : 0;
-const menorEdad = dataToUse.length > 0 ? Math.min(...dataToUse.map(d => d?.datos_identificacion?.edad || 0)) : 0;
-const promedioEdad = dataToUse.length > 0 ? dataToUse.reduce((acc, curr) => acc + (curr?.datos_identificacion?.edad || 0), 0) / dataToUse.length : 0;
-
-const statusPayCounts = {
-  noPagado: dataToUse.filter(d => d.status_pay === '1').length,
-  enProceso: dataToUse.filter(d => d.status_pay === '2').length,
-  pagado: dataToUse.filter(d => d.status_pay === '3').length,
-  culminado: dataToUse.filter(d => d.status_pay === '4').length,
-};
-
-const pieData = [
-  { name: 'No Pagado', value: statusPayCounts.noPagado, color: '#FF4A4A' },
-  { name: 'En Proceso', value: statusPayCounts.enProceso, color: '#FFA500' },
-  { name: 'Pagado', value: statusPayCounts.pagado, color: '#28A745' },
-  { name: 'Culminado', value: statusPayCounts.culminado, color: '#007BFF' },
-];
-
-const genderCounts = {
-  masculino: dataToUse.filter(d => d?.datos_identificacion?.genero_id === 1).length,
-  otros: dataToUse.filter(d => d?.datos_identificacion?.genero_id === 2).length,
-  femenino: dataToUse.filter(d => d?.datos_identificacion?.genero_id === 3).length,
-};
-
-const barData = [
-  { name: 'Masculino', value: genderCounts.masculino, color: '#007BFF' },
-  { name: 'Otros', value: genderCounts.otros, color: '#FFA500' },
-  { name: 'Femenino', value: genderCounts.femenino, color: '#FF69B4' },
-];
-
-const getFilteredDataByInscripcionDate = () => {
-  const today = moment();
-  const filteredData = filteredInscripciones.filter(inscripcion => {
-    const inscripcionDate = moment(inscripcion.fecha_inscripcion);
-    return inscripcionDate.isAfter(today.clone().subtract(range, 'days'));
-  });
-
-  // Agrupar por fecha
-  const dateCounts = filteredData.reduce((acc, inscripcion) => {
-    const fecha = moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD');
-    acc[fecha] = (acc[fecha] || 0) + 1;
-    return acc;
-  }, {});
-
-  return Object.keys(dateCounts).map(date => ({
-    fecha: date,
-    count: dateCounts[date]
-  }));
-};
 
 
 
@@ -303,15 +227,13 @@ const getFilteredDataByInscripcionDate = () => {
 
   const renderItem = (inscripcion) => (
     <tr key={inscripcion.id}>
-      
-      <td className="text-center">{renderStatusPayDot(inscripcion.status_pay)}</td>
+      <td className="text-centerd-fel">{renderStatusPayDot(inscripcion.status_pay)}</td>
       <td>{inscripcion.cedula_identidad}</td>
       <td>{moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD')}</td>
-      <td>{inscripcion?.datos_identificacion?.nombres}</td>
-      <td>{inscripcion?.datos_identificacion?.apellidos}</td>
+      <td>{inscripcion.nombres}</td>
+      <td>{inscripcion.apellidos}</td>
       <td>
-      <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
-     
+      <div className="d-flex" style={{ gap: '5px' }}>
 
         {/* Botón para ver pagos */}
         <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${inscripcion.id}`)} className="me-1">
@@ -346,70 +268,16 @@ const getFilteredDataByInscripcionDate = () => {
         <div className="stat-card" style={{  }}>
             <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><FaUserFriends /></div>
             <div className="stat-number" style={{ color: 'rgba(255, 74, 74, 0.9) ', fontSize: '1.8rem' }}>{totalIns}</div>
-            <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total de Inscritos</h4>
+            <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total Usuarios</h4>
             
         </div>
 
         {/* Promedio de Antigüedad */} 
-        <div className="stat-card" style={{
-                    padding: '8px',
-                    margin: '0 10px',
-                    width: '22%',
-                    position: 'relative',
-                    backgroundColor: '#fff',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                }}>
-
-                    {/* Menor y Mayor Edad - Distribuidos a los lados */}
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',  // Distribuye menor a la izquierda y mayor a la derecha
-                        fontSize: '0.8rem',  // Ajustamos el tamaño del texto
-                        color: '#6c757d',
-                        padding: '0 8px',  // Reducimos el padding para que esté más junto
-                    }}>
-                        <div style={{ color: '#5cb85c', fontWeight: 'bold' }}> {/* Color verde para menor */}
-                            <span>↓ Menor:</span> {menorEdad} años
-                        </div>
-                        <div style={{ color: '#d9534f', fontWeight: 'bold' }}> {/* Color rojo para mayor */}
-                            <span>↑ Mayor:</span> {mayorEdad} años
-                        </div>
-                    </div>
-
-                    {/* Promedio de Edad */}
-                    <div className="stat-number" style={{
-                        color: '#ffda1f',  
-                        fontSize: '1.7rem',  // Reducimos el tamaño de la fuente
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        marginBottom: '3px',  // Reducimos el margen
-                    }}>
-                        {promedioEdad.toFixed(0)} Años
-                    </div>
-
-                    <h4 style={{
-                        fontSize: '0.9rem',  // Reducimos el tamaño del texto
-                        color: '#6c757d',  
-                        textAlign: 'center',
-                        marginBottom: '6px',  // Reducimos el margen inferior
-                    }}>
-                        Promedio de Edad
-                    </h4>
-
-                    {/* Barra de Progreso */}
-                    <div style={{ width: '75%', margin: '0 auto' }}>
-                        <ProgressBar
-                            now={(promedioEdad * 100) /mayorEdad} 
-                            variant="warning"
-                            style={{
-                                height: '8px',  // Reducimos la altura de la barra
-                                borderRadius: '5px',
-                                backgroundColor: '#f1f1f1'
-                            }}
-                        />
-                    </div>
-                </div>
+        <div className="stat-card" style={{  }}>
+            <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><FaClock /></div>
+            <div className="stat-number" style={{ color: 'rgba(54, 162, 235, 0.9)', fontSize: '1.8rem' }}>{'averageAntiquity'} días</div>
+            <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Promedio de Antigüedad</h4>
+        </div>
 
 
     </div>
@@ -421,20 +289,6 @@ const getFilteredDataByInscripcionDate = () => {
           <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
           <h1>Inscritos del Curso {cursoCod}</h1>
         <div className="d-flex align-items-center justify-content-between"> {/* Alineación horizontal */}
-        <Button
-              variant="info me-2"
-              onClick={loadData}
-              disabled={loadingData} // Deshabilita el botón si está cargando
-              style={{ padding: '5px 10px', width: '90px' }} // Ajusta padding y ancho
-
-            >
-              {/* Icono de recarga */}
-              {loadingData ? (
-                <FaSync className="spin" /> // Ícono girando si está cargando
-              ) : (
-                <FaSync />
-              )}
-          </Button>
           {(userRole === 'admin' || userRole === 'superuser' ) && (
             <Button variant="btn custom" onClick={() => navigate(`/inscribir/${cursoId}`)} className="btn-custom me-2" style={{ fontSize: '0.9rem' }}>
               <i className="bi bi-person-plus-fill"></i> Nuevo
@@ -470,15 +324,15 @@ const getFilteredDataByInscripcionDate = () => {
           <option value="4">Culminado (Azul)</option> {/* Opción para "Culminado" */}
         </Form.Select>
       </div>
-       <div className='d-flex align-center'> 
+
       {/* Botón para mostrar los inscritos que no han culminado (status_pay 1, 2 o 3) */}
-      <Button variant="success" onClick={() => applyNonCulminadosFilter()} style={{ marginRight: '10px' }} >
+      <Button variant="success" onClick={() => applyNonCulminadosFilter()}>
         Mostrar en Proceso
       </Button>
       <Button variant="info" onClick={() => applyPayStatusFilter('4')}>
         Mostrar solo culminados
       </Button>
-      </div>        
+
       
     </div>
 
@@ -538,81 +392,113 @@ const getFilteredDataByInscripcionDate = () => {
 
       <ToastContainer />
     </div>
+    </div>
     <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
-                    <h4 style={{ fontSize: '1.2rem' }}>Participantes por Status</h4>
+                <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cargos</h4>
                     <ResponsiveContainer width="100%" height={400}>
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={120}
-                          fill="#8884d8"
-                          label
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>   
+                        
+                    </ResponsiveContainer>
             </div>
 
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
-            <h4 style={{ fontSize: '1.2rem' }}>Participantes por Género</h4>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8884d8">
-                  {barData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                <h4 style={{ fontSize: '1.2rem' }}>Distribución de Roles</h4>
+                    <ResponsiveContainer width="100%" height={400}>
+                        
+                    </ResponsiveContainer>
             </div>
         </div>
-        <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
-            <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <h4 style={{ fontSize: '1.2rem' }}>Registro de Participantes</h4>
-              {/* Selector de rango de fechas */}
-              <Form.Select 
-                value={range} 
-                onChange={(e) => setRange(parseInt(e.target.value))} 
-                style={{ width: '150px', fontSize: '0.85rem' }}
-              >
-                <option value={7}>Últimos 7 días</option>
-                <option value={30}>Últimos 30 días</option>
-                <option value={60}>Últimos 60 días</option>
-              </Form.Select>
-            </div>
             
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={getFilteredDataByInscripcionDate()} margin={{ right: 30, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="fecha" />
-                <YAxis />
-                <Tooltip />
-                <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-              </AreaChart>
-            </ResponsiveContainer>  
-            </div>
 
-            
-        </div>
-    </div>
 
-        </div>
         
+        </div>
+        <div className="col-lg-11 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
+            <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
+              <div className="d-flex justify-content-between align-items-center">
+                  <h4 style={{ fontSize: '1.2rem' }}>Registro de Usuarios</h4>
+                  {/* Selector de rango de fechas */}
+                  <Form.Select 
+                      value={range} 
+                      onChange={(e) => setRange(parseInt(e.target.value))} 
+                      style={{ width: '150px', fontSize: '0.85rem' }} // Ajustar el tamaño del selector
+                  >
+                      <option value={7}>Últimos 7 días</option>
+                      <option value={30}>Últimos 30 días</option>
+                      <option value={60}>Últimos 60 días</option>
+                  </Form.Select>
+              </div>
+              {/* Leyenda de colores */}
+      <div className="status-legend d-flex justify-content-start mb-3">
+        <span className="status-dot red"></span> No pagado (Rojo)
+        <span className="status-dot orange ms-3"></span> En proceso (Naranja)
+        <span className="status-dot green ms-3"></span> Pagado (Verde)
+        <span className="status-dot blue ms-3"></span> Culminado (Azul)
+      </div>
 
+      {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* Tabla paginada */}
+      <PaginationTable
+        data={filteredInscripciones}  // Datos filtrados
+        itemsPerPage={itemsPerPage}
+        columns={columns}
+        renderItem={renderItem}
+        currentPage={currentPage}  // Página actual
+        onPageChange={setCurrentPage}  // Función para cambiar de página
+        />
+
+      {/* Modal de eliminación */}
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>¿Estás seguro de que deseas eliminar esta inscripción?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+              
+            
+            <ResponsiveContainer width="100%" height={400}>
+              
+               
+            </ResponsiveContainer>
+
+
+            
+           </div>
+        
+        
+    </div>
+    
+
+
+      
+
+      {/* Modal de Curso Completado */}
+      <Modal show={showCompleteModal} onHide={handleCloseCompleteModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>Confirmar finalización del curso</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>¿Estás seguro de que este participante ha culminado el curso?</Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleCloseCompleteModal}>
+          Cancelar
+        </Button>
+        <Button variant="success" onClick={handleMarkAsComplete}>
+          Marcar como culminado
+        </Button>
+      </Modal.Footer>
+    </Modal>
+
+
+      <ToastContainer />
     </div>
   );
 };

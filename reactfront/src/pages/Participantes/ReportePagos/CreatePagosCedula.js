@@ -4,6 +4,9 @@ import { Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import { Modal } from 'react-bootstrap';
+import { Card, Row, Col } from 'react-bootstrap'; 
+import moment from 'moment';
+
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
@@ -11,7 +14,7 @@ const endpoint = 'http://localhost:8000/api';
 const CreatePagosCedula = () => {
   const { cedula, cursoId } = useParams();  // Obtener cedula y cursoId de la URL
   const [formData, setFormData] = useState({
-    inscripcion_curso_id: cursoId,
+    informacion_inscripcion_id: cursoId,
     monto_cancelado: '',
     monto_exonerado: '',
     tipo_moneda: 'bsF',
@@ -32,24 +35,32 @@ const CreatePagosCedula = () => {
   const [exoneradoError, setExoneradoError] = useState('');  // Para manejo de errores en monto exonerado
   const [showModal, setShowModal] = useState(false);  // Controlar el modal
   const [modalMessage, setModalMessage] = useState('');  // Mensaje del modal
-  
+  const [fechaBcv, setFechaBcv] = useState(null);
+  const [cuotas, setCuotas] = useState('');  // Mensaje del modal
+  const [cuotasCursos, setCuotasCursos] = useState('');  // Mensaje del modal
+  const [curso, setCurso] = useState(null);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTasaBcv();
-    fetchCursoInfo();
-    fetchInscripcionCurso();  // Llamamos a la función para obtener la inscripción del curso
+    fetchInscripcionCurso().then(cursoIdObtenido => {
+      if (cursoIdObtenido) {
+        fetchCursoInfo(cursoIdObtenido);  // Solo llama a fetchCursoInfo con el cursoId obtenido
+      }
+    });
   }, [cursoId]);
-
   // Obtener la tasa BCV
   const fetchTasaBcv = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${endpoint}/tasa_bcv`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setTasaBcv(response.data.tasa);
+      setFechaBcv(response.data.created_at);
       setFormData((prevState) => ({
         ...prevState,
         tasa_bcv_id: response.data.id,
@@ -67,7 +78,7 @@ const CreatePagosCedula = () => {
       let totalPages = 1;
   
       while (currentPage <= totalPages) {
-        const response = await axios.get(`${endpoint}/cursos?with=area&page=${currentPage}`, {
+        const response = await axios.get(`${endpoint}/cursos?&page=${currentPage}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         allCursos = [...allCursos, ...response.data.data];
@@ -87,58 +98,78 @@ const CreatePagosCedula = () => {
 
 
   // Obtener información del curso
-  // Obtener información del curso
-const fetchCursoInfo = async () => {
-  try {
-    // Llamamos a fetchInscripcionCurso para obtener el curso_id
-    const cursoIdObtenido = await fetchInscripcionCurso();
-
-    if (!cursoIdObtenido) {
-      throw new Error('No se pudo obtener el curso_id');
+  const fetchCursoInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // 1. Primero buscar la inscripción del curso basado en el cursoId (el ID de inscripción)
+      const inscripcionResponse = await axios.get(`${endpoint}/cursos_inscripcion`, {
+        params: { informacion_inscripcion_id: cursoId },  // Filtrar por inscripcion_curso_id
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const inscripcion = inscripcionResponse.data.data.find(
+        (inscripcion) => inscripcion.id === parseInt(cursoId, 10)
+      );
+  
+      if (!inscripcion) {
+        throw new Error('No se encontró la inscripción para el curso');
+      }
+  
+      const inscripcionCursoId = inscripcion.curso_id; // Aquí obtenemos el inscripcionCursoId
+  
+      // 2. Ahora buscar el curso con el inscripcionCursoId obtenido
+      const cursoResponse = await axios.get(`${endpoint}/cursos/${inscripcionCursoId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const cursoFromApi = cursoResponse.data;
+      if (!cursoFromApi) {
+        throw new Error('Curso no encontrado');
+      }
+  
+      // 3. Obtener la cantidad de pagos ya realizados usando el inscripcionCursoId
+      const pagosRealizados = await getPagosByCurso(cursoId);
+      setCurso(pagosRealizados);
+      setCuotas(pagosRealizados);
+      setCuotasCursos(cursoFromApi.cuotas);
+  
+      // 4. Verificar si estamos en la última cuota
+      const esUltimaCuota = pagosRealizados + 1 === cursoFromApi.cuotas;
+  
+      console.log('Curso seleccionado:', cursoFromApi.cod);
+      console.log('Cuotas del curso:', cursoFromApi.cuotas);
+      console.log('Pagos realizados:', pagosRealizados);
+  
+      // 5. Obtener el último pago
+      const ultimoPagoResponse = await axios.get(`${endpoint}/ultimo_pago/${cursoId}/${cedula}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const ultimoPago = ultimoPagoResponse.data;
+      const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(cursoFromApi.costo);
+  
+      // 6. Actualizar el estado del formulario
+      setFormData((prevState) => ({
+        ...prevState,
+        monto_total: montoTotal,
+        monto_restante: montoTotal,
+        conversion_total: calcularConversion(montoTotal),
+        esUltimaCuota,  // Almacenar si es la última cuota
+      }));
+    } catch (error) {
+      console.error('Error fetching curso info:', error);
+      setError('Error al obtener la información del curso');
     }
-
-    // Llamar a getAllCursos usando el curso_id obtenido
-    const allCursos = await getAllCursos();
-    const cursoFromApi = allCursos.find(curso => curso.id === parseInt(cursoIdObtenido, 10));
-    
-    if (!cursoFromApi) {
-      throw new Error('Curso no encontrado en la API');
-    }
-
-    // Obtener la cantidad de pagos ya realizados
-    const pagosRealizados = await getPagosByCurso(cursoId);
-
-    // Verificar si estamos en la última cuota
-    const esUltimaCuota = pagosRealizados + 1 === cursoFromApi.cuotas;
-
-    console.log('Curso seleccionado:', cursoFromApi.cod);
-    console.log('Cuotas del curso:', cursoFromApi.cuotas);
-    console.log('Pagos realizados:', pagosRealizados);
-
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${endpoint}/ultimo_pago/${cursoId}/${cedula}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const ultimoPago = response.data;
-    const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(cursoFromApi.costo);
-
-    setFormData((prevState) => ({
-      ...prevState,
-      monto_total: montoTotal,
-      monto_restante: montoTotal,
-      conversion_total: calcularConversion(montoTotal),
-      esUltimaCuota,  // Almacenar si es la última cuota
-    }));
-  } catch (error) {
-    console.error('Error fetching curso info:', error);
-    setError('Error al obtener la información del curso');
-  }
-};
+  };
+  
+  
 
   
 
-const getPagosByCurso = async (inscripcion_curso_id) => {
+const getPagosByCurso = async (informacion_inscripcion_id) => {
   try {
     const token = localStorage.getItem('token');
     let allPagos = [];
@@ -147,7 +178,7 @@ const getPagosByCurso = async (inscripcion_curso_id) => {
 
     while (currentPage <= totalPages) {
       const response = await axios.get(`${endpoint}/pagos`, {
-        params: { curso_id: inscripcion_curso_id, page: currentPage },
+        params: { curso_id: informacion_inscripcion_id, page: currentPage },
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -156,8 +187,8 @@ const getPagosByCurso = async (inscripcion_curso_id) => {
       currentPage++;
     }
 
-    // Filtrar por inscripcion_curso_id
-    const pagosFiltrados = allPagos.filter((reporte) => reporte.inscripcion_curso_id === parseInt(inscripcion_curso_id));
+    // Filtrar por informacion_inscripcion_id
+    const pagosFiltrados = allPagos.filter((reporte) => reporte.informacion_inscripcion_id === parseInt(informacion_inscripcion_id));
     return pagosFiltrados.length; // Devolver la cantidad de pagos realizados
   } catch (error) {
     console.error('Error fetching pagos:', error);
@@ -165,48 +196,33 @@ const getPagosByCurso = async (inscripcion_curso_id) => {
   }
 };
 
-  
-
-
 
   // Obtener la inscripción del curso usando paginación
   // Obtener la inscripción del curso usando paginación
-const fetchInscripcionCurso = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    let allInscripciones = [];
-    let currentPage = 1;
-    let totalPages = 1;
-
-    while (currentPage <= totalPages) {
+  const fetchInscripcionCurso = async () => {
+    try {
+      const token = localStorage.getItem('token');
       const response = await axios.get(`${endpoint}/cursos_inscripcion`, {
-        params: { inscripcion_curso_id: cursoId, page: currentPage },  // Filtrar por inscripcion_curso_id
+        params: { informacion_inscripcion_id: cursoId },  // Filtrar por cursoId
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      allInscripciones = [...allInscripciones, ...response.data.data];
-      totalPages = response.data.last_page;
-      currentPage++;
+  
+      const inscripcion = response.data.data.find(
+        (inscripcion) => inscripcion.id === parseInt(cursoId, 10)
+      );
+  
+      if (inscripcion) {
+        setInscripcionCursoId(inscripcion.curso_id);  // Guardar curso_id
+        return inscripcion.curso_id;  // Retornar curso_id para usarlo en fetchCursoInfo
+      } else {
+        throw new Error('No se encontró la inscripción para el curso');
+      }
+    } catch (error) {
+      console.error('Error obteniendo la inscripción del curso:', error);
+      setError('Error obteniendo la inscripción del curso');
+      return null;
     }
-
-    // Filtrar por inscripcion_curso_id para obtener curso_id
-    const inscripcion = allInscripciones.find(
-      (inscripcion) => inscripcion.id === parseInt(cursoId, 10)
-    );
-
-    if (inscripcion) {
-      setInscripcionCursoId(inscripcion.curso_id);  // Guardamos el curso_id obtenido
-    } else {
-      throw new Error('No se encontró la inscripción para el curso');
-    }
-
-    return inscripcion?.curso_id; // Retornar curso_id para usarlo en el próximo paso
-  } catch (error) {
-    console.error('Error obteniendo la inscripción del curso:', error);
-    setError('Error obteniendo la inscripción del curso');
-    return null;
-  }
-};
+  };
 
 
   // Manejar cambios en los montos y validar errores
@@ -287,9 +303,7 @@ const fetchInscripcionCurso = async () => {
     if (montoRestante === 0) {
       // Si el monto restante es 0, actualizar status_pay a 3
       console.log(cursoId);
-      await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
-        cedula_identidad: cedula,
-        curso_id: inscripcionCursoId,
+      await axios.put(`${endpoint}/informacion_inscripcion/${cursoId}`, {
         status_pay: 3
       }, {
         headers: {
@@ -305,7 +319,7 @@ const fetchInscripcionCurso = async () => {
       while (currentPage <= totalPages) {
         const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
           params: {
-            key: formData.inscripcion_curso_id, // Usamos `inscripcion_curso_id`
+            key: formData.informacion_inscripcion_id, // Usamos `informacion_inscripcion_id`
             zona_id: 3,
             status: false
           },
@@ -320,7 +334,7 @@ const fetchInscripcionCurso = async () => {
       }
 
       const peticionesFiltradas = allPeticiones.filter(
-        peticion => peticion.key === formData.inscripcion_curso_id && peticion.zona_id === 3 && peticion.status === false
+        peticion => peticion.key === formData.informacion_inscripcion_id && peticion.zona_id === 3 && peticion.status === false
       );
 
       if (peticionesFiltradas.length > 0) {
@@ -338,9 +352,7 @@ const fetchInscripcionCurso = async () => {
 
     } else if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
       // Si el monto restante es mayor que 0 pero menor que el monto total, actualizar el status_pay
-      await axios.put(`${endpoint}/inscripcion_cursos/${cedula}/status`, {
-        cedula_identidad: cedula,
-        curso_id: inscripcionCursoId,
+      await axios.put(`${endpoint}/informacion_inscripcion/${cursoId}`, {        
         status_pay: 2 // status pago en proceso
       }, {
         headers: {
@@ -356,7 +368,7 @@ const fetchInscripcionCurso = async () => {
       while (currentPage <= totalPages) {
         const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
           params: {
-            key: formData.inscripcion_curso_id,
+            key: formData.informacion_inscripcion_id,
             zona_id: 3,
             status: false
           },
@@ -371,7 +383,7 @@ const fetchInscripcionCurso = async () => {
       }
 
       const peticionesFiltradas = allPeticiones.filter(
-        peticion => peticion.key === formData.inscripcion_curso_id && peticion.zona_id === 3 && peticion.status === false
+        peticion => peticion.key === formData.informacion_inscripcion_id && peticion.zona_id === 3 && peticion.status === false
       );
 
       if (peticionesFiltradas.length > 0) {
@@ -404,10 +416,12 @@ const fetchInscripcionCurso = async () => {
   };
 
   return (
-    <div className="container">
+    <div className="row" style={{ marginTop: '50px' }}>
+    <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
+      <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
       <h1>Registrar Nuevo Pago para V{cedula}</h1>
       {error && <div className="alert alert-danger">{error}</div>}
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} className="custom-gutter">
         <Form.Group controlId="monto_total">
           <Form.Label>Monto Total</Form.Label>
           <Form.Control
@@ -418,6 +432,8 @@ const fetchInscripcionCurso = async () => {
           />
           <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)} BsF</Form.Text>
         </Form.Group>
+        <Row className="g-2">
+          <Col md={6}>
         <Form.Group controlId="monto_cancelado">
           <Form.Label>Monto Cancelado</Form.Label>
           <Form.Control
@@ -431,6 +447,8 @@ const fetchInscripcionCurso = async () => {
           {canceladoError && <Alert variant="danger">{canceladoError}</Alert>}
           <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_cancelado)} BsF</Form.Text>
         </Form.Group>
+        </Col>
+        <Col md={6}>
         <Form.Group controlId="monto_exonerado">
           <Form.Label>Monto Exonerado</Form.Label>
           <Form.Control
@@ -444,6 +462,8 @@ const fetchInscripcionCurso = async () => {
           {exoneradoError && <Alert variant="danger">{exoneradoError}</Alert>}
           <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_exonerado)} BsF</Form.Text>
         </Form.Group>
+        </Col>
+        </Row>
         <Form.Group controlId="monto_restante">
           <Form.Label>Monto Restante</Form.Label>
           <Form.Control
@@ -476,12 +496,14 @@ const fetchInscripcionCurso = async () => {
             onChange={handleMontoChange}
           />
         </Form.Group>
-        <Button variant="success" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Registrando...' : 'Registrar Pago'}
-        </Button>
-        <Button variant="secondary" onClick={() => navigate('/datos')} className="ms-2">
-          Volver
-        </Button>
+        <div className='mt-3'>
+          <Button variant="success" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Registrando...' : 'Registrar Pago'}
+          </Button>
+          <Button variant="secondary" onClick={() => navigate('/datos')} className="ms-2">
+            Volver
+          </Button>
+        </div>
       </Form>
 
             {/* // Modal de error */}
@@ -498,9 +520,17 @@ const fetchInscripcionCurso = async () => {
       </Modal>
       {tasaBcv && (
         <div className="mt-3">
-          <p><strong>Tasa BCV Actual:</strong> {tasaBcv}</p>
+          <p><strong>Tasa BCV:</strong> {tasaBcv} Registrada el {moment(fechaBcv).format('YYYY-MM-DD')} </p>
         </div>
+        
       )}
+      {curso && (
+      <div className="mt-2">
+        <p><strong>Cuotas:</strong> {cuotas}/{cuotasCursos}</p>
+      </div>
+    )}
+    </div>
+    </div>
     </div>
   );
 };

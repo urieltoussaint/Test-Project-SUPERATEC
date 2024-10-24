@@ -21,7 +21,12 @@ const EditUsers = () => {
     password: '',  // Añadir campo para la contraseña
     password_confirmation: '' // Añadir campo para la confirmación de la contraseña
   });
-  
+  const [filterOptions, setFilterOptions] = useState({
+    roleOptions: [],
+    cargoOptions: [],
+    
+});
+  const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
   const [originalUsername, setOriginalUsername] = useState('');
   const navigate = useNavigate();
   const { id } = useParams();
@@ -32,6 +37,7 @@ const EditUsers = () => {
   const [passwordError, setPasswordError] = useState(''); // Control de errores de contraseña
 
   useEffect(() => {
+    handleSeleccionar();
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -150,6 +156,27 @@ const EditUsers = () => {
     }
   };
 
+  const handleSeleccionar = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/roles-and-cargos`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const { role, cargo_users } = response.data;
+        setFilterOptions( {
+          roleOptions: role,
+          cargoOptions: cargo_users,
+        });
+        setSelectVisible(true);  // Mostrar los selectores
+        
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+        
+      }
+  };
+
   return (
     <div className="row" style={{ marginTop: '50px' }}>
       {/* Columna para la tabla */}
@@ -230,7 +257,7 @@ const EditUsers = () => {
             <Row className="g-1">
               <Col md={6}>
                 <SelectComponent
-                  endpoint={`${endpoint}/role`}
+                  options={filterOptions.roleOptions}  // Usar el estado filterOptions
                   nameField="name"
                   valueField="id"
                   selectedValue={formData.role_id || ''}
@@ -243,7 +270,7 @@ const EditUsers = () => {
   
               <Col md={6}>
                 <SelectComponent
-                  endpoint={`${endpoint}/cargo`}
+                  options={filterOptions.cargoOptions}  // Usar el estado filterOptions
                   nameField="descripcion"
                   valueField="id"
                   selectedValue={formData.cargo_id || ''}

@@ -77,7 +77,16 @@ const CreatePatrocinantes = () => {
 
   });
 
+  const [filterOptions, setFilterOptions] = useState({
+    estadoOptions: [],
+    paisOptions: [],
+    tipoIndustriaOptions: [],
+    tipoPatrocinanteOptions: [],
+});
+const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
+
   useEffect(() => {
+    handleSeleccionar();
     if (showUserSearchModal) {
       getAllUsers();
     } else if (showRoleSearchModal) {
@@ -315,6 +324,30 @@ const CreatePatrocinantes = () => {
   }
 };
 
+const handleSeleccionar = async () => {
+  try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/filter-patrocinantes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const { estado, pais, tipo_industria, tipo_patrocinante } = response.data;
+      setFilterOptions( {
+        estadoOptions: estado,
+        paisOptions: pais,
+        tipoIndustriaOptions: tipo_industria,
+        tipoPatrocinanteOptions: tipo_patrocinante,
+      });
+      setSelectVisible(true);  // Mostrar los selectores
+
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+      
+    }
+}
+
+
+
   const handleBlur = async () => {
     if (formData.rif_cedula) {
       try {
@@ -426,7 +459,7 @@ const CreatePatrocinantes = () => {
                     <Row className="g-2"> 
                     <Col md={6}>
                     <SelectComponent
-                      endpoint={`${endpoint}/tipo_patrocinante`}
+                      options={filterOptions.tipoPatrocinanteOptions}  // Usar el estado filterOptions
                       nameField="descripcion"
                       valueField="id"
                       selectedValue={formData.tipo_patrocinante_id}
@@ -437,7 +470,7 @@ const CreatePatrocinantes = () => {
                     </Col>
                     <Col md={6}>
                     <SelectComponent
-                      endpoint={`${endpoint}/tipo_industria`}
+                      options={filterOptions.tipoIndustriaOptions}  // Usar el estado filterOptions
                       nameField="descripcion"
                       valueField="id"
                       selectedValue={formData.tipo_industria_id}
@@ -480,7 +513,7 @@ const CreatePatrocinantes = () => {
 
                   
                     <SelectComponent
-                        endpoint={`${endpoint}/pais`}
+                        options={filterOptions.paisOptions}  // Usar el estado filterOptions
                         nameField="descripcion"
                         valueField="id"
                         selectedValue={formData.pais_id}

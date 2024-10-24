@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cursos;
+use App\Models\InformacionInscripcion;
 use App\Models\InscripcionCursos;
 use App\Models\ReportePagos as Model;
 use App\Models\ReportePagos;
@@ -16,12 +17,12 @@ class ReportePagosController extends Controller
 
     public function store(Request $request)
     {
-        $inscripcionCurso = InscripcionCursos::find($request->inscripcion_curso_id);
+        $inscripcionCurso = InformacionInscripcion::find($request->informacion_inscripcion_id);
         $cedulaIdentidad = $inscripcionCurso->cedula_identidad;
         $cursoId = $inscripcionCurso->curso_id;
 
         // Verificar si ya existe un pago para esta inscripción
-        $pagoExistente = ReportePagos::where('inscripcion_curso_id', $request->inscripcion_curso_id)
+        $pagoExistente = ReportePagos::where('informacion_inscripcion_id', $request->informacion_inscripcion_id)
                              ->where('cedula_identidad', $cedulaIdentidad)
                              ->orderBy('id', 'desc')
                              ->first();
@@ -49,7 +50,7 @@ class ReportePagosController extends Controller
         $conversionRestante = $montoRestante * $tasa;
 
         $pago = new ReportePagos([
-            'inscripcion_curso_id' => $request->inscripcion_curso_id,
+            'informacion_inscripcion_id' => $request->informacion_inscripcion_id,
             'cedula_identidad' => $cedulaIdentidad,
             'monto_total' => $montoTotal,
             'monto_cancelado' => $montoCancelado,
@@ -71,7 +72,7 @@ class ReportePagosController extends Controller
 
     public function obtenerUltimoPago($inscripcionCursoId, $cedula)
 {
-    $ultimoPago = ReportePagos::where('inscripcion_curso_id', $inscripcionCursoId)
+    $ultimoPago = ReportePagos::where('informacion_inscripcion_id', $inscripcionCursoId)
                     ->where('cedula_identidad', $cedula)
                     ->orderBy('id', 'desc')
                     ->first();
@@ -80,8 +81,8 @@ class ReportePagosController extends Controller
         return response()->json($ultimoPago);
     }
 
-    $curso = InscripcionCursos::where('inscripcion_cursos.id', $inscripcionCursoId)
-                ->join('cursos', 'inscripcion_cursos.curso_id', '=', 'cursos.id')
+    $curso = InformacionInscripcion::where('informacion_inscripcion.id', $inscripcionCursoId)
+                ->join('cursos', 'informacion_inscripcion.curso_id', '=', 'cursos.id')
                 ->select('cursos.costo')
                 ->first();
 
@@ -97,9 +98,9 @@ class ReportePagosController extends Controller
         $reportePago = ReportePagos::findOrFail($id);
 
         // Obtener la inscripción del curso relacionada
-        $inscripcionCurso = InscripcionCursos::where('inscripcion_cursos.id', $reportePago->inscripcion_curso_id)
-                            ->join('cursos', 'inscripcion_cursos.curso_id', '=', 'cursos.id')
-                            ->select('inscripcion_cursos.*', 'cursos.descripcion', 'cursos.costo')
+        $inscripcionCurso = InformacionInscripcion::where('informacion_inscripcion.id', $reportePago->informacion_inscripcion_id)
+                            ->join('cursos', 'informacion_inscripcion.curso_id', '=', 'cursos.id')
+                            ->select('informacion_inscripcion.*', 'cursos.descripcion', 'cursos.costo')
                             ->first();
 
         // Obtener la tasa BCV relacionada
@@ -121,7 +122,7 @@ class ReportePagosController extends Controller
             'monto_restante' => $reportePago->monto_restante,
             'tipo_moneda' => $reportePago->tipo_moneda,
             'comentario_cuota' => $reportePago->comentario_cuota,
-            'inscripcion_curso_id' => $reportePago->inscripcion_curso_id,
+            'informacion_inscripcion_id' => $reportePago->informacion_inscripcion_id,
             'conversion_cancelado' => $reportePago->conversion_cancelado,
             'conversion_restante' => $reportePago->conversion_restante,
             'conversion_total' => $reportePago->conversion_total,

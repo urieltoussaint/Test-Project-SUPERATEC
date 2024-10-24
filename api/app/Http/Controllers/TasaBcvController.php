@@ -64,13 +64,20 @@ class TasaBcvController extends Controller
     }
 
     public function getLatestTasa()
-    {
-        $tasaBcv = TasaBcv::orderBy('id', 'desc')->first();
-        if (!$tasaBcv) {
-            return response()->json(['error' => 'Tasa BCV no encontrada'], 404);
-        }
-        return response()->json(['id' => $tasaBcv->id, 'tasa' => $tasaBcv->tasa]);
+{
+    $tasaBcv = TasaBcv::orderBy('id', 'desc')->first();
+    
+    if (!$tasaBcv) {
+        return response()->json(['error' => 'Tasa BCV no encontrada'], 404);
     }
+
+    return response()->json([
+        'id' => $tasaBcv->id,
+        'tasa' => $tasaBcv->tasa,
+        'created_at' => $tasaBcv->created_at 
+    ]);
+}
+
     public function show($id)
     {
         $tasaBcv = TasaBcv::findOrFail($id);

@@ -27,6 +27,7 @@ const CreateCursos = () => {
   const [searchName, setSearchName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [comentario, setComentario] = useState('');  // Nuevo estado para el comentario
+
   const [formData, setFormData] = useState({
     descripcion: '',
     cantidad_horas: '',
@@ -37,10 +38,21 @@ const CreateCursos = () => {
     modalidad_id:'',
     tipo_programa_id:'',
   });
+
+  const [filterOptions, setFilterOptions] = useState({
+    areaOptions: [],
+    unidadOptions: [],
+    nivelOptions: [],
+    tipoProgramaOptions: [],
+    modalidadOptions: [],
+});
   const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
   const navigate = useNavigate();
+  const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
+
 
   useEffect(() => {
+    handleSeleccionar();
     const fetchSelectData = async () => {
       setLoading(true); // Inicia la animación de carga
     };
@@ -99,6 +111,9 @@ const getAllRoles = async () => {
     console.error('Error fetching roles:', error);
   }
 };
+
+
+
 
 
   const handleChange = (event) => {
@@ -172,6 +187,35 @@ const getAllRoles = async () => {
     } finally {
         setLoading(false);
     }
+};
+
+
+const handleSeleccionar = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    // Suponiendo que el endpoint unificado sea `/filtros-cursos`
+    const response = await axios.get(`${endpoint}/filtros-cursos`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    // Desestructuramos los datos que vienen en la respuesta
+    const { area, unidad, nivel, tipo_programa, modalidad } = response.data;
+
+    // Retornamos las opciones en un solo objeto
+    setFilterOptions( {
+      areaOptions: area,
+      unidadOptions: unidad,
+      nivelOptions: nivel,
+      tipoProgramaOptions: tipo_programa,
+      modalidadOptions: modalidad,
+    });
+    setSelectVisible(true);  // Mostrar los selectores
+
+  } catch (error) {
+    console.error('Error fetching filter options:', error);
+    
+  }
 };
 
 
@@ -278,7 +322,7 @@ const getAllRoles = async () => {
 
           <Col md={6}>
           <SelectComponent
-              endpoint={`${endpoint}/nivel`}
+              options={filterOptions.nivelOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.nivel_id}
@@ -291,7 +335,8 @@ const getAllRoles = async () => {
           <Row className="g-2">
           <Col md={6}>
           <SelectComponent
-              endpoint={`${endpoint}/area`}
+              
+              options={filterOptions.areaOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.area_id}
@@ -303,7 +348,7 @@ const getAllRoles = async () => {
 
           <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/unidad`}
+              options={filterOptions.unidadOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.unidad_id}
@@ -316,7 +361,8 @@ const getAllRoles = async () => {
           <Row className="g-2">
           <Col md={6}>
           <SelectComponent
-              endpoint={`${endpoint}/modalidad`}
+              options={filterOptions.modalidadOptions}  // Usar el estado filterOptions
+
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.modalidad_id}
@@ -327,7 +373,7 @@ const getAllRoles = async () => {
           </Col>
           <Col md={6}>
           <SelectComponent
-              endpoint={`${endpoint}/tipo_programa`}
+              options={filterOptions.tipoProgramaOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.tipo_programa_id}

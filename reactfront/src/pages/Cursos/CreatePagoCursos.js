@@ -186,7 +186,7 @@ const CreatePagoCursos = () => {
               </Form.Group>
   
             
-
+        <div className='mt-3'>
         <Button variant="success" type="submit">
           Guardar
         </Button>
@@ -197,6 +197,7 @@ const CreatePagoCursos = () => {
         >
           Volver
         </Button>
+        </div>
       </Form>
     </div>
     </div>

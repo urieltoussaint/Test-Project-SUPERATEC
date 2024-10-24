@@ -54,6 +54,14 @@ const EditPatrocinantes = () => {
 
   });
 
+  const [filterOptions, setFilterOptions] = useState({
+    estadoOptions: [],
+    paisOptions: [],
+    tipoIndustriaOptions: [],
+    tipoPatrocinanteOptions: [],
+});
+
+  const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
   const navigate = useNavigate();
   const { id } = useParams(); // Obtener el ID desde la ruta
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState([]);  
@@ -65,6 +73,7 @@ const EditPatrocinantes = () => {
 
   useEffect(() => {
     setLoading(true); // Inicia la animación de carga
+    handleSeleccionar();
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -143,6 +152,29 @@ const handleChange = (event) => {
       ciudad: ''  // Reseteamos el municipio al cambiar de estado
     });
   };
+
+
+  const handleSeleccionar = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/filter-patrocinantes`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+  
+        const { estado, pais, tipo_industria, tipo_patrocinante } = response.data;
+        setFilterOptions( {
+          estadoOptions: estado,
+          paisOptions: pais,
+          tipoIndustriaOptions: tipo_industria,
+          tipoPatrocinanteOptions: tipo_patrocinante,
+        });
+        setSelectVisible(true);  // Mostrar los selectores
+  
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+        
+      }
+  }
 
   const handleSubmit = async (e) => {
 
@@ -356,7 +388,7 @@ const handleBlur = async () => {
                     <Row className="g-2"> 
                     <Col md={6}>
                     <SelectComponent
-                      endpoint={`${endpoint}/tipo_patrocinante`}
+                      options={filterOptions.tipoPatrocinanteOptions}  // Usar el estado filterOptions
                       nameField="descripcion"
                       valueField="id"
                       selectedValue={formData.tipo_patrocinante_id}
@@ -367,7 +399,7 @@ const handleBlur = async () => {
                     </Col>
                     <Col md={6}>
                     <SelectComponent
-                      endpoint={`${endpoint}/tipo_industria`}
+                      options={filterOptions.tipoIndustriaOptions}  // Usar el estado filterOptions
                       nameField="descripcion"
                       valueField="id"
                       selectedValue={formData.tipo_industria_id}
@@ -410,7 +442,7 @@ const handleBlur = async () => {
 
                   
                     <SelectComponent
-                        endpoint={`${endpoint}/pais`}
+                        options={filterOptions.paisOptions}  // Usar el estado filterOptions
                         nameField="descripcion"
                         valueField="id"
                         selectedValue={formData.pais_id}

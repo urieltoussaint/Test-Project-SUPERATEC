@@ -25,15 +25,26 @@ const EditCursos = () => {
     tipo_programa_id:'',
   });
 
+  const [filterOptions, setFilterOptions] = useState({
+    areaOptions: [],
+    unidadOptions: [],
+    nivelOptions: [],
+    tipoProgramaOptions: [],
+    modalidadOptions: [],
+});
+
   const { id } = useParams(); // Obtener el id del curso de la URL
   const { setLoading } = useLoading();
   const navigate = useNavigate();
   const [curso,setCurso]=useState('');
+  const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
+
  
 
 
   useEffect(() => {
     setLoading(true);
+    handleSeleccionar();
     Promise.all([getCurso()]).finally(() => {
         setLoading(false);
     });
@@ -165,6 +176,34 @@ const EditCursos = () => {
       console.error('Error actualizando:', error);
     }
   };
+
+  const handleSeleccionar = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Suponiendo que el endpoint unificado sea `/filtros-cursos`
+      const response = await axios.get(`${endpoint}/filtros-cursos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Desestructuramos los datos que vienen en la respuesta
+      const { area, unidad, nivel, tipo_programa, modalidad } = response.data;
+  
+      // Retornamos las opciones en un solo objeto
+      setFilterOptions( {
+        areaOptions: area,
+        unidadOptions: unidad,
+        nivelOptions: nivel,
+        tipoProgramaOptions: tipo_programa,
+        modalidadOptions: modalidad,
+      });
+      setSelectVisible(true);  // Mostrar los selectores
+  
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+      
+    }
+  };
   
 
 
@@ -203,63 +242,65 @@ const EditCursos = () => {
   
             <Col md={6}>
             <SelectComponent
-                endpoint={`${endpoint}/nivel`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.nivel_id}
-                handleChange={handleChange}
-                controlId="nivel_id"
-                label="Nivel"
-              />
+              options={filterOptions.nivelOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.nivel_id}
+              handleChange={handleChange}
+              controlId="nivel_id"
+              label="Nivel"
+            />
+          </Col>
+          </Row>
+          <Row className="g-2">
+          <Col md={6}>
+          <SelectComponent
+              
+              options={filterOptions.areaOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.area_id}
+              handleChange={handleChange}
+              controlId="area_id"
+              label="Área"
+            />
             </Col>
-            </Row>
-            <Row className="g-2">
-            <Col md={6}>
+
+          <Col md={6}>
             <SelectComponent
-                endpoint={`${endpoint}/area`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.area_id}
-                handleChange={handleChange}
-                controlId="area_id"
-                label="Área"
-              />
-              </Col>
-  
-            <Col md={6}>
-              <SelectComponent
-                endpoint={`${endpoint}/unidad`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.unidad_id}
-                handleChange={handleChange}
-                controlId="unidad_id"
-                label="Unidad"
-              />
-            </Col>
-            </Row>
-            <Row className="g-2">
-            <Col md={6}>
-            <SelectComponent
-                endpoint={`${endpoint}/modalidad`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.modalidad_id}
-                handleChange={handleChange}
-                controlId="modalidad_id"
-                label="Modalidad"
-              />
-            </Col>
-            <Col md={6}>
-            <SelectComponent
-                endpoint={`${endpoint}/tipo_programa`}
-                nameField="descripcion"
-                valueField="id"
-                selectedValue={formData.tipo_programa_id}
-                handleChange={handleChange}
-                controlId="tipo_programa_id"
-                label="Tipo de Programa"
-              />
+              options={filterOptions.unidadOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.unidad_id}
+              handleChange={handleChange}
+              controlId="unidad_id"
+              label="Unidad"
+            />
+          </Col>
+          </Row>
+          <Row className="g-2">
+          <Col md={6}>
+          <SelectComponent
+              options={filterOptions.modalidadOptions}  // Usar el estado filterOptions
+
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.modalidad_id}
+              handleChange={handleChange}
+              controlId="modalidad_id"
+              label="Modalidad"
+            />
+          </Col>
+          <Col md={6}>
+          <SelectComponent
+              options={filterOptions.tipoProgramaOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.tipo_programa_id}
+              handleChange={handleChange}
+              controlId="tipo_programa_id"
+              label="Tipo de Programa"
+            />
             </Col>
           </Row>
           
@@ -272,18 +313,20 @@ const EditCursos = () => {
                   onChange={handleChange}
                 />
               </Form.Group>
-
-        <Button variant="success" type="submit">
-          Guardar
-        </Button>
-        <Button 
-          variant="secondary" 
-          onClick={() => navigate('/cursos')}
-          className="ms-2"
-        >
-          Volver
-        </Button>
+        <div className='mt-3'>
+          <Button variant="success" type="submit" >
+            Guardar
+          </Button>
+          <Button 
+            variant="secondary" 
+            onClick={() => navigate('/cursos')}
+            className="ms-2"
+          >
+            Volver
+          </Button>
+          </div>
       </Form>
+      
     </div>
     </div>
     </div>

@@ -5,13 +5,17 @@ import { useNavigate } from 'react-router-dom';
 import Select from 'react-select/async';
 import { Modal } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
+import { Card, Row, Col } from 'react-bootstrap'; 
+import moment from 'moment';
+
 
 const endpoint = 'http://localhost:8000/api';
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 
+
 const CreatePago = () => {
   const [formData, setFormData] = useState({
-    inscripcion_curso_id: '',
+    informacion_inscripcion_id: '',
     monto_cancelado: '',
     monto_exonerado: '',
     tipo_moneda: 'bsF',
@@ -28,6 +32,7 @@ const CreatePago = () => {
   const [cursos, setCursos] = useState([]);
   const [cursoSeleccionado, setCursoSeleccionado] = useState(null);
   const [tasaBcv, setTasaBcv] = useState(null);
+  const [fechaBcv, setFechaBcv] = useState(null);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [canceladoError, setCanceladoError] = useState('');
@@ -36,6 +41,9 @@ const CreatePago = () => {
   const [cursoId, setCursoId] = useState(null); // <-- Añadido el estado para cursoId
   const [showModal, setShowModal] = useState(false);  // Controlar el modal
   const [modalMessage, setModalMessage] = useState('');  // Mensaje del modal
+  const [cuotas, setCuotas] = useState('');  // Mensaje del modal
+  const [cuotasCursos, setCuotasCursos] = useState('');  // Mensaje del modal
+
 
   useEffect(() => {
     fetchTasaBcv();
@@ -50,6 +58,7 @@ const CreatePago = () => {
         },
       });
       setTasaBcv(response.data.tasa);
+      setFechaBcv(response.data.created_at);
       setFormData((prevState) => ({
         ...prevState,
         tasa_bcv_id: response.data.id,
@@ -89,7 +98,7 @@ const CreatePago = () => {
         setCursos(response.data);
         setCursoSeleccionado(null);
         setFormData({
-          inscripcion_curso_id: '',
+          informacion_inscripcion_id: '',
           monto_cancelado: '',
           monto_exonerado: '',
           tipo_moneda: 'bsF',
@@ -140,6 +149,8 @@ const CreatePago = () => {
         console.error('Error fetching cursos:', error);
         return [];
     }
+
+   
 };
 
 
@@ -155,7 +166,7 @@ const CreatePago = () => {
     
     setCursoSeleccionado(selectedCurso);
     setCursoId(selectedCurso.curso_id);
-    console.log (selectedCurso.curso_id);
+   
     
   
     try {
@@ -169,13 +180,14 @@ const CreatePago = () => {
         return;
       }
   
-      console.log('Cuotas del curso desde API:', cursoFromApi.cuotas);
   
 
 
       // Obtener la cantidad de pagos ya realizados
       const pagosRealizados = await getPagosByCurso(selectedCursoId);
+      setCuotas(pagosRealizados);
       console.log (cursoFromApi.cuotas);
+      setCuotasCursos(cursoFromApi.cuotas);
   
       // Verificar si estamos en la última cuota
       const esUltimaCuota = pagosRealizados + 1 === cursoFromApi.cuotas;
@@ -187,10 +199,10 @@ const CreatePago = () => {
   
       const ultimoPago = response.data;
       const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(selectedCurso.costo);
-  
+      
       setFormData((prevState) => ({
         ...prevState,
-        inscripcion_curso_id: selectedCursoId,
+        informacion_inscripcion_id: selectedCursoId,
         monto_total: montoTotal,
         monto_restante: montoTotal,
         conversion_total: calcularConversion(montoTotal),
@@ -200,7 +212,7 @@ const CreatePago = () => {
       console.error('Error fetching ultimo pago:', error);
       setFormData((prevState) => ({
         ...prevState,
-        inscripcion_curso_id: selectedCursoId,
+        informacion_inscripcion_id: selectedCursoId,
         monto_total: parseFloat(selectedCurso.costo),
         monto_restante: parseFloat(selectedCurso.costo),
         conversion_total: calcularConversion(selectedCurso.costo),
@@ -211,7 +223,7 @@ const CreatePago = () => {
   
   
 
-  const getPagosByCurso = async (inscripcion_curso_id) => {
+  const getPagosByCurso = async (informacion_inscripcion_id) => {
     try {
       const token = localStorage.getItem('token');
       let allPagos = [];
@@ -220,7 +232,7 @@ const CreatePago = () => {
   
       while (currentPage <= totalPages) {
         const response = await axios.get(`${endpoint}/pagos`, {
-          params: { curso_id: inscripcion_curso_id, page: currentPage },
+          params: { curso_id: informacion_inscripcion_id, page: currentPage },
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -229,8 +241,8 @@ const CreatePago = () => {
         currentPage++;
       }
   
-      // Filtrar por inscripcion_curso_id
-      const pagosFiltrados = allPagos.filter((reporte) => reporte.inscripcion_curso_id === parseInt(inscripcion_curso_id));
+      // Filtrar por informacion_inscripcion_id
+      const pagosFiltrados = allPagos.filter((reporte) => reporte.informacion_inscripcion_id === parseInt(informacion_inscripcion_id));
       return pagosFiltrados.length; // Devolver la cantidad de pagos realizados
     } catch (error) {
       console.error('Error fetching pagos:', error);
@@ -239,10 +251,9 @@ const CreatePago = () => {
   };
   
 
- 
-  
 
   const handleSubmit = async (e) => {
+    console.log(formData.informacion_inscripcion_id);
     e.preventDefault();
     if (isSubmitting) return;
 
@@ -252,6 +263,7 @@ const CreatePago = () => {
     setShowModal(true);  // Mostrar el modal
     return;  // No continuar con el submit
   }
+ 
   
     setIsSubmitting(true);
     try {
@@ -270,11 +282,9 @@ const CreatePago = () => {
   
       const montoRestante = parseFloat(formData.monto_restante);
   
-      // Actualizar inscripcion_cursos según el monto restante
+      // Actualizar informacion_inscripcion según el monto restante
       if (montoRestante === 0) {
-        await axios.put(`${endpoint}/inscripcion_cursos/${cedula}/status`, {
-          cedula_identidad: cedula,
-          curso_id: cursoId,
+        await axios.put(`${endpoint}/informacion_inscripcion/${formData.informacion_inscripcion_id}`, {
           status_pay: 3
         }, {
           headers: {
@@ -290,7 +300,7 @@ const CreatePago = () => {
         while (currentPage <= totalPages) {
           const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
             params: {
-              key: formData.inscripcion_curso_id, 
+              key: formData.informacion_inscripcion_id, 
               zona_id: 3,
               status: false
             },
@@ -305,7 +315,7 @@ const CreatePago = () => {
         }
   
         const peticionesFiltradas = allPeticiones.filter(
-          peticion => peticion.key === formData.inscripcion_curso_id && peticion.zona_id === 3 && peticion.status === false
+          peticion => peticion.key === formData.informacion_inscripcion_id && peticion.zona_id === 3 && peticion.status === false
         );
   
         if (peticionesFiltradas.length > 0) {
@@ -323,9 +333,7 @@ const CreatePago = () => {
   
       } else if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
         // Actualizar status_pay a 2 (pago en proceso)
-        await axios.put(`${endpoint}/inscripcion_cursos/update_status`, {
-          cedula_identidad: cedula,
-          curso_id: cursoId,
+        await axios.put(`${endpoint}/informacion_inscripcion/${formData.informacion_inscripcion_id}`, {
           status_pay: 2
         }, {
           headers: {
@@ -341,7 +349,7 @@ const CreatePago = () => {
         while (currentPage <= totalPages) {
           const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
             params: {
-              key: formData.inscripcion_curso_id,
+              key: formData.informacion_inscripcion_id,
               zona_id: 3,
               status: false
             },
@@ -356,7 +364,7 @@ const CreatePago = () => {
         }
   
         const peticionesFiltradas = allPeticiones.filter(
-          peticion => peticion.key === formData.inscripcion_curso_id && peticion.zona_id === 3 && peticion.status === false
+          peticion => peticion.key === formData.informacion_inscripcion_id && peticion.zona_id === 3 && peticion.status === false
         );
   
         if (peticionesFiltradas.length > 0) {
@@ -432,9 +440,11 @@ const CreatePago = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Registrar Nuevo Pago</h1>
-      <Form onSubmit={handleSubmit}>
+    <div className="row" style={{ marginTop: '50px' }}>
+  <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
+    <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
+      <h2>Registrar Nuevo Pago</h2>
+      <Form onSubmit={handleSubmit} className="custom-gutter">
         <Form.Group controlId="cedula">
           <Form.Label>Cédula de Identidad</Form.Label>
           <Select
@@ -447,12 +457,12 @@ const CreatePago = () => {
         </Form.Group>
         {error && <div className="alert alert-danger">{error}</div>}
         {cursos.length > 0 && (
-          <Form.Group controlId="inscripcion_curso_id">
+          <Form.Group controlId="informacion_inscripcion_id">
             <Form.Label>Curso</Form.Label>
             <Form.Control
               as="select"
-              name="inscripcion_curso_id"
-              value={formData.inscripcion_curso_id}
+              name="informacion_inscripcion_id"
+              value={formData.informacion_inscripcion_id}
               onChange={handleCursoChange}
               required
             >
@@ -477,6 +487,8 @@ const CreatePago = () => {
               />
               <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)}BsF</Form.Text>
             </Form.Group>
+            <Row className="g-2">
+          <Col md={6}>
             <Form.Group controlId="monto_cancelado">
               <Form.Label>Monto Cancelado</Form.Label>
               <Form.Control
@@ -485,10 +497,13 @@ const CreatePago = () => {
                 value={formData.monto_cancelado}
                 onChange={handleMontoChange}
                 className={canceladoError ? 'is-invalid' : ''}
+                required
               />
               {canceladoError && <Alert variant="danger">{canceladoError}</Alert>}
               <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_cancelado)}BsF</Form.Text>
             </Form.Group>
+            </Col>
+            <Col md={6}>
             <Form.Group controlId="monto_exonerado">
               <Form.Label>Monto Exonerado</Form.Label>
               <Form.Control
@@ -497,10 +512,13 @@ const CreatePago = () => {
                 value={formData.monto_exonerado}
                 onChange={handleMontoChange}
                 className={exoneradoError ? 'is-invalid' : ''}
+                required
               />
               {exoneradoError && <Alert variant="danger">{exoneradoError}</Alert>}
               <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_exonerado)}BsF</Form.Text>
             </Form.Group>
+            </Col>
+            </Row>
             <Form.Group controlId="monto_restante">
               <Form.Label>Monto Restante</Form.Label>
               <Form.Control
@@ -535,12 +553,14 @@ const CreatePago = () => {
             </Form.Group>
           </>
         )}
+        <div className='mt-3'>
         <Button variant="success" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Registrando...' : 'Registrar Pago'}
         </Button>
         <Button variant="secondary" onClick={() => navigate('/pagos')} className="ms-2">
           Volver
         </Button>
+        </div>
       </Form>
 
       
@@ -558,9 +578,18 @@ const CreatePago = () => {
       </Modal>
       {tasaBcv && (
         <div className="mt-3">
-          <p><strong>Tasa BCV Actual:</strong> {tasaBcv}</p>
+          <p><strong>Tasa BCV:</strong> {tasaBcv} Registrada {moment(fechaBcv).format('YYYY-MM-DD')} </p>
         </div>
+        
       )}
+      {cursoSeleccionado && (
+      <div className="mt-2">
+        <p><strong>Cuotas:</strong> {cuotas}/{cuotasCursos}</p>
+      </div>
+    )}
+
+    </div>
+    </div>
     </div>
   );
 };

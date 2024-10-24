@@ -34,10 +34,6 @@ const ShowPatrocinantes = () => {
     const [tipoIndustriaOptions, setTipoIndustriaOptions] = useState([]);  // Inicializa con un array vacío
    
 
-
-
-
-
     const [filters, setFilters] = useState({
         estado_id: '',
         pais_id: '',

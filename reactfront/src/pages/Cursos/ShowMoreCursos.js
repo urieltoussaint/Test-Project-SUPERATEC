@@ -17,7 +17,7 @@ const ShowMoreCursos = ({ onReload }) => {
       setLoading(true); // Inicia la animación de carga
       try {
         let relationsArray = [
-          'area','unidad','modalidad','tipo_programa','nivel'
+          'area','unidad','modalidad','tipoPrograma','nivel'
         ];
         const relations = relationsArray.join(',');
         const token = localStorage.getItem('token');

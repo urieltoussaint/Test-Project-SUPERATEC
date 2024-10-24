@@ -14,7 +14,7 @@ class Patrocinante extends Model
 
     public function ContactoPatrocinante()
     {
-        return $this->hasOne(ContactoPatrocinante::class, 'id', 'id');
+        return $this->hasOne(ContactoPatrocinante::class, 'patrocinante_id', 'id');
     }
 
     public function estado()
@@ -31,8 +31,22 @@ class Patrocinante extends Model
     {
         return $this->belongsTo(TipoIndustria::class, 'tipo_industria_id');
     }
-    
+    public function Pais()
+    {
+        return $this->belongsTo(Pais::class, 'pais_id');
+    }
 
+    protected static function boot()
+    {
+        parent::boot();
     
+        static::deleting(function ($patrocinante) {
+         
+            \App\Models\Peticiones::where('key', $patrocinante->id)
+            ->where('zona_id', 6)
+            ->delete();
+
+        });
+    }
 
 }

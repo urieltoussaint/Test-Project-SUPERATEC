@@ -35,6 +35,11 @@ class Cursos extends Model
     {
         return $this->belongsTo(Nivel::class, 'nivel_id');
     }
+    public function Area()
+    {
+        return $this->belongsTo(Area::class, 'area_id');
+    }
+    
 
 
     protected static function boot()

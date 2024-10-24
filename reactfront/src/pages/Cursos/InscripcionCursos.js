@@ -291,10 +291,12 @@ const handleInscripcion = async () => {
         }
 
         // Si la inscripción fue exitosa, redirigir
+        toast.success("Participante inscrito con éxito");
         navigate(`/inscritos/${cursoId}`);
     } catch (error) {
         console.error('Error en la inscripción o en la creación de la petición:', error);
         setFormErrors({ general: 'Error en la inscripción o en la creación de la petición' });
+        toast.error("Error al inscribir");
     }
 };
 

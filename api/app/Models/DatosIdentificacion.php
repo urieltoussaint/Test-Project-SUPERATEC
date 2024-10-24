@@ -102,6 +102,7 @@ class DatosIdentificacion extends Model
 {
     return $this->hasOne(InformacionInscripcion::class, 'datos_identificacion_id', 'id');
 }
+
     public function ReportePagos()
     {
         return $this->hasOne(ReportePagos::class, 'cedula_identidad', 'cedula_identidad');

@@ -10,6 +10,7 @@ import moment from 'moment';
 import { Card, Row, Col } from 'react-bootstrap'; 
 import estadosMunicipios from '../../components/estadosMunicipios.json';
 
+
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
@@ -36,6 +37,17 @@ const EditDatos = () => {
     municipio:''
   });
 
+  const [filterOptions, setFilterOptions] = useState({
+    nivelInstruccionOptions: [],
+    estadoOptions: [],
+    generoOptions: [],
+    grupoOptions: [],
+    nacionalidadOptions: [],
+    procedenciaOptions: [],
+    statusSeleccionOptions: [],
+    superatecOptions: [],  
+});
+
   const navigate = useNavigate();
   const { id } = useParams(); // Obtener el ID desde la ruta
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState([]);  
@@ -43,10 +55,13 @@ const EditDatos = () => {
   const [cedulaError, setCedulaError] = useState(''); 
   const [isCedulaValid, setIsCedulaValid] = useState(false);
   const [cedulaLengthError, setCedulaLengthError] = useState('');
+  const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
+
 
 
   useEffect(() => {
     setLoading(true); // Inicia la animación de carga
+    handleSeleccionar();
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -105,6 +120,38 @@ const handleChange = (event) => {
     ...prevState,
     [name]: type === 'checkbox' ? checked : updatedValue,
   }));
+};
+
+const handleSeleccionar = async () => {
+  try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/filter-datos`, {
+          headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const {nivel_instruccion,estado,genero,grupo_prioritario,nacionalidad,procedencia,status_seleccion,superatec} = response.data;
+
+      // Guardar las opciones en el estado de filterOptions
+      setFilterOptions({
+          nivelInstruccionOptions: nivel_instruccion,
+          estadoOptions: estado,
+          generoOptions: genero,
+          grupoOptions:grupo_prioritario,
+          nacionalidadOptions:nacionalidad,
+          procedenciaOptions:procedencia,
+          statusSeleccionOptions:status_seleccion,
+          superatecOptions:superatec,
+
+      });
+
+      console.log("superatec",filterOptions.superatecOptions);
+      console.log("procedencia",filterOptions.procedenciaOptions);
+
+
+      setSelectVisible(true);  // Mostrar los selectores
+  } catch (error) {
+      console.error('Error fetching filter options:', error);
+  }
 };
 
 
@@ -340,7 +387,7 @@ const handleKeyDown = (e) => {
             <Row className="g-2"> 
             <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/genero`}
+              options={filterOptions.generoOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.genero_id}
@@ -348,10 +395,11 @@ const handleKeyDown = (e) => {
               controlId="genero_id"
               label="Género"
             />
+            
             </Col>
             <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/nacionalidad_seleccion`}
+              options={filterOptions.nacionalidadOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.nacionalidad_id}
@@ -416,7 +464,7 @@ const handleKeyDown = (e) => {
             <Row className="g-2"> 
             <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/status_seleccion`}
+              options={filterOptions.statusSeleccionOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.status_seleccion_id}
@@ -428,7 +476,7 @@ const handleKeyDown = (e) => {
             </Col>
             <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/grupo_prioritario`}
+              options={filterOptions.grupoOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.grupo_prioritario_id}
@@ -441,7 +489,7 @@ const handleKeyDown = (e) => {
             <Row className="g-2"> 
             <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/procedencia`}
+              options={filterOptions.procedenciaOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.procedencia_id}
@@ -452,7 +500,7 @@ const handleKeyDown = (e) => {
             </Col>
             <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/nivel_instruccion`}
+             options={filterOptions.nivelInstruccionOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.nivel_instruccion_id}
@@ -501,7 +549,7 @@ const handleKeyDown = (e) => {
             </Col>
             </Row>
             <SelectComponent
-              endpoint={`${endpoint}/como_entero_superatec`}
+              options={filterOptions.superatecOptions}
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.como_entero_superatec_id}
@@ -509,6 +557,7 @@ const handleKeyDown = (e) => {
               controlId="como_entero_superatec_id"
               label="¿Cómo se enteró de Superatec?"
             />
+
 
         <Button variant="success" type="submit">
           Guardar

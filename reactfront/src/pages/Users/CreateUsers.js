@@ -50,13 +50,21 @@ const CreateUsers = () => {
     password: '',
     password_confirmation: '', // Añadir confirmación de contraseña
   });
-  
+
+  const [filterOptions, setFilterOptions] = useState({
+    roleOptions: [],
+    cargoOptions: [],
+    
+});
+  const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
   const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
   const navigate = useNavigate();
 
   useEffect(() => {
+    handleSeleccionar();
     const fetchSelectData = async () => {
       setLoading(true); // Inicia la animación de carga
+      
       try {
         const token = localStorage.getItem('token');
         await axios.get(`${endpoint}/area`, { headers: { Authorization: `Bearer ${token}` } });
@@ -167,6 +175,30 @@ const handleSubmit = async (e) => {
 };
 
 
+const handleSeleccionar = async () => {
+  try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/roles-and-cargos`, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+      });
+      const { role, cargo_users } = response.data;
+      setFilterOptions( {
+        roleOptions: role,
+        cargoOptions: cargo_users,
+      });
+      setSelectVisible(true);  // Mostrar los selectores
+      
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+      
+    }
+};
+
+
+
+
 
 
 
@@ -256,7 +288,7 @@ return (
           <Row className="g-1">
             <Col md={6}>
               <SelectComponent
-                endpoint={`${endpoint}/role`}
+                options={filterOptions.roleOptions}  // Usar el estado filterOptions
                 nameField="name"
                 valueField="id"
                 selectedValue={formData.role_id}
@@ -269,7 +301,7 @@ return (
 
             <Col md={6}>
               <SelectComponent
-                endpoint={`${endpoint}/cargo`}
+                options={filterOptions.cargoOptions}  // Usar el estado filterOptions
                 nameField="descripcion"
                 valueField="id"
                 selectedValue={formData.cargo_id}

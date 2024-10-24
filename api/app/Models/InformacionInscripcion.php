@@ -49,9 +49,10 @@ class InformacionInscripcion extends Model
 
     // Definir relaciones
     public function DatosIdentificacion()
-    {
-        return $this->hasOne(DatosIdentificacion::class, 'datos_identificacion_id', 'id');
-    }
+{
+    return $this->hasOne(DatosIdentificacion::class,  'id','datos_identificacion_id');
+}
+
    
     public function curso()
     {

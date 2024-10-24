@@ -11,8 +11,7 @@ const ShowMorePatrocinantes = ({ onReload }) => {
   const [data, setData] = useState({});
   const navigate = useNavigate(); // Inicializa useNavigate
   const { setLoading } = useLoading(); // Usar el contexto de carga
-  const [totalEmpresas, setTotalEmpresas] = useState(0);
-  const [totalPersonas, setTotalPersonas] = useState(0);
+ 
 
 
   useEffect(() => {
