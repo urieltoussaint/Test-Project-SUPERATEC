@@ -37,6 +37,7 @@ use App\Http\Controllers\StatusProcessController;
 use App\Http\Controllers\TipoIndustriaController;
 use App\Http\Controllers\TipoPatrocinanteController;
 use App\Http\Controllers\InformacionInscripcionController;
+use App\Models\InformacionInscripcion;
 
 // Rutas definidas en routes/api.php
 
@@ -88,7 +89,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('inscripcion_cursos/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
     Route::put('inscripcion_cursos/{cedula}/status', [InformacionInscripcionController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
     Route::get('/cursos/{id}', [CursosController::class, 'show']);
-
+    Route::get('datos/cursos/{cedula_identidad?}', [InformacionInscripcionController::class, 'index']);
     Route::put('informacion_inscripcion/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
 
 
@@ -104,8 +105,10 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('tasa_bcv', [TasaBcvController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::post('tasa_bcv', [TasaBcvController::class, 'store'])->middleware('role:admin,superuser');
     Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado');
-    Route::put('tasa_bcv/{id}', [TasaBcvController::class, 'update'])->middleware('role:admin,superuser');
-    Route::delete('tasa_bcv/{id}', [TasaBcvController::class, 'destroy'])->middleware('role:admin');
+    Route::get('/tasa-bcv/get', [TasaBcvController::class, 'getPrecioActual']);
+    Route::get('/tasa-bcv/save', [TasaBcvController::class, 'savePrecioActual']);
+
+
 
     // Voluntariados
     Route::get('voluntariados', [PersonalesVoluntariadosController::class, 'index'])->middleware('role:admin,superuser,invitado');

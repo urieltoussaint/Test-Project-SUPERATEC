@@ -46,6 +46,8 @@ import ShowPatrocinantes from './pages/Patrocinantes/ShowPatrocinantes';
 import CreatePatrocinantes from './pages/Patrocinantes/CreatePatrocinantes';
 import EditPatrocinantes from './pages/Patrocinantes/EditPatrocinantes';
 import ShowMorePatrocinantes from './pages/Patrocinantes/ShowMorePatrocinantes';
+import ShowDatosCursos from './pages/Participantes/ShowDatosCursos';
+import ShowMoreInscripciones from './pages/Cursos/ShowMoreInscripciones';
 
 
 function App() {
@@ -70,11 +72,14 @@ function App() {
             <Route path="/inscribir/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscripcionCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/inscribir-cursos/:cedula" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscribirCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/inscritos/:cursoId" element={<AuthenticatedLayout><ShowInscritos /></AuthenticatedLayout>} />
+            <Route path="/inscritos/show/:id" element={<AuthenticatedLayout><ShowMoreInscripciones /></AuthenticatedLayout>} />
+
             <Route path="/cursos" element={<AuthenticatedLayout><ShowCursos /></AuthenticatedLayout>} />
             <Route path="/cursos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/cursos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/cursos/:id/pagos" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagoCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/cursos/:id" element={<AuthenticatedLayout><ShowMoreCursos /></AuthenticatedLayout>}  />
+            <Route path="datos/cursos/:cedula_identidad" element={<AuthenticatedLayout><ShowDatosCursos /></AuthenticatedLayout>}  />
             <Route path="/pagos" element={<AuthenticatedLayout><ShowPagos /></AuthenticatedLayout>} />
             <Route path="/pagos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:cedula/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout></ProtectedRoute>}  />
@@ -115,6 +120,7 @@ const AuthenticatedLayout = ({ children }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const userRole = localStorage.getItem('role');
+  const endpoint = 'http://localhost:8000/api';
 
   const fetchUser = async () => {
     try {
@@ -141,12 +147,108 @@ const AuthenticatedLayout = ({ children }) => {
       navigate('/'); // Redirige al login si falla
     }
   };
+
+
+  const checkAndFetchTasa = async () => {
+    const lastUpdated = localStorage.getItem('lastUpdatedBcv'); // Obtener la última fecha de actualización
+    const today = new Date().toISOString().split('T')[0]; // Obtener la fecha actual (YYYY-MM-DD)
+  
+    // Si no se ha hecho la petición hoy
+    if (lastUpdated !== today) {
+      try {
+         // Llamar a la API para obtener la tasa actual
+        console.log("Llamando a /get");
+
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/tasa-bcv/get`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Llamar a la API para guardar la tasa
+        console.log("Llamando a /save");
+
+        const token2 = localStorage.getItem('token');
+        const response2 = await axios.get(`${endpoint}/tasa-bcv/save`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        console.log("Tasa guardada correctamente");
+  
+       
+        
+        // Mostrar la tasa actual (puedes ajustar según sea necesario)
+        console.log("Tasa BCV:", response.data.dolarBcv);
+  
+        // Actualizar la fecha en localStorage
+        localStorage.setItem('lastUpdatedBcv', today);
+      } catch (error) {
+        console.error('Error actualizando o obteniendo la tasa del BCV:', error);
+      }
+    }
+  };
+  
+  
+  const scheduleTasaUpdate = () => {
+    const targetHour = 12; // Hora a la que deseas ejecutar la función (22 = 10 PM)
+    const targetMinutes = 30; // Minutos de la hora objetivo (por ejemplo, 12)
+    
+    // Obtener la hora actual en la zona horaria de Caracas (UTC-4)
+    const now = new Date();
+  
+    // Crear un formato de fecha para Caracas
+    const timeZone = 'America/Caracas';
+    const formatter = new Intl.DateTimeFormat('es-VE', {
+      timeZone,
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: false
+    });
+  
+    // Obtener la hora actual en Caracas
+    const nowInCaracas = formatter.formatToParts(now).reduce((acc, part) => {
+      if (part.type === 'hour') acc.hour = parseInt(part.value);
+      if (part.type === 'minute') acc.minute = parseInt(part.value);
+      if (part.type === 'second') acc.second = parseInt(part.value);
+      return acc;
+    }, {});
+  
+    // Calcular el próximo tiempo objetivo en Caracas
+    let targetTime = new Date(now.toLocaleString('en-US', { timeZone }));
+    targetTime.setHours(targetHour);
+    targetTime.setMinutes(targetMinutes);
+    targetTime.setSeconds(0);
+  
+    // Si la hora objetivo ya pasó hoy, programa para mañana
+    if (nowInCaracas.hour > targetHour || (nowInCaracas.hour === targetHour && nowInCaracas.minute >= targetMinutes)) {
+      targetTime.setDate(targetTime.getDate() + 1);
+    }
+  
+    // Calcular el tiempo restante hasta la ejecución
+    const timeUntilUpdate = targetTime.getTime() - now.getTime();
+    console.log("MANO TA HACIENDO ALGOOOO");
+  
+    setTimeout(() => {
+      checkAndFetchTasa(); // Llamar la función en el momento indicado
+      scheduleTasaUpdate(); // Reprogramar para el día siguiente
+    }, timeUntilUpdate);
+  };
+  
+  useEffect(() => {
+    fetchUser();
+    scheduleTasaUpdate(); // Llamar a la función que programa la actualización de la tasa
+  }, []);
+  
   
 
   useEffect(() => {
 
     fetchUser();
-    
+    scheduleTasaUpdate();
 
     switch (location.pathname) {
       case '/datos':

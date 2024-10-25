@@ -11,4 +11,5 @@ class Area extends Model
     protected $listable = ['descripcion','id'
 ];
 
+
 }

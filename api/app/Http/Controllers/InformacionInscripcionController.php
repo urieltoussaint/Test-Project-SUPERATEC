@@ -24,26 +24,28 @@ class InformacionInscripcionController extends Controller
     protected $class = InformacionInscripcion::class;
 
 
-    public function index(Request $request)
+public function index(Request $request, $cedula_identidad = null)
 {
-    // Obtener el curso_id de la query si está presente
+    // Verificar si cedula_identidad viene como query string o como parámetro de ruta
     $cursoId = $request->query('curso_id');
-    
-    // Verificar si se está filtrando por un curso específico
+    $cedulaIdentidad = $cedula_identidad ?? $request->query('cedula_identidad');  // Usar el valor de la URL o de la query string
+
+    // Verificar si se está filtrando por curso_id o cedula_identidad
+    $inscripcionesQuery = InformacionInscripcion::query();
+
     if ($cursoId) {
-        // Filtramos por curso_id y cargamos la relación DatosIdentificacion
-        $inscripciones = InformacionInscripcion::where('curso_id', $cursoId)
-            ->with('datosIdentificacion') // Relación con los detalles de identificación
-            ->paginate(20); // Paginar los resultados
-    } else {
-        // Si no hay curso_id, mostramos todas las inscripciones
-        $inscripciones = InformacionInscripcion::with('datosIdentificacion')->paginate(20);
+        $inscripcionesQuery->where('curso_id', $cursoId);
+    }
+    
+    if ($cedulaIdentidad) {
+        $inscripcionesQuery->where('cedula_identidad', $cedulaIdentidad);
     }
 
-    // Retornar la respuesta en formato JSON
+    // Cargar relaciones y paginar los resultados
+    $inscripciones = $inscripcionesQuery->with('datosIdentificacion', 'curso', 'nivel', 'modalidad','area','periodo')->paginate(20);
+
     return response()->json($inscripciones);
 }
-
 
 
     public function SelectInsc()

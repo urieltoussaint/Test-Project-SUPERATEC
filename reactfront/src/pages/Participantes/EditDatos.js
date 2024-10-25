@@ -558,17 +558,18 @@ const handleKeyDown = (e) => {
               label="¿Cómo se enteró de Superatec?"
             />
 
-
+        <div className='mt-3'>         
         <Button variant="success" type="submit">
           Guardar
         </Button>
         <Button 
           variant="secondary" 
-          onClick={() => navigate('/datos')}
+          onClick={() => navigate(-1)}
           className="ms-2"
         >
           Volver
         </Button>
+        </div> 
       </Form>
       </div>
       </div>

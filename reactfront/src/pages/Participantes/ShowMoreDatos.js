@@ -66,12 +66,12 @@ const ShowMoreDatos = ({ onReload }) => {
             </ListGroup>
   
             <div className="text-center mt-4">
-              <Button
+            <Button
                 variant="secondary"
-                onClick={() => navigate('/cursos')}
-              >
+                onClick={() => navigate(-1)}  // Esto navega a la última página
+                >
                 Volver
-              </Button>
+                </Button>
             </div>
           </Card>
         </div>

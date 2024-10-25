@@ -302,23 +302,23 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     };
     
 
-    const handleInscribir = async (cursoId) => {
+    const handleInscribir = async (action) => {
         let errors = {};
-    
+        
         if (!cedula) errors.cedula = 'La cédula es requerida';
         if (!formData.cohorte_id) errors.cohorte_id = 'El cohorte es requerido';
         if (!formData.centro_id) errors.centro_id = 'El centro es requerido';
         if (!formData.periodo_id) errors.periodo_id = 'El periodo es requerido';
         if (!formData.grupo) errors.grupo = 'El grupo es requerido';
-    
+        
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
             return;
         }
-    
+        
         try {
             const token = localStorage.getItem('token');
-    
+            
             const formDataComplete = {
                 ...formData,
                 status_pay: formData.es_patrocinado === "true" ? 3 : 1,
@@ -331,16 +331,13 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                 unidad_id: curso?.unidad_id,
                 tipo_programa_id: curso?.tipo_programa_id,
             };
-    
-            // Inspecciona qué estás enviando
-            console.log('formDataComplete', formDataComplete);
-    
+            
             const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataComplete, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-    
+            
             const inscripcionId = inscripcionResponse.data.id;
-    
+            
             if (formData.es_patrocinado === "false" || !formData.es_patrocinado) {
                 await axios.post(`${endpoint}/peticiones`, {
                     zona_id: 3,
@@ -354,7 +351,20 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                 });
             }
     
-            navigate(`/inscritos/${curso.id}`);
+            // Redirigir dependiendo de la acción seleccionada y del valor de es_patrocinado
+            if (action === 'siguiente') {
+                if (formData.es_patrocinado === "false" || !formData.es_patrocinado) {
+                    // Si no es patrocinado, redirigir a pagos
+                    navigate(`/pagos/${cedula}/${inscripcionId}`);
+                } else {
+                    // Si es patrocinado, redirigir a cursos
+                    navigate('/cursos');
+                }
+            } else {
+                // Si la acción es 'guardar', redirigir siempre a cursos
+                navigate('/cursos');
+            }
+    
         } catch (error) {
             console.error('Error en la inscripción o en la creación de la petición:', error);
             setFormErrors({ general: 'Error en la inscripción o en la creación de la petición' });
@@ -570,21 +580,23 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                         </Form.Group>
                         
                             <div className="d-flex justify-content-around">
-                                <Button variant="success" onClick={handleInscribir} className='mt-3'>
-                                    Inscribir
-                                </Button>
+                                
                                 </div>  
                             </div>
                         )}
+                        
                         <div className="d-flex justify-content">
-                            <Button
-                                variant="secondary"
-                                onClick={() => navigate(`/inscritos/${cursoId}`)}
-                                className="mt-4"
-                            >
-                                Volver
-                                
-                            </Button>
+                        <Button variant="info" onClick={() => handleInscribir('guardar')} className='mt-3 'style={{marginRight:"10px"}}>
+                            Inscribir y Guardar
+                        </Button>
+
+                        <Button variant="success" onClick={() => handleInscribir('siguiente')} className='mt-3 'style={{marginRight:"10px"}}>
+                            Siguiente
+                        </Button>
+
+
+
+                            
                         </div>
                     
                     </div>

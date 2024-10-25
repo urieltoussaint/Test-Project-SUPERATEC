@@ -6,6 +6,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import { Modal } from 'react-bootstrap';
 import { Card, Row, Col } from 'react-bootstrap'; 
 import moment from 'moment';
+import { useLoading } from '../../../components/LoadingContext';
+
+
 
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
@@ -39,16 +42,19 @@ const CreatePagosCedula = () => {
   const [cuotas, setCuotas] = useState('');  // Mensaje del modal
   const [cuotasCursos, setCuotasCursos] = useState('');  // Mensaje del modal
   const [curso, setCurso] = useState(null);
+  const { setLoading } = useLoading();
 
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoading(true);
     fetchTasaBcv();
     fetchInscripcionCurso().then(cursoIdObtenido => {
       if (cursoIdObtenido) {
         fetchCursoInfo(cursoIdObtenido);  // Solo llama a fetchCursoInfo con el cursoId obtenido
       }
     });
+    setLoading(false);
   }, [cursoId]);
   // Obtener la tasa BCV
   const fetchTasaBcv = async () => {

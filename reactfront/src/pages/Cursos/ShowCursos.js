@@ -138,7 +138,7 @@ const ShowCursos = () => {
         let totalPages = 1;
     
         while (currentPage <= totalPages) {
-          const response = await axios.get(`${endpoint}/cursos?with=area&page=${currentPage}`, {
+          const response = await axios.get(`${endpoint}/cursos?&page=${currentPage}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

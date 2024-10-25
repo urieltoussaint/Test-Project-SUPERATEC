@@ -312,11 +312,14 @@ const getFilteredDataByInscripcionDate = () => {
       <td>
       <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
      
-
+      <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/show/${inscripcion.id}`)} className="me-1">
+          <i className="bi bi-eye"></i>
+        </Button>
         {/* Botón para ver pagos */}
         <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${inscripcion.id}`)} className="me-1">
-          <i className="bi bi-list-check"></i>
+          <i className="bi bi-currency-exchange"></i>
         </Button>
+        
 
         {/* Botón para eliminar si el rol es 'admin' */}
         {userRole === 'admin' && (
@@ -441,7 +444,7 @@ const getFilteredDataByInscripcionDate = () => {
             </Button>
           )}
 
-          <Button variant="secondary" onClick={() => navigate('/cursos')} className="secondary" style={{ fontSize: '0.9rem' }}>
+          <Button variant="secondary" onClick={() => navigate(-1)} className="secondary" style={{ fontSize: '0.9rem' }}>
             <i className="bi bi-arrow-90deg-left"></i>
           </Button>
         </div>

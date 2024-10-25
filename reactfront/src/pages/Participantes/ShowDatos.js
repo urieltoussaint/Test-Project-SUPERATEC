@@ -461,7 +461,14 @@ const getAgeRangeData = () => {
                     onClick={() => navigate(`/datos/${dato.id}`)}
                     className="me-2"
                 >
-                    <i className="bi bi-list-task"></i>
+                    <i className="bi bi-eye"></i>
+                </Button>
+                <Button
+                    variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
+                    onClick={() => navigate(`/datos/cursos/${dato.cedula_identidad}`)}
+                    className="me-2"
+                >
+                    <i className="bi bi-book-fill"></i>
                 </Button>
 
     
