@@ -195,6 +195,9 @@ const ShowPeticiones = () => {
         else if (id === 6) {
             navigate(`/patrocinantes/${peticiones.key}/edit`);
             }
+        else if (id === 7) {
+                navigate(`/procedencias/edit/${peticiones.key}`);
+                }
         else {
             toast.error('Zona no válida');
         }

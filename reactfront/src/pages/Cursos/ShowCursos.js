@@ -560,7 +560,7 @@ const ShowCursos = () => {
             <div className="d-flex justify-content-center align-items-center">
                   
                     <Button variant="btn btn-info" onClick={() => navigate(`/cursos/${curso.id}`)} className="me-2">
-                        <i className="bi bi-list-task"></i>
+                        <i className="bi bi-eye"></i>
                     </Button>
                     <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/${curso.id}`)} className="me-2">
                         <i className="bi bi-person-lines-fill"></i>

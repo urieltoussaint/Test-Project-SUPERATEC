@@ -84,7 +84,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('cursos_inscripcion/validate', [InformacionInscripcionController::class, 'validarInscripcion'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('cursos_inscripcion', [InformacionInscripcionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::post('cursos_inscripcion', [InformacionInscripcionController::class, 'store'])->middleware('role:admin,superuser');
-    Route::get('cursos_inscripcion/{curso_id}', [InformacionInscripcionController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('cursos_inscripcion/{id}', [InformacionInscripcionController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
     Route::delete('cursos_inscripcion/{id}', [InformacionInscripcionController::class, 'destroy'])->middleware('role:admin');
     Route::put('inscripcion_cursos/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
     Route::put('inscripcion_cursos/{cedula}/status', [InformacionInscripcionController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
@@ -137,6 +137,15 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
      Route::delete('patrocinantes/{id}', [PatrocinanteController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
      Route::get('patrocinantes/rif-cedula/{rif_cedula}', [PatrocinanteController::class, 'searchByRifCedula'])->middleware('role:admin,superuser,invitado');
      Route::get('patrocinantes/{id}', [PatrocinanteController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
+
+    // Promoción
+    Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado');
+    Route::post('procedencia', [ProcedenciaController::class, 'store'])->middleware('role:admin,superuser');
+    Route::get('procedencia/{id}', [ProcedenciaController::class, 'show'])->middleware('role:admin,superuser,invitado');
+    Route::put('procedencia/{id}', [ProcedenciaController::class, 'update'])->middleware('role:admin,superuser');
+    Route::delete('procedencia/{id}', [ProcedenciaController::class, 'destroy'])->middleware('role:admin');
+
+
 
 
     // Rutas solo para ver (invitado, superuser y admin)

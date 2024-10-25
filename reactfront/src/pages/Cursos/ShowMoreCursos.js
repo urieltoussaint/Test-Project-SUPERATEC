@@ -42,7 +42,7 @@ const ShowMoreCursos = ({ onReload }) => {
       <div className="row justify-content-center"> {/* Centra el contenido */}
         <div className="col-lg-9 col-md-8"> {/* Ajusta el tamaño de la tarjeta */}
           <Card className="p-4 shadow"> {/* Añadido padding y sombra */}
-            <h1 className="mb-4 text-center">Detalles de Inscripción {data.cod}</h1> {/* Centrado el título */}
+            <h1 className="mb-4 text-center">Detalles de Curso {data.cod}</h1> {/* Centrado el título */}
             <ListGroup variant="flush">
               <ListGroup.Item>COD: {data.cod}</ListGroup.Item>
               <ListGroup.Item>Nombre del Curso: {data.descripcion}</ListGroup.Item>

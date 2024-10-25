@@ -39,6 +39,8 @@ const ShowDatosCursos = () => {
     const [nivelOptions, setNivelOptions] = useState([]);
     const [tipoProgramaOptions, setTipoProgramaOptions] = useState([]);
     const [modalidadOptions, setModalidadOptions] = useState([]);
+    const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
+
 
 
     const [filters, setFilters] = useState({
@@ -308,6 +310,12 @@ const dataPieUnidad = unidadOptions.map(option => ({
                             <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${informacion_inscripcion.id}`)} className="me-1">
                             <i className="bi bi-currency-exchange"></i>
                             </Button>
+                            {/* Botón para editar si el rol es 'admin' */}
+                            {(userRole === 'admin' || userRole === 'superuser') && (
+                            <Button variant="btn btn-warning" onClick={() => navigate(`/inscritos/edit/${informacion_inscripcion.id}/${informacion_inscripcion.cedula_identidad}`)} className="me-1">
+                                <i className="bi bi-pencil-fill"></i>
+                            </Button>
+                            )}
                     
 
 

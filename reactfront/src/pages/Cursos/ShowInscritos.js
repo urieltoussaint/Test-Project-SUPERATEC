@@ -320,7 +320,12 @@ const getFilteredDataByInscripcionDate = () => {
           <i className="bi bi-currency-exchange"></i>
         </Button>
         
-
+        {/* Botón para editar si el rol es 'admin' */}
+        {(userRole === 'admin' || userRole === 'superuser') && (
+          <Button variant="btn btn-warning" onClick={() => navigate(`/inscritos/edit/${inscripcion.id}/${inscripcion.cedula_identidad}`)} className="me-1">
+            <i className="bi bi-pencil-fill"></i>
+          </Button>
+        )}
         {/* Botón para eliminar si el rol es 'admin' */}
         {userRole === 'admin' && (
           <Button variant="btn btn-danger" onClick={() => handleShowModal(inscripcion.id)} className="me-1">

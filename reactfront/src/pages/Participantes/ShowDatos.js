@@ -594,7 +594,7 @@ const getAgeRangeData = () => {
                             outerRadius="70%" // Radio basado en el porcentaje del contenedor para mayor flexibilidad
                             fill="#8884d8"
                             label={({ name, value }) => ` ${value.toFixed(2)}%`} // Mostrar los porcentajes
-                            labelLine={false}
+                            labelLine={true}
                         >
                             {/* Colores para cada sector */}
                             <Cell key="Masculino" fill="#185da7" />

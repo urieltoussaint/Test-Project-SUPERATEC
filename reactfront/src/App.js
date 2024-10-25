@@ -48,6 +48,10 @@ import EditPatrocinantes from './pages/Patrocinantes/EditPatrocinantes';
 import ShowMorePatrocinantes from './pages/Patrocinantes/ShowMorePatrocinantes';
 import ShowDatosCursos from './pages/Participantes/ShowDatosCursos';
 import ShowMoreInscripciones from './pages/Cursos/ShowMoreInscripciones';
+import EditInscripciones from './pages/Cursos/EditInscripciones';
+import ShowProcedencias from './pages/Procedencias/ShowProcedencias';
+import CreateProcedencias from './pages/Procedencias/CreateProcedencias';
+import EditProcedencias from './pages/Procedencias/EditProcedencias';
 
 
 function App() {
@@ -73,6 +77,7 @@ function App() {
             <Route path="/inscribir-cursos/:cedula" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscribirCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/inscritos/:cursoId" element={<AuthenticatedLayout><ShowInscritos /></AuthenticatedLayout>} />
             <Route path="/inscritos/show/:id" element={<AuthenticatedLayout><ShowMoreInscripciones /></AuthenticatedLayout>} />
+            <Route path="/inscritos/edit/:inscripcionId/:cedula" element={<AuthenticatedLayout><EditInscripciones /></AuthenticatedLayout>} />
 
             <Route path="/cursos" element={<AuthenticatedLayout><ShowCursos /></AuthenticatedLayout>} />
             <Route path="/cursos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateCursos /></AuthenticatedLayout></ProtectedRoute>}  />
@@ -97,6 +102,9 @@ function App() {
             <Route path="/patrocinantes/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser',]}><AuthenticatedLayout><CreatePatrocinantes /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/patrocinantes/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser',]}><AuthenticatedLayout><EditPatrocinantes /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/patrocinantes/:id" element={<AuthenticatedLayout><ShowMorePatrocinantes /></AuthenticatedLayout>}  />
+            <Route path="/procedencias" element={<AuthenticatedLayout><ShowProcedencias /></AuthenticatedLayout>} />
+            <Route path="/procedencias/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreateProcedencias /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/procedencias/edit/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditProcedencias /></AuthenticatedLayout></ProtectedRoute>}  />
 
 
 
@@ -315,6 +323,7 @@ const AuthenticatedLayout = ({ children }) => {
           <li><NavLink to="/cursos"><i className="bi bi-book-half"></i> Cursos</NavLink></li>
           <li><NavLink to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</NavLink></li>
           <li><NavLink to="/patrocinantes"><i className="bi bi-building"></i> Patrocinantes</NavLink></li>
+          <li><NavLink to="/procedencias"><i className="bi bi-geo-fill"></i> Procedencias</NavLink></li>
           <li><NavLink to="/promocion"><i className="bi bi-star-fill"></i> Promoción</NavLink></li>
         </ul>
       </li>
