@@ -24,7 +24,10 @@ const EditProcedencias = () => {
   const { setLoading } = useLoading();
   const navigate = useNavigate();
   const [procedencia,setProcedencia]=useState('');
-
+  const [codError, setCodError] = useState('');  // Estado para mensajes de error del cod
+  const [isCodValid, setIsCodValid] = useState(true);  // Estado para indicar si el cod es válido
+  const [originalCod, setOriginalCod] = useState('');  // Almacena el valor original del cod
+  
 
   useEffect(() => {
     setLoading(true);
@@ -50,6 +53,8 @@ const EditProcedencias = () => {
         direccion: procedencia.direccion || '',
 
       });
+      setOriginalCod(procedencia.cod); // Guarda el valor original de cod
+
     } catch (error) {
       setError('Error fetching Procedencia');
       console.error('Error fetching Procedencia:', error);
@@ -157,6 +162,34 @@ const EditProcedencias = () => {
   };
   
 
+  const handleCodBlur = async () => {
+    if (formData.cod && formData.cod !== originalCod) {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.get(`${endpoint}/validate-cod/${formData.cod}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setCodError('El código ya está en uso.');
+            setIsCodValid(false);
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                setCodError('');
+                setIsCodValid(true);
+            } else {
+                console.error('Error al verificar el código:', error);
+                setCodError('Error verificando el código.');
+                setIsCodValid(false);
+            }
+        }
+    } else {
+        setCodError('');
+        setIsCodValid(true);
+    }
+};
+
+
 
 
   return (
@@ -186,16 +219,35 @@ const EditProcedencias = () => {
                   onChange={handleChange}
                 />
               </Form.Group>
-              <Form.Group controlId="COD">
-                <Form.Label>Dirección</Form.Label>
+              <Form.Group controlId="cod">
+                <Form.Label>COD</Form.Label>
                 <Form.Control
                   type="text"
                   name="cod"
-                  value={formData.cod}
-                  onChange={handleChange}
-                  uppercase
-                />
-              </Form.Group>
+                  value={formData.cod || ''}
+                  onChange={(e) => {
+                      const uppercaseValue = e.target.value.toUpperCase();
+                      setFormData((prevState) => ({
+                          ...prevState,
+                          cod: uppercaseValue
+                      }));
+                  }}
+                  onBlur={handleCodBlur}
+                  className={codError ? 'is-invalid' : isCodValid ? 'is-valid' : ''}
+              />
+
+                {codError && (
+                    <Form.Control.Feedback type="invalid">
+                        {codError}
+                    </Form.Control.Feedback>
+                )}
+                {!codError && isCodValid && (
+                    <Form.Control.Feedback type="valid">
+                        Código disponible.
+                    </Form.Control.Feedback>
+                )}
+            </Form.Group>
+
   
             
         <div className="d-flex justify-content-end mt-3">

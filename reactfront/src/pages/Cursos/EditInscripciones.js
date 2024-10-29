@@ -562,7 +562,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                             Guardar
                         </Button>
 
-                        <Button variant="secondary" onClick={() => navigate('/cursos')}  className='mt-3 '>
+                        <Button variant="secondary" onClick={() => navigate(-1)}   className='mt-3 '>
                             Volver
                         </Button>
                         </div>

@@ -23,7 +23,8 @@ class InformacionInscripcion extends Model
         'cedula_identidad',
         'status_pay',
         'datos_identificacion_id',
-        'patrocinante_id'
+        'patrocinante_id',
+        'status_curso'
 
     ];
     protected $listable = [
@@ -44,7 +45,8 @@ class InformacionInscripcion extends Model
         'cedula_identidad',
         'status_pay',
         'datos_identificacion_id',
-        'patrocinante_id'
+        'patrocinante_id',
+        'status_curso'
     ];
 
     // Definir relaciones

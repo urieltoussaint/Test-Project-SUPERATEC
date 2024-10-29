@@ -321,6 +321,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
             
             const formDataComplete = {
                 ...formData,
+                status_curso:1,
                 status_pay: formData.es_patrocinado === "true" ? 3 : 1,
                 patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado?.id : null,
                 cedula_identidad: cedula,
@@ -377,26 +378,26 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         return <div>{error}</div>;
     }
 
-    const columns = ["COD", "Curso", "Horas", "Fecha de Inicio", "Costo", "Acciones"];
+    // const columns = ["COD", "Curso", "Horas", "Fecha de Inicio", "Costo", "Acciones"];
 
-    const renderItem = (curso) => (
-        <tr key={curso.id}>
-            <td>{curso.cod}</td>
-            <td>{curso.descripcion}</td>
-            <td>{curso.cantidad_horas} h</td>
-            <td>{curso.fecha_inicio}</td>
-            <td>{curso.costo} $</td>
-            <td>
-                <Button
-                    variant="success"
-                    onClick={() => handleInscribir(curso.id)}
-                    className="d-flex align-items-center"
-                >
-                    <i className="bi bi-person-plus-fill me-2"></i> 
-                </Button>
-            </td>
-        </tr>
-    );
+    // const renderItem = (curso) => (
+    //     <tr key={curso.id}>
+    //         <td>{curso.cod}</td>
+    //         <td>{curso.descripcion}</td>
+    //         <td>{curso.cantidad_horas} h</td>
+    //         <td>{curso.fecha_inicio}</td>
+    //         <td>{curso.costo} $</td>
+    //         <td>
+    //             <Button
+    //                 variant="success"
+    //                 onClick={() => handleInscribir(curso.id)}
+    //                 className="d-flex align-items-center"
+    //             >
+    //                 <i className="bi bi-person-plus-fill me-2"></i> 
+    //             </Button>
+    //         </td>
+    //     </tr>
+    // );
 
     return (
         <div className="row" style={{ marginTop: '50px' }}>

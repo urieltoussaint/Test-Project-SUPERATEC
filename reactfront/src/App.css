@@ -544,6 +544,61 @@ body {
   gap: 0.5rem; /* Ajusta según lo que necesites */
 }
 
+.status-dot {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.green {
+  background-color: rgb(48, 144, 99);
+}
+
+.orange {
+  background-color: rgb(254, 185, 56);
+}
+
+.red {
+  background-color: rgb(255, 74, 74);
+}
+.gray {
+  background-color: rgb(62, 62, 62);
+}
+.blue {
+  background-color: rgb(39, 87, 170);
+}
+.pink{
+
+  background-color: #fc53c4;
+}
+
+
+.status-triangle {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid; /* Base del triángulo */
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.status-triangle.not-finalized {
+  border-bottom-color: orange; /* Color para "No Finalizado" */
+}
+
+.status-triangle.graduated {
+  border-bottom-color: green; /* Color para "Egresado/Certificado" */
+}
+
+.status-triangle.withdrawn {
+  border-bottom-color: red; /* Color para "Retirado" */
+}
+
+
+
 
 
 

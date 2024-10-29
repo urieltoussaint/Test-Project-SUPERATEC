@@ -138,12 +138,14 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
      Route::get('patrocinantes/rif-cedula/{rif_cedula}', [PatrocinanteController::class, 'searchByRifCedula'])->middleware('role:admin,superuser,invitado');
      Route::get('patrocinantes/{id}', [PatrocinanteController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
 
-    // Promoción
+    // Procedencia
     Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado');
     Route::post('procedencia', [ProcedenciaController::class, 'store'])->middleware('role:admin,superuser');
     Route::get('procedencia/{id}', [ProcedenciaController::class, 'show'])->middleware('role:admin,superuser,invitado');
     Route::put('procedencia/{id}', [ProcedenciaController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('procedencia/{id}', [ProcedenciaController::class, 'destroy'])->middleware('role:admin');
+    Route::get('/validate-cod/{cod}', [ProcedenciaController::class, 'validateCOD'])->middleware('role:admin,superuser,invitado'); 
+
 
 
 

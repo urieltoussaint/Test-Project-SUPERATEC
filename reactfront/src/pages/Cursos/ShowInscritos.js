@@ -31,6 +31,12 @@ const ShowInscritos = () => {
   const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
   const [range, setRange] = useState(30); // Estado para seleccionar rango de días
   const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
+  const [selectedCursoStatus, setSelectedCursoStatus] = useState(''); // Estado para el filtro de estado de curso
+  const [showExoneradoModal, setShowExoneradoModal] = useState(false); // Controla el modal de exonerado
+const [selectedExoneradoId, setSelectedExoneradoId] = useState(null); // Guarda el ID de la inscripción a exonerar
+const [showRetiradoModal, setShowRetiradoModal] = useState(false); // Estado para el modal de Retirado
+const [selectedRetiradoId, setSelectedRetiradoId] = useState(null); // Estado para el ID de inscripción
+
 
 
   useEffect(() => {
@@ -105,8 +111,37 @@ const ShowInscritos = () => {
     if (status_pay === '2') return 'orange'; // En proceso
     if (status_pay === '3') return 'green'; // Pagado
     if (status_pay === '4') return 'blue'; // Culminado
+    if (status_pay === '5') return '#fc53c4'; // Rosa claro en hexadecimal
+
     return 'gray'; // Desconocido
   };
+
+  const getStatusCursoColor = (status_curso) => {
+    if (status_curso === '1') return 'orange'; // No finalizado
+    if (status_curso === '2') return 'green'; // Egresado/Certificado
+    if (status_curso === '3') return 'red'; // Retirado
+    return 'gray'; // Desconocido
+};
+
+
+
+const renderStatusCursoTriangle = (status_curso) => {
+  const color = getStatusCursoColor(status_curso); // Usar la función correcta para el color
+  return (
+    <div
+      style={{
+        width: 10,
+        height: 10,
+        borderLeft: '6px solid transparent',    // Lado izquierdo del triángulo
+        borderRight: '6px solid transparent',   // Lado derecho del triángulo
+        borderBottom: `10px solid ${color}`,    // Base del triángulo, define el color
+        display: 'inline-block',
+        marginRight: '5px',
+      }}
+    ></div>
+  );
+};
+
 
 
 // Mostrar el modal de confirmación para marcar como culminado
@@ -121,21 +156,21 @@ const handleCloseCompleteModal = () => {
 };
 
   
-  // Manejar la acción para cambiar el status_pay a 4 (culminado)
+  // 
 const handleMarkAsComplete = async () => {
   try {
     const token = localStorage.getItem('token');
     await axios.put(`${endpoint}/inscripcion_cursos/${selectedCompleteId}`, {
-      status_pay: 4,
+      status_curso: 2,
     }, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    toast.success('El participante ha sido marcado como "culminado"');
+    toast.success('El participante ha sido marcado como "Egresado/Certificado"');
     setFilteredInscripciones(
       filteredInscripciones.map(inscripcion => 
-        inscripcion.id === selectedCompleteId ? { ...inscripcion, status_pay: 4 } : inscripcion
+        inscripcion.id === selectedCompleteId ? { ...inscripcion, status_curso:2 } : inscripcion
       )
     );
     setShowCompleteModal(false); // Cierra el modal tras éxito
@@ -145,6 +180,57 @@ const handleMarkAsComplete = async () => {
     setShowCompleteModal(false);
   }
 };
+
+
+const handleMarkAsExonerado = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put(`${endpoint}/inscripcion_cursos/${selectedExoneradoId}`, {
+      status_pay: 5,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    toast.success('El participante ha sido marcado como "Exonerado"');
+    setFilteredInscripciones(
+      filteredInscripciones.map(inscripcion => 
+        inscripcion.id === selectedExoneradoId ? { ...inscripcion, status_pay: 5 } : inscripcion
+      )
+    );
+    setShowExoneradoModal(false); // Cierra el modal tras éxito
+  } catch (error) {
+    console.error('Error updating status_pay:', error);
+    toast.error('Error al marcar como exonerado');
+    setShowExoneradoModal(false);
+  }
+};
+
+// Función para marcar como retirado
+const handleMarkAsRetirado = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put(`${endpoint}/inscripcion_cursos/${selectedRetiradoId}`, {
+      status_curso: 3, // Código para "Retirado"
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    toast.success('El participante ha sido marcado como "Retirado"');
+    setFilteredInscripciones(
+      filteredInscripciones.map(inscripcion =>
+        inscripcion.id === selectedRetiradoId ? { ...inscripcion, status_curso: 3 } : inscripcion
+      )
+    );
+    setShowRetiradoModal(false); // Cierra el modal tras éxito
+  } catch (error) {
+    console.error('Error updating status_curso:', error);
+    toast.error('Error al marcar como retirado');
+    setShowRetiradoModal(false);
+  }
+};
+
 
   const renderStatusPayDot = (status_pay) => {
     const color = getStatusPayColor(status_pay);
@@ -184,6 +270,17 @@ const handleMarkAsComplete = async () => {
   
     setCurrentPage(1);
   };
+  const applyCursoStatusFilter = (statusValue) => {
+    let filtered = [...inscripciones];  // Inicializar con todas las inscripciones
+    
+    if (statusValue) {
+      filtered = filtered.filter(inscripcion => inscripcion.status_curso === statusValue);
+    }
+    
+    setFilteredInscripciones(filtered.length ? filtered : []);  // Actualiza con los datos filtrados
+    setCurrentPage(1);  // Reinicia la paginación
+  };
+  
   
 
   // Mostrar el modal para confirmar la eliminación
@@ -195,6 +292,17 @@ const handleMarkAsComplete = async () => {
   const handleCloseModal = () => {
     setShowModal(false); // Cierra el modal
   };
+
+  // Función para abrir el modal
+const handleShowRetiradoModal = (id) => {
+  setSelectedRetiradoId(id);
+  setShowRetiradoModal(true);
+};
+
+// Función para cerrar el modal
+const handleCloseRetiradoModal = () => {
+  setShowRetiradoModal(false);
+};
 
   const handleDelete = async () => {
     try {
@@ -252,15 +360,19 @@ const statusPayCounts = {
   noPagado: dataToUse.filter(d => d.status_pay === '1').length,
   enProceso: dataToUse.filter(d => d.status_pay === '2').length,
   pagado: dataToUse.filter(d => d.status_pay === '3').length,
-  culminado: dataToUse.filter(d => d.status_pay === '4').length,
+  patrocinado: dataToUse.filter(d => d.status_pay === '4').length,
+  exonerado: dataToUse.filter(d => d.status_pay === '5').length,
 };
 
+
 const pieData = [
-  { name: 'No Pagado', value: statusPayCounts.noPagado, color: '#FF4A4A' },
-  { name: 'En Proceso', value: statusPayCounts.enProceso, color: '#FFA500' },
-  { name: 'Pagado', value: statusPayCounts.pagado, color: '#28A745' },
-  { name: 'Culminado', value: statusPayCounts.culminado, color: '#007BFF' },
+  { name: 'No Pagado', value: statusPayCounts.noPagado, color: '#FF4A4A' },    // Rojo
+  { name: 'En Proceso', value: statusPayCounts.enProceso, color: '#FFA500' },  // Naranja
+  { name: 'Pagado', value: statusPayCounts.pagado, color: '#28A745' },         // Verde
+  { name: 'Patrocinado', value: statusPayCounts.patrocinado, color: '#007BFF' }, // Azul
+  { name: 'Exonerado', value: statusPayCounts.exonerado, color: '#FF69B4' },   // Rosado
 ];
+
 
 const genderCounts = {
   masculino: dataToUse.filter(d => d?.datos_identificacion?.genero_id === 1).length,
@@ -273,6 +385,20 @@ const barData = [
   { name: 'Otros', value: genderCounts.otros, color: '#FFA500' },
   { name: 'Femenino', value: genderCounts.femenino, color: '#FF69B4' },
 ];
+
+
+const cursoStatusCounts = {
+  noFinalizado: dataToUse.filter(d => d.status_curso === '1').length,
+  egresado: dataToUse.filter(d => d.status_curso === '2').length,
+  retirado: dataToUse.filter(d => d.status_curso === '3').length,
+};
+
+const cursoPieData = [
+  { name: 'No Finalizado', value: cursoStatusCounts.noFinalizado, color: '#FFA500' },
+  { name: 'Egresado/Certificado', value: cursoStatusCounts.egresado, color: '#28A745' },
+  { name: 'Retirado', value: cursoStatusCounts.retirado, color: '#FF4A4A' },
+];
+
 
 const getFilteredDataByInscripcionDate = () => {
   const today = moment();
@@ -293,22 +419,91 @@ const getFilteredDataByInscripcionDate = () => {
     count: dateCounts[date]
   }));
 };
+const handleCursoStatusChange = (e) => {
+  const value = e.target.value;
+  setSelectedCursoStatus(value);
+  applyCursoStatusFilter(value);
+};
 
 
 
 
 
 
-  const columns = ["Estado", "Cédula", "Fecha de Inscripción", "Nombres", "Apellidos", "Acciones"];
+
+  const columns = ["Estado de Pago","Estado de Curso", "Cédula", "Fecha de Inscripción", "Nombres", "Apellidos", "Acciones Nómina","Acciones"];
 
   const renderItem = (inscripcion) => (
     <tr key={inscripcion.id}>
       
       <td className="text-center">{renderStatusPayDot(inscripcion.status_pay)}</td>
+      <td className="text-center">{renderStatusCursoTriangle(inscripcion.status_curso)}</td> {/* Nueva columna */}
+
       <td>{inscripcion.cedula_identidad}</td>
       <td>{moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD')}</td>
       <td>{inscripcion?.datos_identificacion?.nombres}</td>
       <td>{inscripcion?.datos_identificacion?.apellidos}</td>
+      <td>
+      <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
+     
+   
+        {/* Botón Exonerado */}
+        {(userRole === 'admin' || userRole === 'superuser') && inscripcion.status_pay !== '5' && (
+         <Button
+         onClick={() => { setSelectedExoneradoId(inscripcion.id); setShowExoneradoModal(true); }}
+         className="me-1"
+         style={{
+           backgroundColor: '#fc53c4', // Rosa
+           color: 'white',
+           border: 'none',
+           padding: '5px 10px', // Ajuste de padding para hacer coincidir el tamaño
+           fontSize: '14px', // Tamaño del texto similar a los otros botones
+           width: '40px',     // Ajusta el ancho
+           height: '40px',    // Ajusta la altura
+           display: 'flex',
+           alignItems: 'center',
+           justifyContent: 'center',
+           borderRadius: '5px'
+         }}
+       >
+         <i className="bi bi-coin"></i>
+       </Button>
+       
+        )}
+
+        {/* Botón para marcar como culminado si el rol es 'admin' o 'superuser' y status_pay es 3 */}
+        {(userRole === 'admin' || userRole === 'superuser') && (inscripcion.status_curso!=='2') && (
+          <Button variant="btn btn-success" onClick={() => handleShowCompleteModal(inscripcion.id)} className="me-1">
+            <i className="bi bi-check-circle"></i>
+          </Button>
+        )}
+
+
+        {/* 
+        Botón Retirado */}
+        <Button
+          onClick={() => handleShowRetiradoModal(inscripcion.id)}
+          className="me-1"
+          style={{
+            backgroundColor: '#FF4A4A', // Rojo
+            color: 'white',
+            border: 'none',
+            padding: '5px 10px',
+            fontSize: '14px',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '5px'
+          }}
+        >
+          <i className="bi bi-x-lg"></i> {/* Icono de "X" */}
+        </Button>
+
+        </div>
+
+      </td>
       <td>
       <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
      
@@ -326,6 +521,7 @@ const getFilteredDataByInscripcionDate = () => {
             <i className="bi bi-pencil-fill"></i>
           </Button>
         )}
+       
         {/* Botón para eliminar si el rol es 'admin' */}
         {userRole === 'admin' && (
           <Button variant="btn btn-danger" onClick={() => handleShowModal(inscripcion.id)} className="me-1">
@@ -333,17 +529,11 @@ const getFilteredDataByInscripcionDate = () => {
           </Button>
         )}
 
-        {/* Botón para marcar como culminado si el rol es 'admin' o 'superuser' y status_pay es 3 */}
-        {(userRole === 'admin' || userRole === 'superuser') && inscripcion.status_pay === '3' && (
-          <Button variant="btn btn-success" onClick={() => handleShowCompleteModal(inscripcion.id)} className="me-1">
-            <i className="bi bi-check-circle"></i>
-          </Button>
-        )}
-
-
         </div>
 
       </td>
+
+      
     </tr>
   );
 
@@ -475,18 +665,23 @@ const getFilteredDataByInscripcionDate = () => {
           <option value="1">No pagado (Rojo)</option>
           <option value="2">En proceso (Naranja)</option>
           <option value="3">Pagado (Verde)</option>
-          <option value="4">Culminado (Azul)</option> {/* Opción para "Culminado" */}
+          <option value="4">Patrocinado (Azul)</option> 
+          <option value="5">Exonerado (Rosado)</option> 
         </Form.Select>
+        <Form.Select
+          value={selectedCursoStatus}
+          onChange={handleCursoStatusChange}
+          className="me-2"
+          style={{ width: 'auto' }}
+        >
+          <option value="">Filtrar por estado de curso</option>
+          <option value="1">No Finalizado (Naranja)</option>
+          <option value="2">Egresado/Certificado (Verde)</option>
+          <option value="3">Retirado (Rojo)</option>
+        </Form.Select>
+
       </div>
-       <div className='d-flex align-center'> 
-      {/* Botón para mostrar los inscritos que no han culminado (status_pay 1, 2 o 3) */}
-      <Button variant="success" onClick={() => applyNonCulminadosFilter()} style={{ marginRight: '10px' }} >
-        Mostrar en Proceso
-      </Button>
-      <Button variant="info" onClick={() => applyPayStatusFilter('4')}>
-        Mostrar solo culminados
-      </Button>
-      </div>        
+ 
       
     </div>
 
@@ -496,8 +691,16 @@ const getFilteredDataByInscripcionDate = () => {
         <span className="status-dot red"></span> No pagado (Rojo)
         <span className="status-dot orange ms-3"></span> En proceso (Naranja)
         <span className="status-dot green ms-3"></span> Pagado (Verde)
-        <span className="status-dot blue ms-3"></span> Culminado (Azul)
+        <span className="status-dot blue ms-3"></span> Patrocinado (Azul)
+        <span className="status-dot pink ms-3"></span> Exonerado (Rosado)
       </div>
+      <div className="status-legend d-flex justify-content-start mb-3">
+      <span className="status-triangle not-finalized"></span> No Finalizado (Naranja)
+      <span className="status-triangle graduated ms-3"></span> Egresado/Certificado (Verde)
+      <span className="status-triangle withdrawn ms-3"></span> Retirado (Rojo)
+</div>
+
+      
 
       {error && <Alert variant="danger">{error}</Alert>}
 
@@ -542,13 +745,54 @@ const getFilteredDataByInscripcionDate = () => {
         </Button>
       </Modal.Footer>
     </Modal>
+    {/* Modal Exonerado */}
+    <Modal show={showExoneradoModal} onHide={() => setShowExoneradoModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Exoneración</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>¿Estás seguro de que deseas marcar al participante como "Exonerado"?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowExoneradoModal(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleMarkAsExonerado}
+            style={{
+              backgroundColor: '#fc53c4', // Rosa
+              color: 'white',
+              border: 'none'
+            }}
+          >
+            Confirmar Exoneración
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+       {/* Modal Retirado      */}
+      <Modal show={showRetiradoModal} onHide={handleCloseRetiradoModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar retiro</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>¿Estás seguro de que deseas marcar este participante como "Retirado"?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseRetiradoModal}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleMarkAsRetirado}>
+            Marcar como retirado
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+
+
 
 
       <ToastContainer />
     </div>
     <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
-                    <h4 style={{ fontSize: '1.2rem' }}>Participantes por Status</h4>
+                    <h4 style={{ fontSize: '1.2rem' }}>Participantes por Estado de Pago</h4>
                     <ResponsiveContainer width="100%" height={400}>
                       <PieChart>
                         <Pie
@@ -571,20 +815,27 @@ const getFilteredDataByInscripcionDate = () => {
             </div>
 
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
-            <h4 style={{ fontSize: '1.2rem' }}>Participantes por Género</h4>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8884d8">
-                  {barData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <h4 style={{ fontSize: '1.2rem' }}>Participantes por Estado de Curso</h4>
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={cursoPieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}      // Ajuste para hacer dona
+                    outerRadius={120}
+                    fill="#8884d8"
+                    label
+                  >
+                    {cursoPieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
         </div>
         <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>

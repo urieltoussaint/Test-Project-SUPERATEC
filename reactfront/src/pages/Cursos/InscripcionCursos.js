@@ -256,7 +256,8 @@ const handleInscripcion = async () => {
         // Crear un nuevo objeto formDataWithStatus que extiende el formData original
         const formDataWithStatus = {
             ...formData,
-            status_pay: formData.es_patrocinado === "true" ? 3 : 1,  // Agregar status_pay basado en patrocinado
+            status_pay: formData.es_patrocinado === "true" ? 4 : 1,  // Agregar status_pay basado en patrocinado
+            status_curso:1,
             patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado?.id : null, // Si patrocinado, agregar patrocinante_id
             // Agregar otros campos que no están en el formulario
             cedula_identidad: cedula,

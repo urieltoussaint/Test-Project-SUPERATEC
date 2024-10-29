@@ -41,6 +41,8 @@ const ShowCursos = () => {
     const [inscripciones, setInscripciones] = useState(0);
     const [avgHours, setAvgHours] = useState(0);
     const [statusPayCounts, setStatusPayCounts] = useState({ 1: 0, 2: 0, 3: 0, 4: 0 });
+    const [statusCursoCounts, setStatusCursoCounts] = useState({ 1: 0, 2: 0, 3: 0 });
+
     const [avgCost, setAvgCost] = useState(0);
     const [ingresosPorCurso, setIngresosPorCurso] = useState([]);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
@@ -57,11 +59,6 @@ const ShowCursos = () => {
     const [modalidadOptions, setModalidadOptions] = useState([]);
     const [selectedModalidad, setSelectedModalidad] = useState('');
     const [inscritosPorCurso, setInscritosPorCurso] = useState({});
-
-
-
-
-
 
 
 
@@ -273,6 +270,13 @@ const ShowCursos = () => {
         acc[statusPay] = (acc[statusPay] || 0) + 1;
         return acc;
       }, {});
+
+      // Cuenta la cantidad de inscripciones en cada estado de curso (status_curso)
+      const statusCursoCounts = filteredInscripciones.reduce((acc, inscripcion) => {
+        const statusCurso = Number(inscripcion.status_curso); // Asegúrate de que sea numérico
+        acc[statusCurso] = (acc[statusCurso] || 0) + 1;
+        return acc;
+      }, {});
     
       // Filtrar inscritos según los cursos filtrados
       const filteredInscritosPorCurso = Object.fromEntries(
@@ -291,21 +295,32 @@ const ShowCursos = () => {
     
       // Calcular ingresos totales por curso
       const ingresosPorCurso = cursosData.map(curso => {
-        const inscritos = filteredInscritosPorCurso[curso.id] || 0;
-        const ingresoTotal = inscritos * parseFloat(curso.costo);
-        return { name: curso.descripcion, ingresos: ingresoTotal };
-      });
+        // Filtra las inscripciones de este curso donde status_pay es 3
+        const inscritosPagados = allInscripciones.filter(inscripcion => 
+            inscripcion.curso_id === curso.id && inscripcion.status_pay === '3'
+        );
+        
+        // Calcula el ingreso total solo con los participantes con status_pay = 3
+        const ingresoTotal = inscritosPagados.length * parseFloat(curso.costo);
     
-      // Top cursos con mayor ingreso
-      const topIngresos = ingresosPorCurso.sort((a, b) => b.ingresos - a.ingresos).slice(0, 10);
+        return { name: curso.descripcion, ingresos: ingresoTotal };
+    });
+    
+    // Ordena los cursos por ingresos y toma el top 10
+    const topIngresos = ingresosPorCurso.sort((a, b) => b.ingresos - a.ingresos).slice(0, 10);
+    
     
       // Actualizar el estado con los pagos filtrados
       setStatusPayCounts(filteredStatusPayCounts);
       setIngresosPorCurso(topIngresos);
+       setStatusCursoCounts(statusCursoCounts);
+      
     
       console.log("Total de participantes filtrados:", totalParticipants);
       console.log("Estado de pagos filtrado:", filteredStatusPayCounts);
     };
+
+    
     
  
 
@@ -545,7 +560,8 @@ const ShowCursos = () => {
       requestAnimationFrame(animate);
   };
 
-    const columns = ["COD", "Descripción", "Horas", "Fecha", "Costo","Cuotas", "Acciones"];
+
+    const columns = ["COD", "Descripción", "Horas", "Fecha", "Costo","Cuotas","N° Inscritos", "Acciones"];
 
     const renderItem = (curso) => (
         
@@ -556,6 +572,7 @@ const ShowCursos = () => {
             <td className='col-fechas'>{curso.fecha_inicio}</td>
             <td className='col-costos'>{curso.costo} $</td>
             <td className='col-cuotas'>{curso.cuotas} </td>
+            <td className='col-inscritos'>{inscritosPorCurso[curso.id] || 0}</td>
             <td>
             <div className="d-flex justify-content-center align-items-center">
                   
@@ -862,12 +879,14 @@ const ShowCursos = () => {
                 <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px' }}>
                   <h4 style={{ fontSize: '1.2rem', textAlign: 'flex' }}>Estado de Pagos</h4>
                   <ResponsiveContainer width="100%" height={300}>
-                  <BarChart  data={[
-                    { name: 'No Pagado', value: statusPayCounts[1], fill: '#FF0000' },
-                    { name: 'Pago en Proceso', value: statusPayCounts[2], fill: '#FFA500' },
-                    { name: 'Pagado, Cursando', value: statusPayCounts[3], fill: '#008000' },
-                    { name: 'Curso Finalizado', value: statusPayCounts[4], fill: '#0000FF' },
-                  ]}>
+                  <BarChart data={[
+                      { name: 'No Pagado', value: statusPayCounts[1], fill: '#FF0000' },         // Rojo
+                      { name: 'En Proceso', value: statusPayCounts[2], fill: '#FFA500' },   // Naranja
+                      { name: 'Pagado', value: statusPayCounts[3], fill: '#008000' },  // Verde
+                      { name: 'Patrocinado', value: statusPayCounts[4], fill: '#0000FF' },  // Azul
+                      { name: 'Exonerado', value: statusPayCounts[5], fill: '#FF69B4' }          // Rosa claro
+                    ]}>
+
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -878,6 +897,28 @@ const ShowCursos = () => {
 
                 </div>
                 <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px' }}>
+                <h4 style={{ fontSize: '1.2rem', textAlign: 'flex' }}>Estado de Cursos</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={[
+                      { name: 'No Finalizado', value: statusCursoCounts[1], fill: '#FFA500' },   // Naranja
+                      { name: 'Egresado/Certificado', value: statusCursoCounts[2], fill: '#28A745' }, // Verde
+                      { name: 'Retirado', value: statusCursoCounts[3], fill: '#FF0000' }          // Rojo
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value" barSize={30} />
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                </div>
+              </div>
+
+              {/* Gráfica de Estado de Pagos justo debajo de la tabla */}
+              <div className="col-lg-12 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
+                
+                <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
                   <h4 style={{ fontSize: '1.2rem' }}> Cursos con mayor Ingreso</h4>
                   <ResponsiveContainer width="100%" height={300}>
                   <BarChart  data={ingresosPorCurso}>

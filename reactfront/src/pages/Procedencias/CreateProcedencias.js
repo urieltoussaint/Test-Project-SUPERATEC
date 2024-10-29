@@ -27,6 +27,9 @@ const CreateProcedencias = () => {
   const [searchName, setSearchName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [comentario, setComentario] = useState('');  // Nuevo estado para el comentario
+  const [codError, setCodError] = useState(''); // Estado para mensajes de error del campo 'cod'
+  const [isCodValid, setIsCodValid] = useState(false); // Estado para indicar si 'cod' es válido
+
 
   const [formData, setFormData] = useState({
     descripcion: '',
@@ -220,6 +223,31 @@ const getAllRoles = async () => {
     setFilteredRoles(filtered);
   };
 
+  const handleCodBlur = async () => {
+    if (formData.cod) {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.get(`${endpoint}/validate-cod/${formData.cod}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setCodError('El código ya está en uso.');
+            setIsCodValid(false);
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                setCodError(''); // Código disponible
+                setIsCodValid(true);
+            } else {
+                console.error('Error al verificar el código:', error);
+                setCodError('Error verificando el código.');
+                setIsCodValid(false);
+            }
+        }
+    }
+};
+
+
   return (
     <div className="row" style={{ marginTop: '50px' }}>
   <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
@@ -250,13 +278,32 @@ const getAllRoles = async () => {
             <Form.Group controlId="cod">
               <Form.Label>COD</Form.Label>
               <Form.Control
-                type="text"
-                name="cod"
-                value={formData.cod}
-                onChange={handleChange}
-                uppercase
+                  type="text"
+                  name="cod"
+                  value={formData.cod || ''}
+                  onChange={(e) => {
+                      const uppercaseValue = e.target.value.toUpperCase();
+                      setFormData((prevState) => ({
+                          ...prevState,
+                          cod: uppercaseValue
+                      }));
+                  }}
+                  onBlur={handleCodBlur}
+                  className={codError ? 'is-invalid' : isCodValid ? 'is-valid' : ''}
               />
-            </Form.Group>
+              {codError && (
+                  <Form.Control.Feedback type="invalid">
+                      {codError}
+                  </Form.Control.Feedback>
+              )}
+              {!codError && isCodValid && (
+                  <Form.Control.Feedback type="valid">
+                      Código disponible.
+                  </Form.Control.Feedback>
+              )}
+          </Form.Group>
+
+
 
         <div className="d-flex justify-content-end mt-3">
           <Button variant="secondary" onClick={() => navigate(-1)} className="me-2">
