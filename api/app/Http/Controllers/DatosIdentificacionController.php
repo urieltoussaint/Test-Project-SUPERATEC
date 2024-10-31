@@ -11,7 +11,6 @@ use App\Models\InformacionInscripcion;
 use App\Models\Nacionalidad;
 use App\Models\NivelInstruccion;
 use App\Models\Procedencia;
-use App\Models\StatusSeleccion;
 use Illuminate\Http\Request;
 
 class DatosIdentificacionController extends Controller
@@ -71,7 +70,6 @@ public function fetchFilterOptions()
         $grupo_prioritario= GrupoPrioritario::all();
         $nacionalidad= Nacionalidad::all();
         $procedencia= Procedencia::all();
-        $status_seleccion= StatusSeleccion::all();
         $superatec = ComoEnteroSuperatec::all();
        
         
@@ -86,7 +84,6 @@ public function fetchFilterOptions()
             'grupo_prioritario' =>$grupo_prioritario,
             'nacionalidad'=>$nacionalidad,
             'procedencia'=>$procedencia,
-            'status_seleccion'=>$status_seleccion,
             'superatec' => $superatec,
             
             

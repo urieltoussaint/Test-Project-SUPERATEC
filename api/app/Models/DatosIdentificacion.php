@@ -7,14 +7,10 @@ namespace App\Models;
 class DatosIdentificacion extends Model
 {
     protected $table = 'datos_identificacion';
-    // protected $primaryKey = 'cedula_identidad';
-    // protected $keyType= 'string';
-    // public $incrementing = false;
-    // public $timestamps = false;
+
 
     protected $fillable = [
         'cedula_identidad',
-        'status_seleccion_id',
         'nacionalidad_id',
         'nombres',
         'apellidos',
@@ -37,7 +33,6 @@ class DatosIdentificacion extends Model
     protected $listable = [
         'id',
         'cedula_identidad',
-        'status_seleccion_id',
         'nacionalidad_id',
         'nombres',
         'apellidos',
@@ -59,15 +54,8 @@ class DatosIdentificacion extends Model
         
     ];
     
-    
-
     // Definir relaciones
-    
-    public function statusSeleccion()
-    {
-        return $this->belongsTo(StatusSeleccion::class, 'status_seleccion_id');
-    }
-
+  
     public function nacionalidad()
     {
         return $this->belongsTo(Nacionalidad::class, 'nacionalidad_id');
@@ -107,10 +95,7 @@ class DatosIdentificacion extends Model
     {
         return $this->hasOne(ReportePagos::class, 'cedula_identidad', 'cedula_identidad');
     }
-    public function InscripcionCursos()
-{
-    return $this->hasOne(InscripcionCursos::class, 'cedula_identidad', 'cedula_identidad');
-}
+ 
 
     public function Peticiones()
 {
@@ -127,16 +112,16 @@ public function ComoEnteroSuperatec()
     
         static::deleting(function ($datosIdentificacion) {
             // Recorrer cada inscripción relacionada y eliminar sus pagos antes de eliminar la inscripción
-            // $datosIdentificacion->InscripcionCursos()->each(function ($inscripcionCurso) {
-            //     // Eliminar todos los pagos relacionados con esta inscripción
-            //     $inscripcionCurso->ReportePagos()->delete();
+            $datosIdentificacion->informacionInscripcion()->each(function ($informacionInscripcion) {
+                // Eliminar todos los pagos relacionados con esta inscripción
+                $informacionInscripcion->ReportePagos()->delete();
     
-            //     // Luego eliminar la inscripción
-            //     $inscripcionCurso->delete();
-            // });
+                // Luego eliminar la inscripción
+                $informacionInscripcion->delete();
+            });
     
             // Ahora puedes eliminar cualquier otra relación directa (por ejemplo, InformacionInscripcion)
-            // $datosIdentificacion->informacionInscripcion()->delete();
+            $datosIdentificacion->informacionInscripcion()->delete();
             \App\Models\Peticiones::where('key', $datosIdentificacion->id)
             ->where('zona_id', 1)
             ->delete();

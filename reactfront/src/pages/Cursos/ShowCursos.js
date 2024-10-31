@@ -57,7 +57,9 @@ const ShowCursos = () => {
     const [selectedTipoPrograma, setSelectedTipoPrograma] = useState('');
 
     const [modalidadOptions, setModalidadOptions] = useState([]);
+    
     const [selectedModalidad, setSelectedModalidad] = useState('');
+    const [participantsByAportePatrocinado, setParticipantsByAportePatrocinado] = useState('');
     const [inscritosPorCurso, setInscritosPorCurso] = useState({});
 
 
@@ -253,73 +255,65 @@ const ShowCursos = () => {
     
 
     const calculateMetricsInscritos = (inscritosPorCurso, cursosData, allInscripciones) => {
-      // Verificar que los datos no sean indefinidos o vacíos
       if (!cursosData || !allInscripciones || cursosData.length === 0 || allInscripciones.length === 0) {
-        console.error("Error: cursosData o allInscripciones están vacíos o indefinidos");
-        return;
+          console.error("Error: cursosData o allInscripciones están vacíos o indefinidos");
+          return;
       }
-    
-      // Filtrar inscripciones y pagos según los cursos filtrados
+  
       const filteredInscripciones = allInscripciones.filter(inscripcion =>
-        cursosData.some(curso => Number(curso.id) === Number(inscripcion.curso_id)) // Asegurarse que los tipos coincidan
+          cursosData.some(curso => Number(curso.id) === Number(inscripcion.curso_id))
       );
-    
-      // Recalcular el estado de pagos
+  
       const filteredStatusPayCounts = filteredInscripciones.reduce((acc, inscripcion) => {
-        const statusPay = Number(inscripcion.status_pay); // Asegurarse que sea numérico
-        acc[statusPay] = (acc[statusPay] || 0) + 1;
-        return acc;
+          const statusPay = Number(inscripcion.status_pay);
+          acc[statusPay] = (acc[statusPay] || 0) + 1;
+          return acc;
       }, {});
-
-      // Cuenta la cantidad de inscripciones en cada estado de curso (status_curso)
+  
       const statusCursoCounts = filteredInscripciones.reduce((acc, inscripcion) => {
-        const statusCurso = Number(inscripcion.status_curso); // Asegúrate de que sea numérico
-        acc[statusCurso] = (acc[statusCurso] || 0) + 1;
-        return acc;
+          const statusCurso = Number(inscripcion.status_curso);
+          acc[statusCurso] = (acc[statusCurso] || 0) + 1;
+          return acc;
       }, {});
-    
-      // Filtrar inscritos según los cursos filtrados
+  
       const filteredInscritosPorCurso = Object.fromEntries(
-        Object.entries(inscritosPorCurso).filter(([cursoId]) =>
-          cursosData.some(curso => Number(curso.id) === Number(cursoId)) // Asegurarse que los tipos coincidan
-        )
+          Object.entries(inscritosPorCurso).filter(([cursoId]) =>
+              cursosData.some(curso => Number(curso.id) === Number(cursoId))
+          )
       );
-    
-      // Animar el número de inscritos
+  
       const totalParticipants = Object.values(filteredInscritosPorCurso).reduce((acc, count) => acc + count, 0);
       animateValue(0, totalParticipants, setTotalParticipants);
-    
-      // Calcular el total de horas solo para los cursos filtrados
+  
       const totalHours = cursosData.reduce((acc, curso) => acc + curso.cantidad_horas, 0);
-      setTotalHours(totalHours); 
-    
-      // Calcular ingresos totales por curso
+      setTotalHours(totalHours);
+  
       const ingresosPorCurso = cursosData.map(curso => {
-        // Filtra las inscripciones de este curso donde status_pay es 3
-        const inscritosPagados = allInscripciones.filter(inscripcion => 
-            inscripcion.curso_id === curso.id && inscripcion.status_pay === '3'
-        );
-        
-        // Calcula el ingreso total solo con los participantes con status_pay = 3
-        const ingresoTotal = inscritosPagados.length * parseFloat(curso.costo);
-    
-        return { name: curso.descripcion, ingresos: ingresoTotal };
-    });
-    
-    // Ordena los cursos por ingresos y toma el top 10
-    const topIngresos = ingresosPorCurso.sort((a, b) => b.ingresos - a.ingresos).slice(0, 10);
-    
-    
-      // Actualizar el estado con los pagos filtrados
-      setStatusPayCounts(filteredStatusPayCounts);
+          const inscritosPagados = allInscripciones.filter(inscripcion =>
+              inscripcion.curso_id === curso.id && inscripcion.status_pay === '3'
+          );
+          const ingresoTotal = inscritosPagados.length * parseFloat(curso.costo);
+          return { name: curso.descripcion, ingresos: ingresoTotal };
+      });
+  
+      const topIngresos = ingresosPorCurso.sort((a, b) => b.ingresos - a.ingresos).slice(0, 10);
       setIngresosPorCurso(topIngresos);
-       setStatusCursoCounts(statusCursoCounts);
-      
-    
-      console.log("Total de participantes filtrados:", totalParticipants);
-      console.log("Estado de pagos filtrado:", filteredStatusPayCounts);
-    };
-
+  
+      // Calculate total counts for "Realiza Aporte" and "Es Patrocinado" across all courses
+      const totalAportes = filteredInscripciones.filter(inscripcion => inscripcion.realiza_aporte === true).length;
+      const totalPatrocinados = filteredInscripciones.filter(inscripcion => inscripcion.es_patrocinado === true).length;
+  
+      // Update the state with the calculated totals for the pie chart
+      setParticipantsByAportePatrocinado([
+          { name: 'Realiza Aporte', value: totalAportes },
+          { name: 'Es Patrocinado', value: totalPatrocinados }
+      ]);
+  
+      // Set other relevant state data
+      setStatusPayCounts(filteredStatusPayCounts);
+      setStatusCursoCounts(statusCursoCounts);
+  };
+  
     
     
  
@@ -397,64 +391,65 @@ const ShowCursos = () => {
 
     const applyFilters = (searchValue, codValue, areaValue, unidadValue, nivelValue, tipoProgramaValue, modalidadValue) => {
       let filtered = cursos;
-    
+  
       if (searchValue) {
-        filtered = filtered.filter(curso =>
-          curso.descripcion.toLowerCase().includes(searchValue.toLowerCase())
-        );
+          filtered = filtered.filter(curso =>
+              curso.descripcion.toLowerCase().includes(searchValue.toLowerCase())
+          );
+          console.log("Filtered by search:", filtered);
       }
-    
+  
       if (codValue) {
-        filtered = filtered.filter(curso =>
-          curso.cod.toLowerCase().includes(codValue.toLowerCase())
-        );
+          filtered = filtered.filter(curso =>
+              curso.cod.toLowerCase().includes(codValue.toLowerCase())
+          );
+          console.log("Filtered by COD:", filtered);
       }
-    
+  
       if (areaValue) {
-        filtered = filtered.filter(curso => curso.area_id === parseInt(areaValue));
+          filtered = filtered.filter(curso => curso.area_id === parseInt(areaValue));
+          console.log("Filtered by Area:", filtered);
       }
-    
+  
       if (unidadValue) {
-        filtered = filtered.filter(curso => curso.unidad_id === parseInt(unidadValue));
+          filtered = filtered.filter(curso => curso.unidad_id === parseInt(unidadValue));
+          console.log("Filtered by Unidad:", filtered);
       }
-    
+  
       if (nivelValue) {
-        filtered = filtered.filter(curso => curso.nivel_id === parseInt(nivelValue));
+          filtered = filtered.filter(curso => curso.nivel_id === parseInt(nivelValue));
+          console.log("Filtered by Nivel:", filtered);
       }
-    
+  
       if (tipoProgramaValue) {
-        filtered = filtered.filter(curso => curso.tipo_programa_id === parseInt(tipoProgramaValue));
+          filtered = filtered.filter(curso => curso.tipo_programa_id === parseInt(tipoProgramaValue));
+          console.log("Filtered by TipoPrograma:", filtered);
       }
-    
+  
       if (modalidadValue) {
-        filtered = filtered.filter(curso => curso.modalidad_id === parseInt(modalidadValue));
+          filtered = filtered.filter(curso => curso.modalidad_id === parseInt(modalidadValue));
+          console.log("Filtered by Modalidad:", filtered);
       }
-    
-      setFilteredCursos(filtered);
+  
+      setFilteredCursos(filtered); // This will update filteredCursos state
       setCurrentPage(1);
-    
-      // Calcular métricas locales con los cursos filtrados e inscripciones ya cargadas
+  
+      // Recalculate metrics after filtering
       calculateMetricsInscritos(inscritosPorCurso, filtered, inscripciones);
       calculateMetrics(filtered, inscripciones);
-    
-      // Validar costos, reemplazar null o valores inválidos por 0
+  
+      // Update average cost based on filtered data
       const totalCostFiltered = filtered.reduce((acc, curso) => {
-        const costo = curso.costo ? parseFloat(curso.costo) : 0; // Si el costo es null o no válido, lo tratamos como 0
-        return acc + (!isNaN(costo) && costo >= 0 ? costo : 0);
+          const costo = curso.costo ? parseFloat(curso.costo) : 0;
+          return acc + (!isNaN(costo) && costo >= 0 ? costo : 0);
       }, 0);
-    
-      // Asegurarse de no dividir si el array está vacío
       const avgCostFiltered = filtered.length > 0 ? totalCostFiltered / filtered.length : 0;
-      
-      
-      
-    
-      // Establecer el promedio evitando NaN
       setAvgCost(isNaN(avgCostFiltered) ? 0 : avgCostFiltered);
-    
-      // Animación del valor del promedio de costos
       animateValue(avgCost, avgCostFiltered, setAvgCost, 2000);
-    };
+  };
+  
+  
+  
     const coursesByNivel = filteredCursos.reduce((acc, curso) => {
       const nivel = nivelOptions.find(n => n.id === curso.nivel_id)?.descripcion || 'Unknown';
       acc[nivel] = (acc[nivel] || 0) + 1;
@@ -633,11 +628,38 @@ const ShowCursos = () => {
         <div className="stat-label">Total de Horas</div>
       </div>
         <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%' }}> {/* Reducir el ancho a 22% */}
-          <div className="stat-icon"><i className="bi bi-currency-dollar"></i></div> {/* Icono de moneda */}
-          <div className="stat-number" style={{ color: '#58c765', fontSize: '1.2rem' }}>
-            {avgCost.toFixed(2)} $ {/* Mostrar el valor con símbolo de moneda */}
-          </div>
-          <div className="stat-label">Promedio de Costo por Curso</div>
+          <ResponsiveContainer width="100%" height={120}>
+            <PieChart>
+              <Pie
+                data={participantsByAportePatrocinado}
+                dataKey="value"
+                startAngle={180}
+                endAngle={0}
+                cx="50%"
+                cy="70%"
+                outerRadius="70%"
+                fill="#8884d8"
+                label={({ name, value }) => ` ${value} participantes`}
+                labelLine={true}
+              >
+                <Cell key="RealizaAporte" fill="#8884d8" />
+                <Cell key="EsPatrocinado" fill="#82ca9d" />
+              </Pie>
+              <Legend
+                layout="horizontal"
+                verticalAlign="bottom"
+                align="center"
+                wrapperStyle={{
+                  width: "88%",
+                  textAlign: "center",
+                  marginTop: "-15px",
+                  fontSize: '10px'
+                }}
+              />
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+
         </div>
       </div>
 

@@ -71,7 +71,6 @@ public function fetchFilterOptions()
         $grupo_prioritario= GrupoPrioritario::all();
         $nacionalidad= Nacionalidad::all();
         $procedencia= Procedencia::all();
-        $status_seleccion= StatusSeleccion::all();
         $superatec = ComoEnteroSuperatec::all();
        
         

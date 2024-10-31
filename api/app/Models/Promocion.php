@@ -7,9 +7,9 @@ class Promocion extends Model
 {
     protected $table = 'promocion';
     protected $fillable = ['centro_id','cohorte_id','periodo_id','fecha_promocion','procedencia_id','mencion_id',
-    'estudiantes_asistentes','estudiantes_interesados','status_id','comentarios'];
+    'estudiantes_asistentes','estudiantes_interesados','comentarios'];
     protected $listable = ['id','fecha_registro','centro_id','cohorte_id','periodo_id','fecha_promocion','procedencia_id','mencion_id',
-    'estudiantes_asistentes','estudiantes_interesados','status_id','comentarios'];
+    'estudiantes_asistentes','estudiantes_interesados','comentarios'];
 
 
     public function Centro()
@@ -28,10 +28,7 @@ class Promocion extends Model
     {
         return $this->belongsTo(Periodo::class, 'periodo_id');
     }
-    public function StatusSeleccion()
-    {
-        return $this->belongsTo(StatusSeleccion::class, 'Status_id');
-    }
+    
     public function Mencion()
     {
         return $this->belongsTo(Mencion::class, 'mencion_id');

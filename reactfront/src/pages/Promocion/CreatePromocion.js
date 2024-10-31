@@ -7,12 +7,15 @@ import './CreatePromocion.css';
 import { useLoading } from '../../components/LoadingContext';
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
+import { Card, Row, Col } from 'react-bootstrap'; 
+
 
 
 const endpoint = 'http://localhost:8000/api';
 
 const CreatePromocion = () => {
   const { setLoading } = useLoading();
+
   const [formData, setFormData] = useState({
     centro_id: '',
     cohorte_id: '',
@@ -22,9 +25,17 @@ const CreatePromocion = () => {
     mencion_id: '',
     estudiantes_asistentes: '',
     estudiantes_interesados: '',
-    status_id: '',
     comentarios: '',
   });
+
+  const [filterOptions, setFilterOptions] = useState({
+    centroOptions: [],
+    periodoOptions: [],
+    cohorteOptions: [],
+    mencionOptions: [],
+    procedenciaOptions: [],
+
+});
 
   const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
   const navigate = useNavigate();
@@ -32,48 +43,9 @@ const CreatePromocion = () => {
   useEffect(() => {
     const fetchSelectData = async () => {
       setLoading(true); // Inicia la animación de carga
-      try {
-        // Realiza las solicitudes necesarias para cargar los selectores
-        const token = localStorage.getItem('token');
-        await Promise.all([
-
-          axios.get(`${endpoint}/centro`,{
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }),
-          axios.get(`${endpoint}/cohorte`,{
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }),
-          axios.get(`${endpoint}/periodo`,{
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }),
-          axios.get(`${endpoint}/procedencia`,{
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }),
-          axios.get(`${endpoint}/mencion`,{
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }),
-          axios.get(`${endpoint}/status_seleccion`,{
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }),
-        ]);
-        setSelectDataLoaded(true); // Indica que los datos han sido cargados
-      } catch (error) {
-        console.error('Error fetching select data:', error);
-      } finally {
+        HandleSelected ();
         setLoading(false); // Detiene la animación de carga
-      }
+      
     };
 
     fetchSelectData();
@@ -86,6 +58,29 @@ const CreatePromocion = () => {
       [name]: value
     }));
   };
+
+
+  const HandleSelected = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/filter-promocion`, { headers: { Authorization: `Bearer ${token}` } });
+
+        const {centro,periodo,cohorte,mencion,procedencia}=response.data;
+        setFilterOptions({
+
+        centroOptions:centro,
+        periodoOptions: periodo,
+        cohorteOptions: cohorte,
+        mencionOptions: mencion,
+        procedenciaOptions:procedencia
+        });
+ 
+    } catch (error) {
+        console.error('Error fetching filter options:', error);
+    }
+};
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -108,18 +103,20 @@ const CreatePromocion = () => {
   };
 
   return (
-    <div className="container">
+    <div className="row" style={{ marginTop: '50px' }}>
+    <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
+      <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
       <meta name="csrf-token" content="{{ csrf_token() }}" />
       <h1>Agregar Nueva Promoción</h1>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} className="custom-gutter">
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
+              <Row className="g-2"> 
+              <Col md={6}>
 
-            {selectDataLoaded && (
-              <>
                 <SelectComponent
-                  endpoint={`${endpoint}/centro`}
+                  options={filterOptions.centroOptions} 
                   nameField="descripcion"
                   valueField="id"
                   selectedValue={formData.centro_id}
@@ -127,8 +124,12 @@ const CreatePromocion = () => {
                   controlId="centro_id"
                   label="Centro"
                 />
+                </Col>
+                <Col md={6}>
+
                 <SelectComponent
-                  endpoint={`${endpoint}/cohorte`}
+                
+                options={filterOptions.cohorteOptions} 
                   nameField="descripcion"
                   valueField="id"
                   selectedValue={formData.cohorte_id}
@@ -136,8 +137,12 @@ const CreatePromocion = () => {
                   controlId="cohorte_id"
                   label="Cohorte"
                 />
+                </Col>
+                </Row>
+                <Row className="g-2"> 
+                <Col md={6}>
                 <SelectComponent
-                  endpoint={`${endpoint}/periodo`}
+                  options={filterOptions.periodoOptions} 
                   nameField="descripcion"
                   valueField="id"
                   selectedValue={formData.periodo_id}
@@ -145,8 +150,10 @@ const CreatePromocion = () => {
                   controlId="periodo_id"
                   label="Periodo"
                 />
+                </Col>
+                <Col md={6}>
                 <SelectComponent
-                  endpoint={`${endpoint}/procedencia`}
+                  options={filterOptions.procedenciaOptions} 
                   nameField="descripcion"
                   valueField="id"
                   selectedValue={formData.procedencia_id}
@@ -154,8 +161,12 @@ const CreatePromocion = () => {
                   controlId="procedencia_id"
                   label="Procedencia"
                 />
+                </Col>
+                </Row>
+                <Row className="g-2"> 
+                <Col md={6}>
                 <SelectComponent
-                  endpoint={`${endpoint}/mencion`}
+                  options={filterOptions.mencionOptions} 
                   nameField="descripcion"
                   valueField="id"
                   selectedValue={formData.mencion_id}
@@ -163,18 +174,9 @@ const CreatePromocion = () => {
                   controlId="mencion_id"
                   label="Mención"
                 />
-                <SelectComponent
-                  endpoint={`${endpoint}/status_seleccion`}
-                  nameField="descripcion"
-                  valueField="id"
-                  selectedValue={formData.status_id}
-                  handleChange={handleChange}
-                  controlId="status_id"
-                  label="Status"
-                />
-              </>
-            )}
-
+                </Col>
+               
+                <Col md={6}>
             <Form.Group controlId="fecha_promocion">
               <Form.Label>Fecha de Promoción</Form.Label>
               <Form.Control
@@ -185,7 +187,10 @@ const CreatePromocion = () => {
                 required
               />
             </Form.Group>
-
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="estudiantes_asistentes">
               <Form.Label>Estudiantes Asistentes</Form.Label>
               <Form.Control
@@ -196,6 +201,9 @@ const CreatePromocion = () => {
                 required
               />
             </Form.Group>
+            </Col>
+            
+            <Col md={6}>
             <Form.Group controlId="estudiantes_interesados">
               <Form.Label>Estudiantes Interesados</Form.Label>
               <Form.Control
@@ -206,11 +214,14 @@ const CreatePromocion = () => {
                 required
               />
             </Form.Group>
+            </Col>
+            </Row>
+            
 
             <Form.Group controlId="comentarios">
               <Form.Label>Comentarios</Form.Label>
               <Form.Control
-                type="text"
+                type="textarea"
                 name="comentarios"
                 value={formData.comentarios}
                 onChange={handleChange}
@@ -219,18 +230,21 @@ const CreatePromocion = () => {
             </Form.Group>
           </div>
         </div>
-
-        <Button variant="success" type="submit">
-          Guardar
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => navigate('/promocion')}
-          className="ms-2"
-        >
-          Volver
-        </Button>
+        <div className='mt-3'>
+          <Button variant="success" type="submit">
+            Guardar
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/promocion')}
+            className="ms-2"
+          >
+            Volver
+          </Button>
+        </div>
       </Form>
+    </div>
+    </div>
     </div>
   );
 };

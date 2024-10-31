@@ -38,12 +38,12 @@ const ShowMorePromocion = ({  }) => {
   }, [id]);
 
   return (
-    <div className="container">
-      <h1>Promocion #{data.id}</h1>
-      <div className="cards-container">
-        <Card>
-          <Card.Header>Datos de Promoción</Card.Header>
-          <ListGroup variant="flush">
+    <div className="container my-5"> {/* Añadido margen superior */}
+      <div className="row justify-content-center"> {/* Centra el contenido */}
+        <div className="col-lg-9 col-md-8"> {/* Ajusta el tamaño de la tarjeta */}
+          <Card className="p-4 shadow"> {/* Añadido padding y sombra */}
+            <h1 className="mb-4 text-center">Detalles de Promoción {data.cod}</h1> {/* Centrado el título */}
+            <ListGroup variant="flush">
             <ListGroup.Item>Fecha de Registro: {moment(data.fecha_registro).format('YYYY-MM-DD')}</ListGroup.Item>
             <ListGroup.Item>Centro: {data.centro?.descripcion}</ListGroup.Item>
             <ListGroup.Item>Cohorte: {data.cohorte?.descripcion}</ListGroup.Item>
@@ -55,17 +55,19 @@ const ShowMorePromocion = ({  }) => {
             <ListGroup.Item>Estudiantes Interesados: {data.estudiantes_interesados}</ListGroup.Item>
             <ListGroup.Item>Comentarios: {data.comentarios}</ListGroup.Item>
           </ListGroup>
+          <div className="text-center mt-4">
+            <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                >
+                Volver
+                </Button>
+
+            </div>
         </Card>
       </div>
-      <Button 
-        variant="secondary" 
-        onClick={() => {
-          navigate('/promocion');
-        }} 
-        className="mt-4"
-      >
-        Volver
-      </Button>
+      
+    </div>
     </div>
   );
 };

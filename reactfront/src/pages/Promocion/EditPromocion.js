@@ -6,6 +6,7 @@ import SelectComponent from '../../components/SelectComponent';
 import './EditPromocion.css'; // Importa la hoja de estilo si es necesario
 import { useLoading } from '../../components/LoadingContext'; 
 import { ToastContainer,toast } from 'react-toastify';
+import { Card, Row, Col } from 'react-bootstrap'; 
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -19,10 +20,18 @@ const EditPromocion = () => {
         mencion_id:'',
         estudiantes_asistentes:'',
         estudiantes_interesados:'',
-        status_id:'',
         comentarios:'',
         
       });
+
+      const [filterOptions, setFilterOptions] = useState({
+        centroOptions: [],
+        periodoOptions: [],
+        cohorteOptions: [],
+        mencionOptions: [],
+        procedenciaOptions: [],
+    
+    });
 
   const navigate = useNavigate();
   const { id } = useParams(); // Obtener el ID desde la ruta
@@ -32,7 +41,8 @@ const EditPromocion = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let relationsArray = ['centro', 'cohorte', 'periodo', 'procedencia', 'mencion', 'statusSeleccion'];
+        HandleSelected();
+        let relationsArray = ['centro', 'cohorte', 'periodo', 'procedencia', 'mencion'];
         const relations = relationsArray.join(',');
         const token = localStorage.getItem('token');
         const response = await axios.get(`${endpoint}/promocion/${id}?with=${relations}`,{
@@ -53,7 +63,6 @@ const EditPromocion = () => {
             nivel_id: '',
             estudiantes_asistentes: '',
             estudiantes_interesados: '',
-            status_id: '',
             comentarios: '',
           },
         });
@@ -93,44 +102,106 @@ const EditPromocion = () => {
     }
   };
 
+
+
+  const HandleSelected = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/filter-promocion`, { headers: { Authorization: `Bearer ${token}` } });
+
+        const {centro,periodo,cohorte,mencion,procedencia}=response.data;
+        setFilterOptions({
+
+        centroOptions:centro,
+        periodoOptions: periodo,
+        cohorteOptions: cohorte,
+        mencionOptions: mencion,
+        procedenciaOptions:procedencia
+        });
+ 
+    } catch (error) {
+        console.error('Error fetching filter options:', error);
+    }
+};
+
+
   return (
-    <div className="container">
+    <div className="row" style={{ marginTop: '50px' }}>
+    <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
+      <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Actualizar Promoción</h1>
-      <Form onSubmit={handleSubmit}>
+      <h1>Agregar Nueva Promoción</h1>
+      <Form onSubmit={handleSubmit} className="custom-gutter">
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
+              <Row className="g-2"> 
+              <Col md={6}>
 
-          <SelectComponent
-              endpoint={`${endpoint}/centro`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.centro_id}
-              handleChange={handleChange}
-              controlId="centro_id"
-              label="Centro"
-            />
-            <SelectComponent
-              endpoint={`${endpoint}/cohorte`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.cohorte_id}
-              handleChange={handleChange}
-              controlId="cohorte_id"
-              label="Cohorte"
-            />
-            <SelectComponent
-              endpoint={`${endpoint}/periodo`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.periodo_id}
-              handleChange={handleChange}
-              controlId="periodo_id"
-              label="Periodo"
-            />
-             <Form.Group controlId="fecha_promocion">
-              <Form.Label>Fecha de Promocion</Form.Label>
+                <SelectComponent
+                  options={filterOptions.centroOptions} 
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.centro_id}
+                  handleChange={handleChange}
+                  controlId="centro_id"
+                  label="Centro"
+                />
+                </Col>
+                <Col md={6}>
+
+                <SelectComponent
+                
+                options={filterOptions.cohorteOptions} 
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.cohorte_id}
+                  handleChange={handleChange}
+                  controlId="cohorte_id"
+                  label="Cohorte"
+                />
+                </Col>
+                </Row>
+                <Row className="g-2"> 
+                <Col md={6}>
+                <SelectComponent
+                  options={filterOptions.periodoOptions} 
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.periodo_id}
+                  handleChange={handleChange}
+                  controlId="periodo_id"
+                  label="Periodo"
+                />
+                </Col>
+                <Col md={6}>
+                <SelectComponent
+                  options={filterOptions.procedenciaOptions} 
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.procedencia_id}
+                  handleChange={handleChange}
+                  controlId="procedencia_id"
+                  label="Procedencia"
+                />
+                </Col>
+                </Row>
+                <Row className="g-2"> 
+                <Col md={6}>
+                <SelectComponent
+                  options={filterOptions.mencionOptions} 
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.mencion_id}
+                  handleChange={handleChange}
+                  controlId="mencion_id"
+                  label="Mención"
+                />
+                </Col>
+               
+                <Col md={6}>
+            <Form.Group controlId="fecha_promocion">
+              <Form.Label>Fecha de Promoción</Form.Label>
               <Form.Control
                 type="date"
                 name="fecha_promocion"
@@ -139,27 +210,11 @@ const EditPromocion = () => {
                 required
               />
             </Form.Group>
-            
-            <SelectComponent
-              endpoint={`${endpoint}/procedencia`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.procedencia_id}
-              handleChange={handleChange}
-              controlId="procedencia_id"
-              label="Procedencia"
-            /> 
-            <SelectComponent
-              endpoint={`${endpoint}/mencion`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.mencion_id}
-              handleChange={handleChange}
-              controlId="mencion_id"
-              label="Mención"
-            /> 
-
-             <Form.Group controlId="estudiantes_asistentes">
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+            <Form.Group controlId="estudiantes_asistentes">
               <Form.Label>Estudiantes Asistentes</Form.Label>
               <Form.Control
                 type="number"
@@ -169,6 +224,9 @@ const EditPromocion = () => {
                 required
               />
             </Form.Group>
+            </Col>
+            
+            <Col md={6}>
             <Form.Group controlId="estudiantes_interesados">
               <Form.Label>Estudiantes Interesados</Form.Label>
               <Form.Control
@@ -179,21 +237,14 @@ const EditPromocion = () => {
                 required
               />
             </Form.Group>
-
-            <SelectComponent
-              endpoint={`${endpoint}/status_seleccion`}
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.status_id}
-              handleChange={handleChange}
-              controlId="status_id"
-              label="Status"
-            />
+            </Col>
+            </Row>
+            
 
             <Form.Group controlId="comentarios">
               <Form.Label>Comentarios</Form.Label>
               <Form.Control
-                type="text"
+                type="textarea"
                 name="comentarios"
                 value={formData.comentarios}
                 onChange={handleChange}
@@ -202,18 +253,21 @@ const EditPromocion = () => {
             </Form.Group>
           </div>
         </div>
-
-        <Button variant="success" type="submit">
-          Guardar
-        </Button>
-        <Button 
-          variant="secondary" 
-          onClick={() => navigate('/promocion')}
-          className="ms-2"
-        >
-          Volver
-        </Button>
+        <div className='mt-3'>
+          <Button variant="success" type="submit">
+            Guardar
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/promocion')}
+            className="ms-2"
+          >
+            Volver
+          </Button>
+        </div>
       </Form>
+    </div>
+    </div>
     </div>
   );
 };

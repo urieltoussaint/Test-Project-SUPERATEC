@@ -24,7 +24,10 @@ class InformacionInscripcion extends Model
         'status_pay',
         'datos_identificacion_id',
         'patrocinante_id',
-        'status_curso'
+        'patrocinante_id2',
+        'patrocinante_id3',
+        'status_curso',
+        'realiza_aporte'
 
     ];
     protected $listable = [
@@ -46,7 +49,10 @@ class InformacionInscripcion extends Model
         'status_pay',
         'datos_identificacion_id',
         'patrocinante_id',
-        'status_curso'
+        'patrocinante_id2',
+        'patrocinante_id3',
+        'status_curso',
+        'realiza_aporte'
     ];
 
     // Definir relaciones
@@ -101,11 +107,18 @@ class InformacionInscripcion extends Model
     {
         return $this->belongsTo(TipoPrograma::class, 'tipo_programa_id');
     }
-    public function Patrocinante()
+    public function Patrocinante1()
     {
         return $this->belongsTo(Patrocinante::class, 'patrocinante_id');
     }
-
+    public function Patrocinante2()
+    {
+        return $this->belongsTo(Patrocinante::class, 'patrocinante_id2');
+    }
+    public function Patrocinante3()
+    {
+        return $this->belongsTo(Patrocinante::class, 'patrocinante_id3');
+    }
     public function ReportePagos()
     {
         return $this->hasMany(ReportePagos::class, 'informacion_inscripcion_id');

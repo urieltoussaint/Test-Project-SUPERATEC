@@ -39,6 +39,8 @@ const ShowDatosCursos = () => {
     const [nivelOptions, setNivelOptions] = useState([]);
     const [tipoProgramaOptions, setTipoProgramaOptions] = useState([]);
     const [modalidadOptions, setModalidadOptions] = useState([]);
+    const [cohortedOptions, setCohorteOptions] = useState([]);
+
     const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
 
 
@@ -50,7 +52,8 @@ const ShowDatosCursos = () => {
         modalidad_id: '',
         tipo_programa_id: '',
         unidad_id: '',
-        status_pay:''
+        status_pay:'',
+        cohorte_id:''
     });
     
    
@@ -69,7 +72,7 @@ const ShowDatosCursos = () => {
 
       const getAllDatosCursos = async () => {
         try {
-            let relationsArray = ['area', 'curso', 'nivel', 'modalidad', 'periodo'];
+            let relationsArray = ['area', 'curso', 'nivel', 'modalidad', 'periodo','cohorte'];
             const relations = relationsArray.join(',');
     
             // Asegurarse de que cedula_identidad tiene valor
@@ -118,14 +121,14 @@ const ShowDatosCursos = () => {
           
           // Desestructuramos los datos que vienen en la respuesta
           
-          
-          setAreaOptions(response.data.area);
+            setCohorteOptions(response.data.cohorte);
+            setAreaOptions(response.data.area);
             setunidadOptions(response.data.unidad);
             setNivelOptions(response.data.nivel);
             setTipoProgramaOptions(response.data.tipo_programa);
             setModalidadOptions(response.data.modalidad);
             setPeriodoOptions(response.data.periodo);
-        
+           
         } catch (error) {
           console.error('Error fetching filter options:', error);
         }
@@ -150,6 +153,12 @@ const getStatusPayColor = (status_pay) => {
     if (status_pay === '4') return 'blue'; // Culminado
     return 'gray'; // Desconocido
 };
+const getStatusCursoColor = (status_curso) => {
+    if (status_curso === '1') return 'orange'; // No finalizado
+    if (status_curso === '2') return 'green'; // Egresado/Certificado
+    if (status_curso === '3') return 'red'; // Retirado
+    return 'gray'; // Desconocido
+};
 
 // Función para renderizar el círculo de color
 const renderStatusPayDot = (status_pay) => {
@@ -166,6 +175,23 @@ const renderStatusPayDot = (status_pay) => {
         ></div>
     );
 };
+
+const renderStatusCursoTriangle = (status_curso) => {
+    const color = getStatusCursoColor(status_curso); // Usar la función correcta para el color
+    return (
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderLeft: '6px solid transparent',    // Lado izquierdo del triángulo
+          borderRight: '6px solid transparent',   // Lado derecho del triángulo
+          borderBottom: `10px solid ${color}`,    // Base del triángulo, define el color
+          display: 'inline-block',
+          marginRight: '5px',
+        }}
+      ></div>
+    );
+  };
 
 const applyFilters = (filters) => {
     let filtered = inscripciones;
@@ -199,12 +225,19 @@ const applyFilters = (filters) => {
     if (filters.unidad_id) {
         filtered = filtered.filter(inscripcion => inscripcion.unidad_id === parseInt(filters.unidad_id));
     }
+    // Filtrar por cohorte
+    if (filters.cohorte_id) {
+        filtered = filtered.filter(inscripcion => inscripcion.cohorte_id === parseInt(filters.cohorte_id));
+    }
 
     // Filtrar por status_pay
     if (filters.status_pay) {
         filtered = filtered.filter(inscripcion => inscripcion.status_pay === filters.status_pay);
     }
-
+    // Filtrar por status_curso
+    if (filters.status_curso) {
+        filtered = filtered.filter(inscripcion => inscripcion.status_curso === filters.status_curso);
+    }
     // Actualizar los datos filtrados
     setFilteredInscripciones(filtered);
     setCurrentPage(1);  // Reiniciar a la primera página después de aplicar los filtros
@@ -225,26 +258,36 @@ const totalCursos = filteredInscripciones.length;
 
 // Calcular las horas cursando (status_pay = 3) y horas realizadas (status_pay = 4)
 const horasCursando = filteredInscripciones
-    .filter(inscripcion => inscripcion.status_pay === '3')
+    .filter(inscripcion => inscripcion.status_curso === '1')
     .reduce((acc, curr) => acc + (curr.curso?.cantidad_horas || 0), 0);
 
 const horasRealizadas = filteredInscripciones
-    .filter(inscripcion => inscripcion.status_pay === '4')
+    .filter(inscripcion => inscripcion.status_curso === '2')
     .reduce((acc, curr) => acc + (curr.curso?.cantidad_horas || 0), 0);
 
 // Calcular el total de cursos no empezados (status_pay = 1), cursando (status_pay = 3) y terminados (status_pay = 4)
-    const totalNoEmpezados = filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '1'||inscripcion.status_pay === '2').length;
-    const totalCursando = filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '3').length;
-    const totalTerminados = filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '4').length;
+   
+    const totalCursando = filteredInscripciones.filter(inscripcion => inscripcion.status_curso === '1').length;
+    const totalTerminados = filteredInscripciones.filter(inscripcion => inscripcion.status_curso === '2').length;
+    const totalRetirados = filteredInscripciones.filter(inscripcion => inscripcion.status_curso === '3').length;
 
     // Datos para el gráfico de dona según status_pay
-    const dataPie = [
-        { name: 'No Pagado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '1').length, color: 'rgba(255, 74, 74, 0.9)' },  
-        { name: 'Pago en Proceso', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '2').length, color: '#ffc658' }, 
-        { name: 'Cursando', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '3').length, color: 'rgb(72, 205, 143)' },  
-        { name: 'Culminado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '4').length, color: 'rgb(61, 128, 200)' } 
-    ];
-    
+   // Datos para el gráfico de dona según status_pay (actualizado con nuevos estados)
+const dataPie = [
+    { name: 'No Pagado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '1').length, color: 'rgba(255, 74, 74, 0.9)' },  
+    { name: 'Pago en Proceso', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '2').length, color: '#ffc658' }, 
+    { name: 'Pagado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '3').length, color: 'rgb(72, 205, 143)' },  
+    { name: 'Patrocinado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '4').length, color: 'rgb(61, 128, 200)' },
+    { name: 'Exonerado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_pay === '5').length, color: '#fc53c4' } // Rosa claro para Exonerado
+];
+
+const dataPieCursos = [
+    { name: 'No Finalizado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_curso === '1').length, color: '#ffc658' },  
+    { name: 'Egresado/Certificado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_curso === '2').length, color: 'rgb(72, 205, 143)' }, 
+    { name: 'Retirado', value: filteredInscripciones.filter(inscripcion => inscripcion.status_curso === '3').length, color: 'red' },  
+   
+];
+
 
 // Datos para el gráfico de barras según modalidad
 const dataBar = modalidadOptions.map(modalidad => ({
@@ -259,9 +302,9 @@ const dataRadar = nivelOptions.map(nivel => ({
 }));
 
 // Datos para el gráfico de ComposedChart por periodo
-const dataPeriodo = periodoOptions.map(periodo => ({
-    name: periodo.descripcion,
-    cantidad: filteredInscripciones.filter(inscripcion => inscripcion.periodo_id === periodo.id).length,
+const dataCohorte = cohortedOptions.map(cohorte => ({
+    name: cohorte.descripcion,
+    cantidad: filteredInscripciones.filter(inscripcion => inscripcion.cohorte_id === cohorte.id).length,
 }));
 
 
@@ -284,7 +327,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
         
 
 
-    const columns = [ "cod", "Nombre del Curso","Area","Horas","Status","Acciones"];
+    const columns = [ "cod", "Nombre del Curso","Area","Horas","Estado de Pago","Estado de Curso","Acciones"];
 
     const renderItem = (informacion_inscripcion) => (
         <tr key={informacion_inscripcion.id}>
@@ -292,10 +335,8 @@ const dataPieUnidad = unidadOptions.map(option => ({
         <td >{informacion_inscripcion?.curso.descripcion}</td>
         <td >{informacion_inscripcion?.area?.descripcion}</td>
         <td >{informacion_inscripcion?.curso?.cantidad_horas}</td>
-        <td className="text-center">{renderStatusPayDot(informacion_inscripcion.status_pay)}</td> {/* Aquí agregamos el círculo */}
-
-      
-        
+        <td className="text-center">{renderStatusPayDot(informacion_inscripcion.status_pay)}</td> 
+        <td className="text-center">{renderStatusCursoTriangle(informacion_inscripcion.status_curso)}</td> 
         <td >
         <div className="d-flex justify-content-around">
                         
@@ -372,16 +413,16 @@ const dataPieUnidad = unidadOptions.map(option => ({
                     borderRadius: '8px',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                 }}>
-                    <h4 style={{ fontSize: '1rem', color: 'gray', textAlign: 'center' }}>Cursos por Status</h4>
+                    <h4 style={{ fontSize: '1rem', color: 'gray', textAlign: 'center' }}>Status de Cursos</h4>
                     <div className="stat-number" style={{
                         fontSize: '1.2rem',
                         fontWeight: 'bold',
                         textAlign: 'center',
                         color: '#6c757d'
                     }}>
-                        <span style={{ color: 'rgb(255, 74, 74)' }}>{totalNoEmpezados}</span> / <span style={{ color: 'rgb(72, 205, 143)' }}>{totalCursando}</span> / <span style={{ color: 'rgb(61, 128, 200)' }}>{totalTerminados}</span>
+                        <span style={{ color: '#ffda1f' }}>{totalCursando}</span> / <span style={{ color: 'rgb(72, 205, 143)' }}>{totalTerminados}</span> / <span style={{ color: 'rgb(255, 74, 74)' }}>{totalRetirados}</span>
                     </div>
-                    <div style={{ fontSize: '0.85rem', textAlign: 'center', color: '#6c757d' }}>No Empezados / Cursando / Terminados</div>
+                    <div style={{ fontSize: '0.85rem', textAlign: 'center', color: '#6c757d' }}>No Finalizado / Egresado / Retirado</div>
                 </div>
             </div>
             </div>
@@ -430,6 +471,30 @@ const dataPieUnidad = unidadOptions.map(option => ({
                         <option value="3">Cursando</option>
                         <option value="4">Culminado</option>
                     </Form.Select>
+                    <Form.Select
+                        name="status_curso"
+                        value={filters.status_curso}
+                        onChange={handleFilterChange}
+                        className="me-2"
+                    >
+                        <option value="">Filtrar por Estado de Curso</option>
+                        <option value="1">No Finalizado</option>
+                        <option value="2">Egresado/Certificado</option>
+                        <option value="3">Retirado</option>
+                    </Form.Select>
+                    </div>
+                    <div className="d-flex mb-3 ">
+                    <Form.Select
+                            name="cohorte_id"
+                            value={filters.cohorte_id}
+                            onChange={handleFilterChange}
+                            className="me-2"
+                        >
+                            <option value="">Filtrar por Cohorte</option>
+                            {cohortedOptions.map(option => (
+                                <option key={option.id} value={option.id}>{option.descripcion}</option>
+                            ))}
+                        </Form.Select>
 
                         <Form.Select
                             name="periodo_id"
@@ -507,12 +572,20 @@ const dataPieUnidad = unidadOptions.map(option => ({
 
                     </div>
                     {/* Leyenda de colores */}
-                        <div className="status-legend d-flex justify-content-start mb-3">
-                            <span className="status-dot red"></span> Curso No Pagado (Rojo)
-                            <span className="status-dot orange ms-3"></span> Curso Pagando (Naranja)
-                            <span className="status-dot green ms-3"></span> Pagado Cursando (Verde)
-                            <span className="status-dot blue ms-3"></span> Curso Culminado (Azul)
-                        </div>
+                        {/* Leyenda de colores actualizada para status_pay */}
+                    <div className="status-legend d-flex justify-content-start mb-3">
+                        <span className="status-dot red"></span> No Pagado (Rojo)
+                        <span className="status-dot orange ms-3"></span> Pago en Proceso (Naranja)
+                        <span className="status-dot green ms-3"></span> Pagado (Verde)
+                        <span className="status-dot blue ms-3"></span> Patrocinado (Azul)
+                        <span className="status-dot pink ms-3"></span> Exonerado (Rosado)
+                    </div>
+                    <div className="status-legend d-flex justify-content-start mb-3">
+                        <span className="status-triangle not-finalized"></span> No Finalizado (Naranja)
+                        <span className="status-triangle graduated ms-3"></span> Egresado/Certificado (Verde)
+                        <span className="status-triangle withdrawn ms-3"></span> Retirado (Rojo)
+                    </div>
+
 
 
                     <PaginationTable
@@ -531,7 +604,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
         
         <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
             <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
-            <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Status</h4>
+            <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Estado de Pagos</h4>
                 <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                     <Pie
@@ -575,20 +648,32 @@ const dataPieUnidad = unidadOptions.map(option => ({
             </div>
             
             <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
-            <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Nivel</h4>
+            <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Estado de Cursos</h4>
                 <ResponsiveContainer width="100%" height={300}>
-                    <RadarChart data={dataRadar}>
-                        <PolarGrid />
-                        <PolarAngleAxis dataKey="subject" />
-                        <PolarRadiusAxis angle={30} domain={[0, Math.max(...dataRadar.map(d => d.value))]} />
-                        <Radar name="Cursos" dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                        <Legend />
-                    </RadarChart>
+                <PieChart>
+                    <Pie
+                        data={dataPieCursos}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}  // Hacer la forma de dona
+                        outerRadius={100}
+                        fill="#8884d8"
+                        label
+                    >
+                        {dataPieCursos.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} /> 
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </PieChart>
                 </ResponsiveContainer>
             </div>
         </div>
         <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
-            <div className="chart-box" style={{ flex: '1 1 48%', maxWidth: '48%', marginRight: '10px' }}>
+            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
             <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Tipo de Programa</h4>
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={dataBarTipoPrograma}>
@@ -607,7 +692,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
 
 
             </div>
-            <div className="chart-box" style={{ flex: '1 1 48%', maxWidth: '48%', marginRight: '10px' }}>
+            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
             <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Unidad</h4>
                 <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -634,15 +719,27 @@ const dataPieUnidad = unidadOptions.map(option => ({
 
 
             </div>
+            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
+            <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Nivel</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                    <RadarChart data={dataRadar}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="subject" />
+                        <PolarRadiusAxis angle={30} domain={[0, Math.max(...dataRadar.map(d => d.value))]} />
+                        <Radar name="Cursos" dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                        <Legend />
+                    </RadarChart>
+                </ResponsiveContainer>
+            </div>
 
         </div>
         <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
             <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
-            <h4 style={{ fontSize: '1.2rem' }}>Cursos por Periodo</h4>
+            <h4 style={{ fontSize: '1.2rem' }}>Cursos por Cohorte</h4>
             <div className="d-flex justify-content-between align-items-center">
                     
                     <ResponsiveContainer width="100%" height={400}>
-                        <ComposedChart data={dataPeriodo}>
+                        <ComposedChart data={dataCohorte}>
                             <CartesianGrid stroke="#f5f5f5" />
                             <XAxis dataKey="name" />
                             <YAxis />

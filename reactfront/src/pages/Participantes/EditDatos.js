@@ -26,7 +26,6 @@ const EditDatos = () => {
     direccion_email: '',
     telefono_casa: '',
     telefono_celular: '',
-    status_seleccion_id: '',
     nacionalidad_id: '',
     genero_id: '',
     grupo_prioritario_id: '',
@@ -44,7 +43,6 @@ const EditDatos = () => {
     grupoOptions: [],
     nacionalidadOptions: [],
     procedenciaOptions: [],
-    statusSeleccionOptions: [],
     superatecOptions: [],  
 });
 
@@ -65,7 +63,7 @@ const EditDatos = () => {
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('token');
-            let relationsArray = ['nacionalidad', 'estado', 'statusSeleccion', 'grupoPrioritario', 'procedencia', 'genero', 'nivelInstruccion'];
+            let relationsArray = ['nacionalidad', 'estado', 'grupoPrioritario', 'procedencia', 'genero', 'nivelInstruccion'];
             const relations = relationsArray.join(',');
             const response = await axios.get(`${endpoint}/datos/${id}`, {
                 headers: {
@@ -139,7 +137,6 @@ const handleSeleccionar = async () => {
           grupoOptions:grupo_prioritario,
           nacionalidadOptions:nacionalidad,
           procedenciaOptions:procedencia,
-          statusSeleccionOptions:status_seleccion,
           superatecOptions:superatec,
 
       });
@@ -462,19 +459,6 @@ const handleKeyDown = (e) => {
             </Form.Group>
 
             <Row className="g-2"> 
-            <Col md={6}>
-            <SelectComponent
-              options={filterOptions.statusSeleccionOptions}  // Usar el estado filterOptions
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.status_seleccion_id}
-              handleChange={handleChange}
-              controlId="status_seleccion_id"
-              label="Status"
-              allowEmpty={true}  // Permitir que el campo esté vacío
-            />
-            </Col>
-            <Col md={6}>
             <SelectComponent
               options={filterOptions.grupoOptions}  // Usar el estado filterOptions
               nameField="descripcion"
@@ -484,7 +468,6 @@ const handleKeyDown = (e) => {
               controlId="grupo_prioritario_id"
               label="Grupo Prioritario"
             />
-            </Col>
             </Row>
             <Row className="g-2"> 
             <Col md={6}>

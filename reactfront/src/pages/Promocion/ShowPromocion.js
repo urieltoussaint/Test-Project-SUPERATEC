@@ -11,6 +11,9 @@ import { ToastContainer,toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';
 import { Modal } from 'react-bootstrap';
+import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+import { FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaLocationDot } from "react-icons/fa6";
 const endpoint = 'http://localhost:8000/api';
 
 const ShowPromocion = () => {
@@ -23,6 +26,12 @@ const ShowPromocion = () => {
     const [periodoOptions, setPeriodoOptions] = useState([]);
     const [cohorteOptions, setCohorteOptions] = useState([]);
     const [mencionOptions, setMencionOptions] = useState([]);
+    const [procedenciaOptions, setProcedenciaOptions] = useState([]);
+    const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FF4567'];
+
+
+    
     const userRole = localStorage.getItem('role');
     const itemsPerPage = 4;
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
@@ -31,6 +40,7 @@ const ShowPromocion = () => {
         periodo_id: '',
         cohorte_id: '',
         mencion_id: '',
+        procedencia_id:'',
     });
     const { setLoading } = useLoading();
     const [error, setError] = useState(null);
@@ -82,42 +92,7 @@ const ShowPromocion = () => {
             console.error('Error fetching data:', error);
         }
     };
-    
 
-    const fetchFilterOptions = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const [centroRes, periodoRes, cohorteRes, mencionRes] = await Promise.all([
-                axios.get(`${endpoint}/centro`,{
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }),
-                axios.get(`${endpoint}/periodo`,{
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }),
-                axios.get(`${endpoint}/cohorte`,{
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }),
-                axios.get(`${endpoint}/mencion`,{
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }),
-            ]);
-            setCentroOptions(centroRes.data.data);
-            setPeriodoOptions(periodoRes.data.data);
-            setCohorteOptions(cohorteRes.data.data);
-            setMencionOptions(mencionRes.data.data);
-        } catch (error) {
-            setError('Error fetching filter options');
-            console.error('Error fetching filter options:', error);
-        }
-    };
 
     const deletePromocion = async () => {
        
@@ -154,6 +129,25 @@ const ShowPromocion = () => {
         applyFilters(newFilters);
     };
 
+    const fetchFilterOptions = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/filter-promocion`, { headers: { Authorization: `Bearer ${token}` } });
+            
+            setCentroOptions(response.data.centro);
+            setPeriodoOptions(response.data.periodo);
+            setCohorteOptions(response.data.cohorte);
+            setMencionOptions(response.data.mencion);
+            setProcedenciaOptions(response.data.procedencia);
+
+
+    
+        } catch (error) {
+            setError('Error fetching filter options');
+            console.error('Error fetching filter options:', error);
+        }
+    };
+
     const applyFilters = (filters) => {
         let filtered = promociones;
 
@@ -186,6 +180,11 @@ const ShowPromocion = () => {
                 promocion.mencion_id === parseInt(filters.mencion_id)
             );
         }
+        if (filters.procedencia_id) {
+            filtered = filtered.filter(promocion =>
+                promocion.procedencia_id === parseInt(filters.procedencia_id)
+            );
+        }
 
         setFilteredPromociones(filtered);
         setCurrentPage(1);
@@ -194,15 +193,107 @@ const ShowPromocion = () => {
     if (error) {
         return <div>{error}</div>;
     };
+
+    const loadData = async () => {
+        setLoadingData(true); // Inicia el estado de carga
+        try {
+            await getAllPromociones(); // Espera a que getAllDatos haga la solicitud y actualice los datos
+        } catch (error) {
+            console.error('Error recargando los datos:', error); // Maneja el error si ocurre
+        } finally {
+            setLoadingData(false); // Detener el estado de carga cuando la solicitud haya terminado
+        }
+    };
+
+
+    const activeFilters = Object.values(filters).some(val => val); // Comprobar si hay filtros activos
+    const dataToUse = activeFilters ? filteredPromociones : promociones; // Usar filteredDatos si hay filtros activos, de lo contrario usar datos
+
+    // Total de participantes basado en filtros activos
+    const totalPromociones = dataToUse.length;
+
+    const getMencionChartData = () => {
+        const mencionDict = mencionOptions.reduce((acc, mencion) => {
+            acc[mencion.id] = mencion.descripcion;
+            return acc;
+        }, {});
+    
+        const groupedData = filteredPromociones.reduce((acc, promocion) => {
+            const mencionName = mencionDict[promocion.mencion_id] || 'Desconocido';
+            if (!acc[mencionName]) {
+                acc[mencionName] = { name: mencionName, count: 0 };
+            }
+            acc[mencionName].count += 1;
+            return acc;
+        }, {});
+    
+        const total = Object.values(groupedData).reduce((sum, item) => sum + item.count, 0);
+        return Object.values(groupedData).map(item => ({
+            name: item.name,
+            value: parseFloat(((item.count / total) * 100).toFixed(2)), // Calcular el porcentaje
+        }));
+    };
+    
+    const getProcedenciaChartData = () => {
+        const grupoDict = procedenciaOptions.reduce((acc, grupo) => {
+            acc[grupo.id] = grupo.descripcion;
+            return acc;
+        }, {});
+    
+        const groupedData = filteredPromociones.reduce((acc, promocion) => {
+            const grupoName = grupoDict[promocion.procedencia_id] || 'Desconocido';
+            if (!acc[grupoName]) {
+                acc[grupoName] = { name: grupoName, count: 0 };
+            }
+            acc[grupoName].count += 1;
+            return acc;
+        }, {});
+    
+        return Object.values(groupedData);
+    };
+
+    const getCentroChartData = () => {
+        const centroDict = centroOptions.reduce((acc, centro) => {
+            acc[centro.id] = centro.descripcion;
+            return acc;
+        }, {});
+    
+        const groupedData = filteredPromociones.reduce((acc, promocion) => {
+            const centroName = centroDict[promocion.centro_id] || 'Desconocido';
+            if (!acc[centroName]) {
+                acc[centroName] = { name: centroName, count: 0 };
+            }
+            acc[centroName].count += 1;
+            return acc;
+        }, {});
+    
+        return Object.values(groupedData).map(item => ({
+            name: item.name,
+            value: item.count
+        }));
+    };
+    
+    // Agrega estas funciones dentro del componente ShowPromocion
+const getTotalEstudiantesAsistentes = () => {
+    return filteredPromociones.reduce((acc, promocion) => acc + (promocion.estudiantes_asistentes || 0), 0);
+};
+
+const getTotalEstudiantesInteresados = () => {
+    return filteredPromociones.reduce((acc, promocion) => acc + (promocion.estudiantes_interesados || 0), 0);
+};
+
+    
+
+
     const columns = [ "id", "Fecha de Registro", "Comentarios", "Acciones"];
 
     const renderItem = (dato) => (
         <tr key={dato.id}>
-        <td className='col-id'>{dato.id}</td>
-        <td className='col-fecha' >{moment(dato.fecha_registro).format('YYYY-MM-DD')}</td>
-        <td className='col-comentarios' >{dato.comentarios}</td>
+        <td >{dato.id}</td>
+        <td  >{moment(dato.fecha_registro).format('YYYY-MM-DD')}</td>
+        <td  >{dato.comentarios}</td>
         <td >
-            <div className="col-acciones">
+            <div className="d-flex justify-content-around">
 
                 <Button
                         variant="btn btn-info" 
@@ -230,91 +321,144 @@ const ShowPromocion = () => {
                     <i className="bi bi-trash3-fill"></i>
                     </Button>
                     )}
-            </div>
+                    </div>
         </td>
     </tr>
     );
 
     return (
-        <div className="container mt-5">
-            <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h1>Lista de Promociones</h1>
-                <div className="d-flex align-items-center">
-                    <Form.Control
-                        type="text"
-                        placeholder="Buscar por comentario"
-                        value={searchComentario}
-                        onChange={handleSearchChange}
-                        className="me-2"
-                    />
-                    {userRole === 'admin' || userRole === 'superuser' ? (
-
-                    <Button variant="btn custom" onClick={() => navigate('create')} className="btn-custom">
-                    <i className="bi bi-bookmark-star-fill me-2  "></i> Nuevo
-                    </Button>
-                    ):null}
+        <div className="container-fluid mt-2" style={{ fontSize: '0.85rem' }}>
+            <div className="col-lg-11 mx-auto d-flex justify-content-center"> 
+            <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
+            {/* Total de Promociones */}
+            <div className="stat-card" style={{  }}>
+                            <div className="stat-icon"><FaLocationDot /></div>
+                            <div className="stat-number" style={{ color: '#58c765', fontSize: '1.2rem' }}>{totalPromociones}</div>
+                            <div className="stat-label">Total de Promociones</div>
+                        </div>
+                         {/* Total de Asistentes */}
+                         <div className="stat-card" style={{  }}>
+                            <div className="stat-icon"><i className="bi bi-people-fill"></i></div>
+                            <div className="stat-number" style={{ color: '#4b9cd3', fontSize: '1.2rem' }}>{getTotalEstudiantesAsistentes()}</div>
+                            <div className="stat-label">Total de Asistentes</div>
+                        </div>
+                        {/*  Total de  interesados */}
+                        <div className="stat-card" style={{  }}>
+                            <div className="stat-icon"><i className="bi bi-people"></i></div>
+                            <div className="stat-number" style={{ color: '#f0ad4e', fontSize: '1.2rem' }}>{getTotalEstudiantesInteresados()}</div>
+                            <div className="stat-label">Total de Interesados</div>
+                        </div>
                 </div>
-            </div>
+                </div>   
 
-            <div className="d-flex mb-3">
-                <Form.Select
-                    name="centro_id"
-                    value={filters.centro_id}
-                    onChange={handleFilterChange}
-                    className="me-2"
-                >
-                    <option value="">Centro</option>
-                    {centroOptions.map(option => (
-                        <option key={option.id} value={option.id}>{option.descripcion}</option>
-                    ))}
-                </Form.Select>
+                
+                <div className="row" style={{ marginTop: '10px' }}>
+                <div className="col-lg-11 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
+                    <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}> 
+                            <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
+                            <h1>Lista de Promociones</h1>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Buscar por comentario"
+                                    value={searchComentario}
+                                    onChange={handleSearchChange}
+                                    className="me-2"
+                                />
 
-                <Form.Select
-                    name="periodo_id"
-                    value={filters.periodo_id}
-                    onChange={handleFilterChange}
-                    className="me-2"
-                >
-                    <option value="">Periodo</option>
-                    {periodoOptions.map(option => (
-                        <option key={option.id} value={option.id}>{option.descripcion}</option>
-                    ))}
-                </Form.Select>
+                                <Button
+                                    variant="info me-2"
+                                    onClick={loadData}
+                                    disabled={loadingData} // Deshabilita el botón si está cargando
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
 
-                <Form.Select
-                    name="cohorte_id"
-                    value={filters.cohorte_id}
-                    onChange={handleFilterChange}
-                    className="me-2"
-                >
-                    <option value="">Cohorte</option>
-                    {cohorteOptions.map(option => (
-                        <option key={option.id} value={option.id}>{option.descripcion}</option>
-                    ))}
-                </Form.Select>
+                                >
+                                    {/* Icono de recarga */}
+                                    {loadingData ? (
+                                    <FaSync className="spin" /> // Ícono girando si está cargando
+                                    ) : (
+                                    <FaSync />
+                                    )}
+                                </Button>
+                                {userRole === 'admin' || userRole === 'superuser' ? (
 
-                <Form.Select
-                    name="mencion_id"
-                    value={filters.mencion_id}
-                    onChange={handleFilterChange}
-                    className="me-2"
-                >
-                    <option value="">Mención</option>
-                    {mencionOptions.map(option => (
-                        <option key={option.id} value={option.id}>{option.descripcion}</option>
-                    ))}
-                </Form.Select>
-            </div>
+                                <Button variant="btn custom" onClick={() => navigate('create')} className="btn-custom">
+                                <i className="bi bi-bookmark-star-fill me-2  "></i> Nuevo
+                                </Button>
+                                ):null}
+                            </div>
+                        </div>
 
-            <PaginationTable
-                data={filteredPromociones}  // Datos filtrados
-                itemsPerPage={itemsPerPage}
-                columns={columns}
-                renderItem={renderItem}
-                currentPage={currentPage}  // Página actual
-                onPageChange={setCurrentPage}  // Función para cambiar de página
-            />
+                        <div className="d-flex mb-3">
+                            <Form.Select
+                                name="centro_id"
+                                value={filters.centro_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Centro</option>
+                                {centroOptions.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+                            </Form.Select>
+
+                            
+
+                            <Form.Select
+                                name="cohorte_id"
+                                value={filters.cohorte_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Cohorte</option>
+                                {cohorteOptions.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+                            </Form.Select>
+                            <Form.Select
+                                name="periodo_id"
+                                value={filters.periodo_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Periodo</option>
+                                {periodoOptions.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+                            </Form.Select>
+
+                            <Form.Select
+                                name="mencion_id"
+                                value={filters.mencion_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Mención</option>
+                                {mencionOptions.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+                            </Form.Select>
+                            <Form.Select
+                                name="procedencia_id"
+                                value={filters.procedencia_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Procedencia</option>
+                                {procedenciaOptions.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+                            </Form.Select>
+                        </div>
+
+                        <PaginationTable
+                            data={filteredPromociones}  // Datos filtrados
+                            itemsPerPage={itemsPerPage}
+                            columns={columns}
+                            renderItem={renderItem}
+                            currentPage={currentPage}  // Página actual
+                            onPageChange={setCurrentPage}  // Función para cambiar de página
+                        />
 
             
             {/* Modal  de eliminación */}
@@ -333,6 +477,144 @@ const ShowPromocion = () => {
                 </Modal.Footer>
             </Modal>
             <ToastContainer />
+        </div>
+        <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px', marginTop:'10px' }}>
+
+
+            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+
+            <   h4 style={{ fontSize: '1.2rem' }}>Distribución por Mencion</h4>
+
+            {mencionOptions.length > 0 && (
+                <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                        <Pie
+                            data={getMencionChartData()}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={120}
+                            label={({ name, value }) => `${name}: ${value}%`}
+                            labelLine
+                        >
+                            {getMencionChartData().map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `${value}%`} />
+                        <Legend
+                            layout="horizontal"
+                            verticalAlign="bottom"
+                            align="center"
+                            wrapperStyle={{
+                                position: "relative",
+                                top: "20px",
+                                textAlign: "center",
+                                fontSize: '12px'
+                            }}
+                        />
+                    </PieChart>
+                </ResponsiveContainer>
+                )}
+            </div>
+
+            <div className="chart-box " style={{flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+            <h4 style={{ fontSize: '1.2rem', textAlign: 'center' }}>Distribución por Procedencia</h4>
+                {procedenciaOptions.length > 0 && (
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={getProcedenciaChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="count" fill="#8884d8" name="Promociones">
+                                {getProcedenciaChartData().map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                )}
+                    
+
+            </div>
+            <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+            <h4 style={{ fontSize: '1.2rem', textAlign: 'center' }}>Distribución por Centro</h4>
+                {centroOptions.length > 0 && (
+                    <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                            <Pie
+                                data={getCentroChartData()}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={80}  // Radio interno para hacer la forma de dona
+                                outerRadius={110} // Radio externo
+                                fill="#82ca9d"
+                                label={({  percent }) => ` ${(percent * 100).toFixed(2)}%`}
+                            >
+                                {getCentroChartData().map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend
+                                layout="horizontal"
+                                verticalAlign="bottom"
+                                align="center"
+                                wrapperStyle={{
+                                    width: "90%",
+                                    textAlign: "center",
+                                    fontSize: '12px'
+                                }}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    )}
+
+
+
+            </div>
+            </div>
+
+
+            <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px', marginTop:'10px' }}>
+
+
+            <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px'}}>
+
+            <   h4 style={{ fontSize: '1.2rem' }}>Asistentes vs Interesados</h4>
+
+            <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                    data={dataToUse}
+                    layout="vertical"
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis dataKey="id" type="category" label={{ value: "Promociones", position: "insideLeft", angle: 0 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="estudiantes_asistentes" fill="#4b9cd3" name="Asistentes" />
+                    <Bar dataKey="estudiantes_interesados" fill="#f0ad4e" name="Interesados" />
+                </BarChart>
+            </ResponsiveContainer>
+
+
+            </div>
+
+            
+            
+            </div>
+        
+        </div>
+        
+        
+        </div>
         </div>
     );
 };

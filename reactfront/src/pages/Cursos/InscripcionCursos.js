@@ -33,6 +33,11 @@ const InscripcionCursos = () => {
     const [cedulaError, setCedulaError] = useState('');  // Estado para el mensaje de error si ya está inscrito
     const [isCedulaValid, setIsCedulaValid] = useState(true); // Estado para manejar si la cédula es válida
     const [formErrors, setFormErrors] = useState({}); // Estado para almacenar los mensajes de error
+    const [patrocinanteSeleccionado1, setPatrocinanteSeleccionado1] = useState(null);
+    const [patrocinanteSeleccionado2, setPatrocinanteSeleccionado2] = useState(null);
+    const [patrocinanteSeleccionado3, setPatrocinanteSeleccionado3] = useState(null);
+    const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
+
 
 
   
@@ -61,13 +66,27 @@ const InscripcionCursos = () => {
             [name]: value
         }));
     };
+    // const handleSeleccionarPatrocinante = (patrocinante) => {
+    //     setPatrocinanteSeleccionado(patrocinante);  // Guarda el patrocinante seleccionado
+    //     setFormData(prevData => ({
+    //         ...prevData,
+    //         patrocinante_id: patrocinante.id  // Almacena el ID del patrocinante seleccionado
+    //     }));
+    //     handleCloseModal();  // Cierra el modal después de seleccionar
+    // };
+    
     const handleSeleccionarPatrocinante = (patrocinante) => {
-        setPatrocinanteSeleccionado(patrocinante);  // Guarda el patrocinante seleccionado
-        setFormData(prevData => ({
-            ...prevData,
-            patrocinante_id: patrocinante.id  // Almacena el ID del patrocinante seleccionado
-        }));
-        handleCloseModal();  // Cierra el modal después de seleccionar
+        if (currentPatrocinante === 1) {
+            setPatrocinanteSeleccionado1(patrocinante);
+            setFormData(prevData => ({ ...prevData, patrocinante_id: patrocinante.id }));
+        } else if (currentPatrocinante === 2) {
+            setPatrocinanteSeleccionado2(patrocinante);
+            setFormData(prevData => ({ ...prevData, patrocinante_id2: patrocinante.id }));
+        } else if (currentPatrocinante === 3) {
+            setPatrocinanteSeleccionado3(patrocinante);
+            setFormData(prevData => ({ ...prevData, patrocinante_id3: patrocinante.id }));
+        }
+        handleCloseModal();
     };
     
     
@@ -185,6 +204,8 @@ const InscripcionCursos = () => {
             console.error('Error fetching filter options:', error);
         }
     };
+
+    
     
     
 
@@ -233,7 +254,7 @@ const InscripcionCursos = () => {
     };
 
 
-const handleInscripcion = async () => {
+const handleInscripcion = async (action) => {
     // Objeto para almacenar errores
     let errors = {};
 
@@ -256,10 +277,11 @@ const handleInscripcion = async () => {
         // Crear un nuevo objeto formDataWithStatus que extiende el formData original
         const formDataWithStatus = {
             ...formData,
-            status_pay: formData.es_patrocinado === "true" ? 4 : 1,  // Agregar status_pay basado en patrocinado
+            status_pay: formData.realiza_aporte === "false" && (!formData.es_patrocinado || formData.es_patrocinado === "false") ? 5 : (formData.es_patrocinado === "true" ? 4 : 1), 
             status_curso:1,
-            patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado?.id : null, // Si patrocinado, agregar patrocinante_id
-            // Agregar otros campos que no están en el formulario
+            patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado1?.id : null,
+            patrocinante_id2: formData.es_patrocinado === "true" ? patrocinanteSeleccionado2?.id || null :null,
+            patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
             cedula_identidad: cedula,
             datos_identificacion_id: formData.datos_identificacion_id, // Usar el ID de la identificación seleccionada
             curso_id: cursoId,
@@ -270,6 +292,8 @@ const handleInscripcion = async () => {
             tipo_programa_id: curso.tipo_programa_id,
         };
 
+        
+
         // 1. Realizar la inscripción con todos los datos
         const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataWithStatus, {
             headers: { Authorization: `Bearer ${token}` },
@@ -278,7 +302,7 @@ const handleInscripcion = async () => {
         const inscripcionId = inscripcionResponse.data.id;  // El ID de la inscripción
 
         // 2. Si es patrocinado, crear la petición adicional
-        if (formData.es_patrocinado === "false" || !formData.es_patrocinado) {
+        if ((formData.es_patrocinado === "false" || !formData.es_patrocinado)&& formData.realiza_aporte==='true') {
             const peticionResponse = await axios.post(`${endpoint}/peticiones`, {
                 zona_id: 3,
                 comentario: 'Pago no realizado',
@@ -290,10 +314,24 @@ const handleInscripcion = async () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
         }
+        
 
         // Si la inscripción fue exitosa, redirigir
         toast.success("Participante inscrito con éxito");
-        navigate(`/inscritos/${cursoId}`);
+        // Redirigir dependiendo de la acción seleccionada y del valor de es_patrocinado
+        if (action === 'siguiente') {
+            if ((formData.es_patrocinado === "false" || !formData.es_patrocinado)&& formData.realiza_aporte==='true') {
+                // Si no es patrocinado, redirigir a pagos
+                navigate(`/pagos/${cedula}/${inscripcionId}`);
+            } else {
+                // Si es patrocinado, redirigir a cursos
+                navigate('/cursos');
+            }
+        } else {
+            // Si la acción es 'guardar', redirigir siempre a cursos
+            navigate(`/inscritos/${cursoId}`);
+        }
+        
     } catch (error) {
         console.error('Error en la inscripción o en la creación de la petición:', error);
         setFormErrors({ general: 'Error en la inscripción o en la creación de la petición' });
@@ -425,6 +463,14 @@ const handleInscripcion = async () => {
 
                         </Col>
                         </Row>
+                        <Form.Group controlId="realiza_aporte">
+                        <Form.Label>¿Realiza Aporte?</Form.Label>
+                        <Form.Control as="select" name="realiza_aporte" value={formData.realiza_aporte} onChange={handleChange}>
+                            <option value="">Seleccione</option>
+                            <option value={true}>Sí</option>
+                            <option value={false}>No</option>
+                        </Form.Control>
+                        </Form.Group>
                         
                         <Form.Group controlId="es_patrocinado">
                         <Form.Label>¿Es patrocinado?</Form.Label>
@@ -438,31 +484,66 @@ const handleInscripcion = async () => {
                         </Form.Group>
                         {/* Mostrar el campo de patrocinante solo si es_patrocinado es true */}
                         {formData.es_patrocinado === "true" && (
-                                <Form.Group controlId="patrocinante">
-                                    <Form.Label>Patrocinante seleccionado</Form.Label>
+                            <>
+                                <Form.Group controlId="patrocinante1">
+                                    <Form.Label>Patrocinante 1 (Obligatorio)</Form.Label>
                                     <div className="d-flex">
-                                        {patrocinanteSeleccionado ? (
-                                            <>
-                                                <Form.Control 
-                                                    type="text" 
-                                                    value={patrocinanteSeleccionado.nombre_patrocinante} 
-                                                    readOnly 
-                                                />
-                                                <Button variant="secondary" onClick={handleOpenModal} className="ms-2">
-                                                    Cambiar
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <Button variant="info" onClick={handleOpenModal}>
-                                                Buscar Patrocinante
+                                        <Form.Control 
+                                            type="text" 
+                                            value={patrocinanteSeleccionado1 ? patrocinanteSeleccionado1.nombre_patrocinante : 'No seleccionado'} 
+                                            readOnly 
+                                        />
+                                        <Button variant="secondary" onClick={() => { setCurrentPatrocinante(1); handleOpenModal(); }} className="ms-2">
+                                            {patrocinanteSeleccionado1 ? 'Cambiar' : 'Seleccionar'}
+                                        </Button>
+                                        {patrocinanteSeleccionado1 && (
+                                            <Button variant="danger" onClick={() => setPatrocinanteSeleccionado1(null)} className="ms-2">
+                                                Deseleccionar
                                             </Button>
                                         )}
                                     </div>
                                 </Form.Group>
-                            )}
-                            {formErrors.general && (
-            <div className="text-danger">{formErrors.general}</div>
-        )}
+                                
+                                <Form.Group controlId="patrocinante2">
+                                    <Form.Label>Patrocinante 2 (Opcional)</Form.Label>
+                                    <div className="d-flex">
+                                        <Form.Control 
+                                            type="text" 
+                                            value={patrocinanteSeleccionado2 ? patrocinanteSeleccionado2.nombre_patrocinante : 'No seleccionado'} 
+                                            readOnly 
+                                        />
+                                        <Button variant="secondary" onClick={() => { setCurrentPatrocinante(2); handleOpenModal(); }} className="ms-2">
+                                            {patrocinanteSeleccionado2 ? 'Cambiar' : 'Seleccionar'}
+                                        </Button>
+                                        {patrocinanteSeleccionado2 && (
+                                            <Button variant="danger" onClick={() => setPatrocinanteSeleccionado2(null)} className="ms-2">
+                                                Deseleccionar
+                                            </Button>
+                                        )}
+                                    </div>
+                                </Form.Group>
+
+                                <Form.Group controlId="patrocinante3">
+                                    <Form.Label>Patrocinante 3 (Opcional)</Form.Label>
+                                    <div className="d-flex">
+                                        <Form.Control 
+                                            type="text" 
+                                            value={patrocinanteSeleccionado3 ? patrocinanteSeleccionado3.nombre_patrocinante : 'No seleccionado'} 
+                                            readOnly 
+                                        />
+                                        <Button variant="secondary" onClick={() => { setCurrentPatrocinante(3); handleOpenModal(); }} className="ms-2">
+                                            {patrocinanteSeleccionado3 ? 'Cambiar' : 'Seleccionar'}
+                                        </Button>
+                                        {patrocinanteSeleccionado3 && (
+                                            <Button variant="danger" onClick={() => setPatrocinanteSeleccionado3(null)} className="ms-2">
+                                                Deseleccionar
+                                            </Button>
+                                        )}
+                                    </div>
+                                </Form.Group>
+                            </>
+                        )}
+
                             
                         <Form.Group controlId="observaciones">
                         <Form.Label>Observaciones</Form.Label>
@@ -475,11 +556,16 @@ const handleInscripcion = async () => {
                         </Form.Group>
                         
                             <div className="d-flex justify-content-around">
-                                <Button variant="success" onClick={handleInscripcion} className='mt-3'>
-                                    Inscribir
+                                <Button variant="info" onClick={handleInscripcion} className='mt-3'>
+                                    Inscribir y Guardar
                                 </Button>
+                                <Button variant="success" onClick={() => handleInscripcion('siguiente')} className='mt-3 'style={{marginRight:"10px"}}>
+                                 Siguiente
+                                 </Button>
                                 </div>  
                             </div>
+
+                            
                         )}
 
                         <Button

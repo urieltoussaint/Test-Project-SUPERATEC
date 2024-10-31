@@ -52,7 +52,6 @@ const ShowMoreDatos = ({ onReload }) => {
               <ListGroup.Item>Estado: {data.estado?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Municipio: {data.municipio}</ListGroup.Item>
               <ListGroup.Item>Dirección: {data.direccion}</ListGroup.Item>
-              <ListGroup.Item>Status: {data.status_seleccion?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Grupo Prioritario: {data.grupo_prioritario?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Procedencia: {data.procedencia?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Nivel de Instrucción: {data.nivel_instruccion?.descripcion}</ListGroup.Item>

@@ -437,7 +437,7 @@ const handleCursoStatusChange = (e) => {
     <tr key={inscripcion.id}>
       
       <td className="text-center">{renderStatusPayDot(inscripcion.status_pay)}</td>
-      <td className="text-center">{renderStatusCursoTriangle(inscripcion.status_curso)}</td> {/* Nueva columna */}
+      <td className="text-center">{renderStatusCursoTriangle(inscripcion.status_curso)}</td> 
 
       <td>{inscripcion.cedula_identidad}</td>
       <td>{moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD')}</td>
@@ -695,10 +695,10 @@ const handleCursoStatusChange = (e) => {
         <span className="status-dot pink ms-3"></span> Exonerado (Rosado)
       </div>
       <div className="status-legend d-flex justify-content-start mb-3">
-      <span className="status-triangle not-finalized"></span> No Finalizado (Naranja)
-      <span className="status-triangle graduated ms-3"></span> Egresado/Certificado (Verde)
-      <span className="status-triangle withdrawn ms-3"></span> Retirado (Rojo)
-</div>
+        <span className="status-triangle not-finalized"></span> No Finalizado (Naranja)
+        <span className="status-triangle graduated ms-3"></span> Egresado/Certificado (Verde)
+        <span className="status-triangle withdrawn ms-3"></span> Retirado (Rojo)
+      </div>
 
       
 

@@ -151,7 +151,6 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
 
 
     // Rutas solo para ver (invitado, superuser y admin)
-    Route::get('status_seleccion', [StatusSeleccionController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('area', [AreaController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('centro', [CentroController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
@@ -192,6 +191,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('filtros-cursos', [CursosController::class, 'getFiltrosCursos'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-datos', [DatosIdentificacionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-patrocinantes', [PatrocinanteController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('filter-promocion', [PromocionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
+
 
 
     //slect

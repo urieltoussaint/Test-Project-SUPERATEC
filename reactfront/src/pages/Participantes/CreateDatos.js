@@ -51,7 +51,6 @@ const CreateDatos = () => {
     direccion_email: '',
     telefono_casa: '',
     telefono_celular: '',
-    status_seleccion_id: null,
     nacionalidad_id: null,
     genero_id: null,
     grupo_prioritario_id: null,
@@ -69,7 +68,6 @@ const CreateDatos = () => {
     grupoOptions: [],
     nacionalidadOptions: [],
     procedenciaOptions: [],
-    statusSeleccionOptions: [],
     superatecOptions: [],  
 });
 
@@ -251,7 +249,7 @@ const CreateDatos = () => {
             headers: { Authorization: `Bearer ${token}` }
         });
 
-        const {nivel_instruccion,estado,genero,grupo_prioritario,nacionalidad,procedencia,status_seleccion,superatec} = response.data;
+        const {nivel_instruccion,estado,genero,grupo_prioritario,nacionalidad,procedencia,superatec} = response.data;
 
         // Guardar las opciones en el estado de filterOptions
         setFilterOptions({
@@ -261,7 +259,6 @@ const CreateDatos = () => {
             grupoOptions:grupo_prioritario,
             nacionalidadOptions:nacionalidad,
             procedenciaOptions:procedencia,
-            statusSeleccionOptions:status_seleccion,
             superatecOptions:superatec,
 
         });
@@ -547,19 +544,7 @@ const CreateDatos = () => {
             </Form.Group>
 
             <Row className="g-2"> 
-            <Col md={6}>
-            <SelectComponent
-              options={filterOptions.statusSeleccionOptions}  // Usar el estado filterOptions
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.status_seleccion_id}
-              handleChange={handleChange}
-              controlId="status_seleccion_id"
-              label="Status"
-              allowEmpty={true}  // Permitir que el campo esté vacío
-            />
-            </Col>
-            <Col md={6}>
+            
             <SelectComponent
               options={filterOptions.grupoOptions}  // Usar el estado filterOptions
               nameField="descripcion"
@@ -569,7 +554,6 @@ const CreateDatos = () => {
               controlId="grupo_prioritario_id"
               label="Grupo Prioritario"
             />
-            </Col>
             </Row>
             <Row className="g-2"> 
             <Col md={6}>

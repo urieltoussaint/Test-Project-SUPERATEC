@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';  // Importa el componente de paginación
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
+
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';
@@ -30,7 +31,6 @@ const ShowDatos = () => {
     const [estadoOptions, setEstadoOptions] = useState([]);
     const [SuperatecOptions, setSuperatecOptions] = useState([]);
     const [grupoPrioritarioOptions, setgrupoPrioritarioOptions] = useState([]);
-    const [StatusOptions, setStatusOptions] = useState([]);
 
     
 
@@ -148,7 +148,6 @@ const ShowDatos = () => {
             setEstadoOptions(response.data.estado);
             setSuperatecOptions(response.data.superatec);
             setgrupoPrioritarioOptions(response.data.grupo_prioritario);
-            setStatusOptions(response.data.status_seleccion);
 
 
     
@@ -262,6 +261,8 @@ const ShowDatos = () => {
     // Cálculo de la mayor y menor edad
     const mayorEdad = dataToUse.length > 0 ? Math.max(...dataToUse.map(d => d.edad)) : 0;
     const menorEdad = dataToUse.length > 0 ? Math.min(...dataToUse.map(d => d.edad)) : 0;
+   
+
 
     const getFilteredDataByDate = () => {
         const today = moment();
@@ -393,26 +394,8 @@ const getGroupPrioritarioChartData = () => {
     }));
 };
 
-const getStatusSeleccionBarChartData = () => {
-    const statusDict = StatusOptions.reduce((acc, status) => {
-        acc[status.id] = status.descripcion;
-        return acc;
-    }, {});
 
-    const groupedData = filteredDatos.reduce((acc, dato) => {
-        const statusId = dato?.status_seleccion_id || 'Desconocido';
-        const statusName = statusDict[statusId] || 'Desconocido';
-
-        if (!acc[statusName]) {
-            acc[statusName] = { name: statusName, count: 0 };
-        }
-        acc[statusName].count += 1;
-        return acc;
-    }, {});
-
-    return Object.values(groupedData);
-};
-const getAgeRangeData = () => {
+const getAgeRangeData = (filteredDatos) => {
     const ageRanges = {
         '6-12': 0,
         '13-17': 0,
@@ -437,12 +420,14 @@ const getAgeRangeData = () => {
         }
     });
 
-    return Object.entries(ageRanges).map(([name, count]) => ({ name, count }));
+    // Convertir `ageRanges` a un array adecuado para el gráfico
+    const total = filteredDatos.length || 1;  // Evitar dividir por cero
+    return Object.entries(ageRanges).map(([name, count]) => ({
+        name,
+        value: parseFloat(((count / total) * 100).toFixed(2)),  // Calcular el porcentaje
+    }));
 };
-
-
-
-
+const ageRangeData = getAgeRangeData(filteredDatos);
 
 
     const columns = ["Cédula", "Nombres", "Apellidos","Email","Tlf", "Acciones"];
@@ -620,49 +605,41 @@ const getAgeRangeData = () => {
 
 
                 {/* Promedio de Aporte y Patrocinado */}
-                <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%', textAlign: 'center' }}>
-                <h4 style={{ fontSize: '1.1rem', color:'gray' }} className='mt-3'>Distribución por Rango de Edad</h4>
-                    {filteredDatos.length > 0 && (
-                        <>
-                            <div style={{width: '90%',  // Ajusta el ancho para reducir el espacio que ocupa
-                                height: '15px', 
-                                backgroundColor: '#f1f1f1', 
-                                borderRadius: '5px', 
-                                overflow: 'hidden', 
-                                margin: '0 auto'}}>
-                                {getAgeRangeData().map((item, index) => (
-                                    <div
-                                        key={item.name}
-                                        style={{
-                                            width: `${(item.count / filteredDatos.length) * 100}%`,
-                                            backgroundColor: COLORS[index % COLORS.length], // Usa diferentes colores para cada rango
-                                            height: '100%',
-                                            display: 'inline-block',
-                                        }}
-                                    ></div>
-                                ))}
-                            </div>
-
-                            {/* Leyenda debajo de la barra */}
-                            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-around' }}>
-                                {getAgeRangeData().map((item, index) => (
-                                    <div key={item.name} style={{ display: 'flex', alignItems: 'center' }}>
-                                        <div
-                                            style={{
-                                                width: '15px',
-                                                height: '15px',
-                                                backgroundColor: COLORS[index % COLORS.length],
-                                                marginRight: '5px',
-                                            }}
-                                        ></div>
-                                        <span>{item.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </>
-                    )}
+                <div className="stat-card" style={{ padding: '0', margin: '0 10px', width: '100%', maxWidth: '300px' }}> 
+                {/* <h4 style={{ fontSize: '1.2rem', color: 'gray' }}>Distribución por Rango de Edad</h4> */}
+        <ResponsiveContainer width="100%" height={120}>
+            <PieChart>
+                <Pie
+                    data={ageRangeData}
+                    dataKey="value"
+                    startAngle={180}
+                    endAngle={0}
+                    cx="50%"
+                    cy="70%"
+                    outerRadius="80%"
+                    label={({ name, percent }) => `${(percent * 100).toFixed(2)}%`}
+                    labelLine
+                >
+                    {ageRangeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                </Pie>
+                <Tooltip formatter={(value) => `${value}%`} />
+                <Legend 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center" 
+                    wrapperStyle={{ 
+                    width: "88%", 
+                    textAlign: "center", 
+                    marginTop: "-15px", 
+                    fontSize: '10px' 
+                    }}
+                    formatter={(value, entry) => <span style={{ color: entry.color }}>{value}</span>}
+                />
+            </PieChart>
+        </ResponsiveContainer>
                 </div>
-
 
             </div>
 
@@ -774,17 +751,7 @@ const getAgeRangeData = () => {
                                 ))}
                             </Form.Select>
 
-                            <Form.Select
-                                name="status_seleccion_id"
-                                value={filters.status_seleccion_id}
-                                onChange={handleFilterChange}
-                                className="me-2"
-                            >
-                                <option value="">Status</option>
-                                {StatusOptions.map(option => (
-                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                                ))}
-                            </Form.Select>
+                           
                         </div>
                         
                             
@@ -926,18 +893,42 @@ const getAgeRangeData = () => {
 
                 </div>
                 <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
-                <h4 style={{ fontSize: '1.2rem' }}>Participantes por Status Selección</h4>
-                    {StatusOptions.length > 0 && (
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={getStatusSeleccionBarChartData()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="count" fill="#82ca9d" name="Participantes" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    )}
+                    <h4 style={{ fontSize: '1.2rem', color: 'gray' }}>Distribución por Rango de Edad</h4>
+                    <ResponsiveContainer width="100%" height={300} >
+                        <PieChart>
+                            <Pie
+                                data={ageRangeData}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="60%"
+                                outerRadius={120}
+                                fill="#82ca9d"
+                                label={({ name, percent }) => `${(percent * 100).toFixed(2)}%`}
+                            >
+                                {ageRangeData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `${value}%`} />
+                            <Legend 
+                                layout="horizontal" 
+                                verticalAlign="bottom" 
+                                align="center" 
+                                wrapperStyle={{ 
+                                    position: "relative",  // Hace que "top" funcione
+                                    top: "20px",  // Ajusta el valor para empujar la leyenda hacia abajo
+                                    width: "90%", 
+                                    textAlign: "center", 
+                                    fontSize: '15px' 
+                                }}
+                            />
+
+                        </PieChart>
+                    </ResponsiveContainer>
+
+
+                
                 </div>
             </div>
 

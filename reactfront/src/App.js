@@ -257,29 +257,7 @@ const AuthenticatedLayout = ({ children }) => {
 
     fetchUser();
     scheduleTasaUpdate();
-
-    switch (location.pathname) {
-      case '/datos':
-        setPageTitle('Participantes');
-        break;
-        case '/peticiones':
-        setPageTitle('Bandeja de Entrada');
-        break;
-      case '/cursos':
-        setPageTitle('Cursos');
-        break;
-      case '/pagos':
-        setPageTitle('Reporte de Pagos');
-        break;
-      case '/voluntariados':
-        setPageTitle('Voluntariados');
-        break;
-      // Agrega más rutas aquí según sea necesario
-      default:
-        setPageTitle('Dashboard');
-        break;
-    }
-  }, [navigate],[location]);
+  }, [navigate]);
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -342,7 +320,7 @@ const AuthenticatedLayout = ({ children }) => {
 
       <div className="header">
 
-      <h2 className="page-title">{`> ${pageTitle}`}</h2>
+      
         <div className="header-content">
         
           <div className="user-section ">
