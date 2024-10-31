@@ -192,6 +192,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('filter-datos', [DatosIdentificacionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-patrocinantes', [PatrocinanteController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-promocion', [PromocionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('filter-voluntariados', [PersonalesVoluntariadosController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
 
 
 

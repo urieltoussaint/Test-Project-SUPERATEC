@@ -42,12 +42,16 @@ const ShowMoreVoluntariados = ({  }) => {
   }, [id]);
 
   return (
-    <div className="container">
-      <h1>Datos del Voluntario {data.nombres} {data.apellidos}</h1>
-      <div className="cards-container">
-        <Card>
-          <Card.Header>Datos Personales</Card.Header>
+    <div className="container-fluid" style={{ marginTop: '50px'}}>
+      <h1 className="mb-4 text-center">Detalles del Voluntariado {data.cedula_identidad}</h1> {/* Centrado el título */}
+      <div className="row justify-content-between"> {/* Espacio entre columnas */}
+      
+        <div className="col-lg-6 col-md-6"> {/* Ajusta el tamaño de la tarjeta */}
+            
+          <Card className="p-4 shadow"> {/* Añadido padding y sombra */}
+          <h4 className="mb-4 text-center">Datos del Voluntariado</h4> {/* Centrado el título */}
           <ListGroup variant="flush">
+
             <ListGroup.Item>Cédula de Identidad: {data.cedula_identidad}</ListGroup.Item>
             <ListGroup.Item>Nombres: {data.nombres}</ListGroup.Item>
             <ListGroup.Item>Apellidos: {data.apellidos}</ListGroup.Item>
@@ -64,9 +68,13 @@ const ShowMoreVoluntariados = ({  }) => {
             <ListGroup.Item>Fecha de Registro: {data.fecha_registro}</ListGroup.Item>
           </ListGroup>
         </Card>
-        <Card className="mt-4">
-          <Card.Header>Datos del Voluntariado</Card.Header>
-          <ListGroup variant="flush">
+        </div>
+
+         <div className="col-lg-6 col-md-6"> {/* Ajusta el tamaño de la tarjeta */}
+          <Card className="p-4 shadow"> {/* Añadido padding y sombra */}
+            <h4 className="mb-4 text-center">Informacion de Voluntariado</h4>
+            <ListGroup variant="flush">
+
             <ListGroup.Item>Tipo de Voluntariado : {data.informacion_voluntariados?.tipo_voluntariado?.descripcion || 'N/A'}</ListGroup.Item>
             <ListGroup.Item>Area de Voluntariado : {data.informacion_voluntariados?.area?.descripcion || 'N/A'}</ListGroup.Item>          
             <ListGroup.Item>Centro : {data.informacion_voluntariados?.centro?.descripcion || 'N/A'}</ListGroup.Item>           
@@ -75,17 +83,15 @@ const ShowMoreVoluntariados = ({  }) => {
             <ListGroup.Item>Horas Totales : {data.informacion_voluntariados?.horas_totales || 'N/A'}</ListGroup.Item>           
           </ListGroup>
         </Card>
+        <div className="text-center mt-4 w-100">
+          <Button variant="secondary" onClick={() => navigate(-1)}>
+            Volver
+          </Button>
+        </div>
       </div>
-      <Button 
-        variant="secondary" 
-        onClick={() => {
-          navigate('/voluntariados');
-        }} 
-        className="mt-4"
-      >
-        Volver
-      </Button>
-    </div>
+      </div>
+      </div>
+     
   );
 };
 

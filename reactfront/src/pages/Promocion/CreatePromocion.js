@@ -37,7 +37,6 @@ const CreatePromocion = () => {
 
 });
 
-  const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
   const navigate = useNavigate();
 
   useEffect(() => {

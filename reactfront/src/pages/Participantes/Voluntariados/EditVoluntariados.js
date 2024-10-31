@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button,Alert } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import './EditVoluntariados.css';
 import { useLoading } from '../../../components/LoadingContext';	
 import { toast } from 'react-toastify';
+import { Card, Row, Col } from 'react-bootstrap';
+
+
 
 const endpoint = 'http://localhost:8000/api';
 
 const EditVoluntariados = () => {
+  const [cedulaError, setCedulaError] = useState(''); // Estado para almacenar el mensaje de validación
+  const [isCedulaValid, setIsCedulaValid] = useState(false);
   const [formData, setFormData] = useState({
     cedula_identidad: '',
     nombres: '',
@@ -33,6 +38,16 @@ const EditVoluntariados = () => {
       horas_totales: '',
     },
   });
+  const [filterOptions, setFilterOptions] = useState({
+    generoOptions: [],
+    nivelOptions: [],
+    procedenciaOptions: [],
+    superatecOptions: [],
+    tipoOptions: [],
+    areaOptions: [],
+    centroOptions: [],
+    turnoOptions: []
+  });
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -40,46 +55,50 @@ const EditVoluntariados = () => {
 
 
   useEffect(() => {
-    const fetchData = async () => {
-      try { 
-        setLoading(true);
-        let relationsArray = [
-          'nacionalidad',
-          'estado',
-          'procedencia',
-          'genero',
-          'NivelInstruccion',
-          'informacionVoluntariados.TipoVoluntariado',
-          'informacionVoluntariados.area',
-          'informacionVoluntariados.centro',
-          'informacionVoluntariados.turnos',
-        ];
-        const relations = relationsArray.join(',');
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${endpoint}/voluntariados/${id}?with=${relations}`,{headers: {
+  handleSeleccionar();
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      let relationsArray = [
+        'procedencia',
+        'genero',
+        'NivelInstruccion',
+        'informacionVoluntariados',
+      ];
+      const relations = relationsArray.join(',');
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/voluntariados/${id}?with=${relations}`, {
+        headers: {
           Authorization: `Bearer ${token}`,
-      },});
-        console.log(response.data);
+        },
+      });
 
-        setFormData({
-          ...response.data,
-          informacion_voluntariados: response.data.informacion_voluntariados || {
-            tipo_voluntariado_id: '',
-            area_voluntariado_id: '',
-            centro_id: '',
-            actividades_realizar: '',
-            turno_id: '',
-            fecha_inicio: '',
-            horas_totales: '',
-          },
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }setLoading(false);
-    };
+      const fetchedData = response.data;
 
-    fetchData();
-  }, [id]);
+      setFormData({
+        ...fetchedData,
+        informacion_voluntariados: fetchedData.informacion_voluntariados || {
+          tipo_voluntariado_id: '',
+          area_voluntariado_id: '',
+          centro_id: '',
+          actividades_realizar: '',
+          turno_id: '',
+          fecha_inicio: '',
+          horas_totales: '',
+        },
+      });
+
+      console.log("FormData after fetch:", formData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [id]);
+
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -101,6 +120,54 @@ const EditVoluntariados = () => {
     }
   };
 
+  
+  const handleSeleccionar = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/filter-voluntariados`, { headers: { Authorization: `Bearer ${token}` } });
+
+        const {centro,area,nivel,genero,procedencia,turno,superatec,tipo}=response.data;
+        setFilterOptions({
+        centroOptions:centro,
+        areaOptions: area,
+        nivelOptions: nivel,
+        generoOptions:genero,
+        procedenciaOptions:procedencia,
+        turnoOptions:turno,
+        superatecOptions:superatec,
+        tipoOptions:tipo,
+
+        });
+ 
+    } catch (error) {
+        console.error('Error fetching filter options:', error);
+    }
+};
+
+  const handleBlur = async () => {
+    if (formData.cedula_identidad) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/datos/${formData.cedula_identidad}`,{headers: {
+          Authorization: `Bearer ${token}`,
+      }});
+        // Si la cédula está registrada, mostramos el error y no es válida
+        setCedulaError('La cédula ya está registrada.');
+        setIsCedulaValid(false);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // La cédula no está registrada, por lo que es válida
+          setCedulaError('');
+          setIsCedulaValid(true);
+        } else {
+          console.error('Error checking cedula:', error);
+          setCedulaError('Error verificando la cédula.');
+          setIsCedulaValid(false);
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -117,23 +184,39 @@ const EditVoluntariados = () => {
   };
 
   return (
-    <div className="container">
-      <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Actualizar Datos del Voluntario</h1>
-      <Form onSubmit={handleSubmit}>
+    
+    <div className="container-fluid" style={{ marginTop: '50px'}}>
+    <Form onSubmit={(e) => handleSubmit(e, false)} className="custom-gutter">
+  <div className="row justify-content-center" >
+  <div className="col-lg-6 " > {/* Centrado del contenido */}
+  <h2 className="mb-2">Agregar Nuevo voluntariado</h2>
+  <div className="card-box" style={{ padding: '20px',  }}>
+  <h4 className="mb-4">Datos del Voluntariado</h4>
+        <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
-            <Form.Group controlId="cedula_identidad">
+          <Form.Group controlId="cedula_identidad">
               <Form.Label>Cédula de Identidad</Form.Label>
               <Form.Control
                 type="text"
                 name="cedula_identidad"
-                value={formData.cedula_identidad}
+                value={formData.cedula_identidad ? `V-${formData.cedula_identidad}` : ''}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="V-123321123"
+                maxLength={10}
                 required
+                className={cedulaError ? 'is-invalid' : isCedulaValid ? 'is-valid' : ''}
               />
+              {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
+              {!cedulaError && isCedulaValid && (
+                <Form.Control.Feedback type="valid">
+                  Cédula disponible.
+                </Form.Control.Feedback>
+              )}
             </Form.Group>
-
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="nombres">
               <Form.Label>Nombres</Form.Label>
               <Form.Control
@@ -144,7 +227,8 @@ const EditVoluntariados = () => {
                 required
               />
             </Form.Group>
-
+            </Col>
+            <Col md={6}>
             <Form.Group controlId="apellidos">
               <Form.Label>Apellidos</Form.Label>
               <Form.Control
@@ -155,7 +239,11 @@ const EditVoluntariados = () => {
                 required
               />
             </Form.Group>
-
+            </Col>
+            </Row>
+            
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="fecha_nacimiento">
               <Form.Label>Fecha de Nacimiento</Form.Label>
               <Form.Control
@@ -166,9 +254,11 @@ const EditVoluntariados = () => {
                 required
               />
             </Form.Group>
+            </Col>
+            <Col md={6}>
 
             <SelectComponent
-              endpoint={`${endpoint}/genero`}
+              options={filterOptions.generoOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.genero_id}
@@ -176,6 +266,11 @@ const EditVoluntariados = () => {
               controlId="genero_id"
               label="Género"
             />
+
+            </Col>
+            </Row>
+            
+            
 
             <Form.Group controlId="direccion">
               <Form.Label>Dirección</Form.Label>
@@ -198,6 +293,8 @@ const EditVoluntariados = () => {
                 required
               />
             </Form.Group>
+            <Row className="g-2"> 
+            <Col md={6}>
 
             <Form.Group controlId="telefono_casa">
               <Form.Label>Teléfono de Casa</Form.Label>
@@ -208,6 +305,8 @@ const EditVoluntariados = () => {
                 onChange={handleChange}
               />
             </Form.Group>
+            </Col>
+            <Col md={6}>
 
             <Form.Group controlId="telefono_celular">
               <Form.Label>Teléfono Celular</Form.Label>
@@ -218,9 +317,23 @@ const EditVoluntariados = () => {
                 onChange={handleChange}
               />
             </Form.Group>
-
+            </Col>
+            </Row>
+            
+            <Form.Group controlId="ocupacion">
+              <Form.Label>Ocupación</Form.Label>
+              <Form.Control
+                type="text"
+                name="ocupacion"
+                value={formData.ocupacion}
+                onChange={handleChange}
+              />
+            </Form.Group>
+            <Row className="g-2"> 
+            <Col md={6}>
+              
             <SelectComponent
-              endpoint={`${endpoint}/nivel_instruccion`}
+              options={filterOptions.nivelOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.nivel_instruccion_id}
@@ -229,8 +342,26 @@ const EditVoluntariados = () => {
               label="Nivel de Instrucción"
             />
 
+            </Col>
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/procedencia`}
+                  options={filterOptions.centroOptions} 
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.centro_id}
+                  handleChange={handleChange}
+                  controlId="centro_id"
+                  label="Centro"
+                />
+
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+
+            <SelectComponent
+              options={filterOptions.procedenciaOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.procedencia_id}
@@ -238,9 +369,10 @@ const EditVoluntariados = () => {
               controlId="procedencia_id"
               label="Procedencia"
             />
-
+            </Col>
+            <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/como_entero_superatec`}
+              options={filterOptions.superatecOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.como_entero_superatec_id}
@@ -248,100 +380,137 @@ const EditVoluntariados = () => {
               controlId="como_entero_superatec_id"
               label="¿Cómo se enteró de SUPERATEC?"
             />
+            </Col>
+            </Row>
+
+            </div>
           </div>
+          </div>
+              </div>
 
-          <div className="col-md-6">
+          <div className="col-lg-5 "style={{ marginTop: '50px'}} >
+          <div className="card-box" style={{ padding: '20px' }}>
             <h2>Información del Voluntariado</h2>
-
+    
+            <Row className="g-2"> 
+            <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/tipo_voluntariado`}
+              options={filterOptions.tipoOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.informacion_voluntariados.tipo_voluntariado_id}
               handleChange={handleChange}
-              controlId="informacion_voluntariados.tipo_voluntariado_id"
-              name="informacion_voluntariados.tipo_voluntariado_id"
+              controlId="tipo_voluntariado_id"
               label="Tipo de Voluntariado"
             />
 
+            </Col>
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/area`}
+              options={filterOptions.areaOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.informacion_voluntariados.area_voluntariado_id}
               handleChange={handleChange}
-              controlId="informacion_voluntariados.area_voluntariado_id"
-              name="informacion_voluntariados.area_voluntariado_id"
+              controlId="area_voluntariado_id"
               label="Área de Voluntariado"
             />
 
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/centro`}
+              options={filterOptions.centroOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.informacion_voluntariados.centro_id}
               handleChange={handleChange}
-              controlId="informacion_voluntariados.centro_id"
-              name="informacion_voluntariados.centro_id"
+              controlId="centro_id"
               label="Centro"
             />
 
-            <Form.Group controlId="informacion_voluntariados.actividades_realizar">
+            </Col>
+            <Col md={6}>
+
+            <Form.Group controlId="actividades_realizar">
               <Form.Label>Actividades a Realizar</Form.Label>
               <Form.Control
                 as="textarea"
-                name="informacion_voluntariados.actividades_realizar"
+                name="actividades_realizar"
                 value={formData.informacion_voluntariados.actividades_realizar}
                 onChange={handleChange}
               />
             </Form.Group>
 
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/turnos`}
+              options={filterOptions.turnoOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.informacion_voluntariados.turno_id}
               handleChange={handleChange}
-              controlId="informacion_voluntariados.turno_id"
-              name="informacion_voluntariados.turno_id"
-              label="Turno"
+              controlId="turno_id"
+              label="Turnos"
             />
 
-            <Form.Group controlId="informacion_voluntariados.fecha_inicio">
+            </Col>
+            <Col md={6}>
+
+            <Form.Group controlId="fecha_inicio">
               <Form.Label>Fecha de Inicio</Form.Label>
               <Form.Control
                 type="date"
-                name="informacion_voluntariados.fecha_inicio"
+                name="fecha_inicio"
                 value={formData.informacion_voluntariados.fecha_inicio}
                 onChange={handleChange}
                 required
               />
             </Form.Group>
 
-            <Form.Group controlId="informacion_voluntariados.horas_totales">
+            </Col>
+            </Row>
+
+            <Form.Group controlId="horas_totales">
               <Form.Label>Horas Totales</Form.Label>
               <Form.Control
                 type="number"
-                name="informacion_voluntariados.horas_totales"
+                name="horas_totales"
                 value={formData.informacion_voluntariados.horas_totales}
                 onChange={handleChange}
                 required
               />
             </Form.Group>
           </div>
+          <div className="button-container"  >
+                <Button 
+                    variant="info"
+                    type="submit"
+                    className="ms-2"
+                >
+                    Guardar
+                </Button>
+
+                <Button 
+                    variant="secondary" 
+                    onClick={() => navigate(-1)}
+                    className="ms-2"
+                >
+                    Volver
+                </Button>
+            </div>
         </div>
 
-        <Button variant="success" type="submit">
-          Guardar
-        </Button>
-        <Button 
-          variant="secondary" 
-          onClick={() => navigate('/voluntariados')}
-          className="ms-2"
-        >
-          Volver
-        </Button>
-      </Form>
+        
+      
+    </div>
+    </Form>
     </div>
   );
 };

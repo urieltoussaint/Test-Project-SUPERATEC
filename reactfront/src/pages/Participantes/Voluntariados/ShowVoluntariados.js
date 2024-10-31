@@ -9,6 +9,14 @@ import { useLoading } from '../../../components/LoadingContext';
 import { toast, ToastContainer } from 'react-toastify';
 import PaginationTable from '../../../components/PaginationTable';
 import { Modal } from 'react-bootstrap';
+import { FaLocationDot } from "react-icons/fa6";
+import { FaPerson } from "react-icons/fa6";
+import { FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+
+
+
+
 
 const endpoint = 'http://localhost:8000/api';
 
@@ -31,7 +39,8 @@ const ShowVoluntariados = () => {
     const { setLoading } = useLoading();
     const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
-    
+    const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FF4567'];
 
     
 
@@ -55,6 +64,12 @@ const ShowVoluntariados = () => {
             
         });
     }, [id]);
+    const [filters, setFilters] = useState({
+        centro_id: '',
+        area_voluntariado_id: '',
+        nivel_instruccion_id: '',
+        genero_id: '',
+    });
 
 
     const getAllVoluntariados = async () => {
@@ -85,54 +100,21 @@ const ShowVoluntariados = () => {
             console.error('Error fetching data:', error);
         }
     };
-    
 
-    
     const fetchFilterOptions = async () => {
-        const token = localStorage.getItem('token');
         try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/filter-voluntariados`, { headers: { Authorization: `Bearer ${token}` } });
             
-            const areaResponse = await axios.get(`${endpoint}/area`,{
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            setAreaOptions(areaResponse.data.data);
-            
+            setAreaOptions(response.data.area);
+            setNivelOptions(response.data.nivel);
+            setGeneroOptions(response.data.genero);
+            setCentroOptions(response.data.centro);
 
-            const nivelResponse = await axios.get(`${endpoint}/nivel_instruccion`,{
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            setNivelOptions(nivelResponse.data.data);
-
-            const generoResponse = await axios.get(`${endpoint}/genero`,{
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            setGeneroOptions(generoResponse.data.data);
-
-            const centroResponse = await axios.get(`${endpoint}/centro`,{
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            setCentroOptions(centroResponse.data.data);
-            
         } catch (error) {
             setError('Error fetching filter options');
             console.error('Error fetching filter options:', error);
         }
-        
-        
-
-        
-        
-        
     };
 
     const deleteVoluntariados = async () => {
@@ -148,6 +130,7 @@ const ShowVoluntariados = () => {
                 setTimeout(() => {
                     getAllVoluntariados();
                 }, 500);
+                handleCloseModal();
                 
             } catch (error) {
                 setError('Error deleting data');
@@ -159,72 +142,138 @@ const ShowVoluntariados = () => {
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
-        setSearchCedula(value);
-        applyFilters(value, selectedArea, selectedNivel, selectedGenero,selectedCentro);
+        setSearchCedula(value);  
+        applyFilters({ ...filters, searchCedula: value });
     };
 
-    const handleAreaChange = (e) => {
-        const value = e.target.value;
-        setSelectedArea(value);
-        applyFilters(searchCedula, value, selectedNivel, selectedGenero,selectedCentro);
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        const newFilters = { ...filters, [name]: value };
+        setFilters(newFilters);
+        applyFilters(newFilters);
     };
 
-    const handleNivelChange = (e) => {
-        const value = e.target.value;
-        setSelectedNivel(value);
-        applyFilters(searchCedula, selectedArea, value, selectedGenero,selectedCentro);
-    };
 
-    const handleGeneroChange = (e) => {
-        const value = e.target.value;
-        setSelectedGenero(value);
-        applyFilters(searchCedula, selectedArea, selectedNivel, value,selectedCentro);
-    };
-    const handleCentroChange = (e) => {
-        const value = e.target.value;
-        setSelectedCentro(value);
-        applyFilters(searchCedula, selectedArea, selectedNivel,selectedGenero, value);
-    };
-
-    const applyFilters = (cedulaValue, areaValue, nivelValue, generoValue,centroValue) => {
+    const applyFilters = (filters) => {
         let filtered = voluntariados;
 
-        if (cedulaValue) {
+        if (filters.searchCedula) {
             filtered = filtered.filter(voluntario =>
-                voluntario.cedula_identidad.toLowerCase().includes(cedulaValue.toLowerCase())
+                voluntario.cedula_identidad.toLowerCase().includes(filters.searchCedula.toLowerCase())
+
             );
         }
 
-        if (areaValue) {
+        if (filters.area_voluntariado_id) {
             filtered = filtered.filter(voluntario =>
-                voluntario.informacion_voluntariados.area_voluntariado_id === parseInt(areaValue)
+                // voluntario.informacion_voluntariados.area_voluntariado_id === parseInt(areaValue)
+                voluntario.informacion_voluntariados.area_voluntariado_id === parseInt(filters.area_voluntariado_id)
+
             );
         }
 
-        if (nivelValue) {
+        if (filters.nivel_instruccion_id) {
             filtered = filtered.filter(voluntario =>
-                voluntario.nivel_instruccion_id === parseInt(nivelValue)
+                // voluntario.nivel_instruccion_id === parseInt(nivelValue)
+                voluntario.nivel_instruccion_id === parseInt(filters.nivel_instruccion_id)
+
             );
         }
 
-        if (generoValue) {
+        if (filters.genero_id) {
             filtered = filtered.filter(voluntario =>
-                voluntario.genero_id === parseInt(generoValue)
+                // voluntario.genero_id === parseInt(generoValue)
+                voluntario.genero_id === parseInt(filters.genero_id)
+
             );
         }
-        if (centroValue) {
+        if (filters.centro_id) {
             filtered = filtered.filter(voluntario =>
-                voluntario.informacion_voluntariados.centro_id === parseInt(centroValue)
+                // voluntario.informacion_voluntariados.centro_id === parseInt(centroValue)
+                voluntario.informacion_voluntariados.centro_id === parseInt(filters.centro_id)
+
             );
         }
 
         setFilteredVoluntariados(filtered);
         setCurrentPage(1);
+        
     };
 
     if (error) {
         return <div>{error}</div>;
     }
+
+    const loadData = async () => {
+        setLoadingData(true); // Inicia el estado de carga
+        try {
+            await getAllVoluntariados(); // Espera a que getAllDatos haga la solicitud y actualice los datos
+        } catch (error) {
+            console.error('Error recargando los datos:', error); // Maneja el error si ocurre
+        } finally {
+            setLoadingData(false); // Detener el estado de carga cuando la solicitud haya terminado
+        }
+    };
+
+
+    const activeFilters = Object.values(filters).some(val => val); // Comprobar si hay filtros activos
+    const dataToUse = activeFilters ? filteredVoluntariados : voluntariados; // Usar filteredDatos si hay filtros activos, de lo contrario usar datos
+
+    // Total de participantes basado en filtros activos
+    const totalVoluntariados = dataToUse.length;
+    const totalMasculino = dataToUse.filter(d => d.genero_id === 1).length;
+    const totalFemenino = dataToUse.filter(d => d.genero_id === 3).length;
+    const totalOtros = dataToUse.filter(d => d.genero_id === 2).length;
+    const porcentajeMasculino = totalMasculino > 0 ? (totalMasculino / dataToUse.length) * 100 : 0;
+    const porcentajeFemenino = totalFemenino > 0 ? (totalFemenino / dataToUse.length) * 100 : 0;
+    const porcentajeOtros = totalOtros > 0 ? (totalOtros / dataToUse.length) * 100 : 0;
+
+    const getAreaVoluntariadoData = () => {
+        // Crear un diccionario para agrupar por áreas
+        const areaCounts = filteredVoluntariados.reduce((acc, voluntario) => {
+            const areaId = voluntario.informacion_voluntariados.area_voluntariado_id;
+            acc[areaId] = (acc[areaId] || 0) + 1;
+            return acc;
+        }, {});
+    
+        // Convertir los datos en un formato adecuado para la gráfica
+        return Object.keys(areaCounts).map(areaId => ({
+            name: areaOptions.find(option => option.id === parseInt(areaId))?.descripcion || "Desconocido",
+            value: areaCounts[areaId]
+        }));
+    };
+
+    const getNivelInstruccionData = () => {
+        // Crear un diccionario para agrupar por nivel de instrucción
+        const nivelCounts = filteredVoluntariados.reduce((acc, voluntario) => {
+            const nivelId = voluntario.nivel_instruccion_id;
+            acc[nivelId] = (acc[nivelId] || 0) + 1;
+            return acc;
+        }, {});
+    
+        // Convertir los datos en un formato adecuado para la gráfica
+        return Object.keys(nivelCounts).map(nivelId => ({
+            name: nivelOptions.find(option => option.id === parseInt(nivelId))?.descripcion || "Desconocido",
+            value: nivelCounts[nivelId]
+        }));
+    };
+
+    const getDataByCentro = () => {
+        const groupedData = filteredVoluntariados.reduce((acc, voluntario) => {
+            const centroId = voluntario.informacion_voluntariados?.centro_id || 'Desconocido';
+            if (!acc[centroId]) {
+                acc[centroId] = { name: centroOptions.find(c => c.id === centroId)?.descripcion || 'Desconocido', count: 0 };
+            }
+            acc[centroId].count += 1;
+            return acc;
+        }, {});
+    
+        return Object.values(groupedData);
+    };
+    
+    
+    
+
     const columns = [ "Cédula", "Nombres", "Apellidos","Acciones"];
 
     const renderItem = (dato) => (
@@ -233,11 +282,11 @@ const ShowVoluntariados = () => {
             <td className='col-nombre'>{dato.nombres}</td>
             <td className='col-apellido'>{dato.apellidos}</td>
             <td >
-                <div className="col-acciones">
+            <div className="d-flex justify-content-around">
 
                     <Button
                         variant="btn btn-info" 
-                        onClick={() => navigate(`/Voluntariados/${dato.cedula_identidad}`)}
+                        onClick={() => navigate(`/Voluntariados/${dato.id}`)}
                         className="me-2"
                     >
                         <i className="bi bi-eye"></i>
@@ -246,7 +295,7 @@ const ShowVoluntariados = () => {
 
                         <Button
                         variant="btn btn-warning"
-                        onClick={() => navigate(`/voluntariados/${dato.cedula_identidad}/edit`)}
+                        onClick={() => navigate(`/voluntariados/${dato.id}/edit`)}
                         className="me-2"
                         >
                         <i className="bi bi-pencil-fill"></i>
@@ -256,7 +305,7 @@ const ShowVoluntariados = () => {
                    
                     <Button
                     variant="btn btn-danger"
-                    onClick={() => handleShowModal(dato.cedula_identidad)}
+                    onClick={() => handleShowModal(dato.id)}
                     className="me-2"
                     >
                     <i className="bi bi-trash3-fill"></i>
@@ -269,30 +318,98 @@ const ShowVoluntariados = () => {
     
     
     return (
-        <div className="container mt-5">
-            <meta name="csrf-token" content="{{ csrf_token() }}"></meta>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h1>Lista de Voluntarios</h1>
-                <div className="d-flex align-items-center">
-                    <Form.Control
-                        type="text"
-                        placeholder="Buscar por cédula"
-                        value={searchCedula}
-                        onChange={handleSearchChange}
-                        className="me-2"
-                    />
-                    {userRole === 'admin' || userRole === 'superuser' ? (
-
-                    <Button variant="btn custom" onClick={() => navigate('create')} className="btn-custom">
-                    <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
-                    </Button>
-                    ): null}
+        <div className="container-fluid mt-2" style={{ fontSize: '0.85rem' }}>
+            <div className="col-lg-11 mx-auto d-flex justify-content-center"> 
+            <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
+            {/* Total de Voluntariados */}
+            <div className="stat-card" style={{  }}>
+                <div className="stat-icon"><FaPerson  /></div>
+                <div className="stat-number" style={{ color: '#58c765', fontSize: '1.2rem' }}>{totalVoluntariados}</div>
+                <div className="stat-label">Total de Voluntariados</div>
+            </div>
+                {/* por genero */}
+                <div className="stat-card" style={{  }}>
+                <ResponsiveContainer width="100%" height={120}> {/* Ajustamos el width y height dinámicamente */}
+                        <PieChart>
+                        <Pie
+                            data={[
+                            { name: 'Masculino', value: porcentajeMasculino },
+                            { name: 'Femenino', value: porcentajeFemenino },
+                            { name: 'Otros', value: porcentajeOtros },
+                            ]}
+                            dataKey="value"
+                            startAngle={180} // Semicírculo
+                            endAngle={0}
+                            cx="50%"        // Centrar horizontalmente con porcentaje
+                            cy="70%"        // Ajustamos la gráfica para pegarla más arriba
+                            outerRadius="70%" // Radio basado en el porcentaje del contenedor para mayor flexibilidad
+                            fill="#8884d8"
+                            label={({ name, value }) => ` ${value.toFixed(2)}%`} // Mostrar los porcentajes
+                            labelLine={true}
+                        >
+                            {/* Colores para cada sector */}
+                            <Cell key="Masculino" fill="#185da7" />
+                            <Cell key="Femenino" fill="rgba(254, 185, 56, 0.9)" />
+                            <Cell key="Otros" fill="rgba(255, 74, 74, 0.9)" />
+                        </Pie>
+                        <Legend 
+                            layout="horizontal" 
+                            verticalAlign="bottom" 
+                            align="center" 
+                            wrapperStyle={{ 
+                            width: "88%", 
+                            textAlign: "center", 
+                            marginTop: "-15px", 
+                            fontSize: '10px' 
+                            }}
+                        />
+                        <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
                 </div>
+                </div>
+                </div> 
+
+                <div className="row" style={{ marginTop: '10px' }}>
+                <div className="col-lg-11 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
+                    <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}> 
+                            <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
+                        <h1>Lista de Voluntarios</h1>
+                        <div className="d-flex align-items-center">
+                            <Form.Control
+                                type="text"
+                                placeholder="Buscar por cédula"
+                                value={searchCedula}
+                                onChange={handleSearchChange}
+                                className="me-2"
+                            />
+                            <Button
+                                variant="info me-2"
+                                onClick={loadData}
+                                disabled={loadingData} // Deshabilita el botón si está cargando
+                                style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+
+                            >
+                                {/* Icono de recarga */}
+                                {loadingData ? (
+                                <FaSync className="spin" /> // Ícono girando si está cargando
+                                ) : (
+                                <FaSync />
+                                )}
+                            </Button>
+                            {userRole === 'admin' || userRole === 'superuser' ? (
+                                    
+                            <Button variant="btn custom" onClick={() => navigate('create')} className="btn-custom">
+                            <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
+                            </Button>
+                            ): null}
+                        </div>
             </div>
             <div className="d-flex mb-3">
                 <Form.Select
-                    value={selectedArea}
-                    onChange={handleAreaChange}
+                    name="area_voluntariado_id"
+                    value={filters.area_voluntariado_id}
+                    onChange={handleFilterChange}
                     className="me-2"
                     style={{ width: '150px' }}
                 >
@@ -301,10 +418,12 @@ const ShowVoluntariados = () => {
                         <option key={option.id} value={option.id}>{option.descripcion}</option>
                     ))}
                 </Form.Select>
+                
 
                 <Form.Select
-                    value={selectedNivel}
-                    onChange={handleNivelChange}
+                    name="nivel_instruccion_id"
+                    value={filters.nivel_instruccion_id}
+                    onChange={handleFilterChange}
                     className="me-2"
                     style={{ width: '150px' }}
                 >
@@ -315,8 +434,9 @@ const ShowVoluntariados = () => {
                 </Form.Select>
 
                 <Form.Select
-                    value={selectedGenero}
-                    onChange={handleGeneroChange}
+                    name="genero_id"
+                    value={filters.genero_id}
+                    onChange={handleFilterChange}
                     className="me-2"
                     style={{ width: '150px' }}
                 >
@@ -326,8 +446,9 @@ const ShowVoluntariados = () => {
                     ))}
                 </Form.Select>
                 <Form.Select
-                    value={selectedCentro}
-                    onChange={handleCentroChange}
+                    name="centro_id"
+                    value={filters.centro_id}
+                    onChange={handleFilterChange}
                     className="me-2"
                     style={{ width: '150px' }}
                 >
@@ -363,6 +484,67 @@ const ShowVoluntariados = () => {
                 </Modal.Footer>
             </Modal>
             <ToastContainer />
+        </div>
+        <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px', marginTop:'10px' }}>
+            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+            <h4 style={{ fontSize: '1.2rem', textAlign: 'center' }}>Distribución por Área</h4>
+
+                <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                        <Pie
+                            data={getAreaVoluntariadoData()}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            fill="#82ca9d"
+                            label={({ name, value }) => `${name}: ${value}`}
+                        >
+                            {getAreaVoluntariadoData().map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip />
+                    </PieChart>
+                </ResponsiveContainer>
+          
+            </div>
+
+            <div className="chart-box " style={{flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+            <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={getNivelInstruccionData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#8884d8">
+                        {getNivelInstruccionData().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+
+
+            </div>
+            <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+            <h4 style={{ fontSize: '1.2rem' }}>Distribución por Centro</h4>
+            <ResponsiveContainer width="100%" height={400}>
+                <RadarChart data={getDataByCentro()} cx="50%" cy="50%" outerRadius="80%">
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="name" />
+                    <PolarRadiusAxis angle={30} domain={[0, Math.max(...getDataByCentro().map(d => d.count))]} />
+                    <Radar name="Centros" dataKey="count" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                    <Legend />
+                    <Tooltip />
+                </RadarChart>
+            </ResponsiveContainer>
+
+            </div>
+            </div>
+        </div>
+        </div>
         </div>
     );
 };

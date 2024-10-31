@@ -91,7 +91,7 @@ const ShowMorePatrocinantes = ({ onReload }) => {
             </ListGroup>
           </Card>
           <div className="text-center mt-4 w-100">
-          <Button variant="secondary" onClick={() => navigate('/patrocinantes')}>
+          <Button variant="secondary" onClick={() => navigate(-1)}>
             Volver
           </Button>
         </div>

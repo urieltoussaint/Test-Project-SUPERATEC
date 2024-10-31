@@ -140,8 +140,6 @@ const ShowPromocion = () => {
             setMencionOptions(response.data.mencion);
             setProcedenciaOptions(response.data.procedencia);
 
-
-    
         } catch (error) {
             setError('Error fetching filter options');
             console.error('Error fetching filter options:', error);

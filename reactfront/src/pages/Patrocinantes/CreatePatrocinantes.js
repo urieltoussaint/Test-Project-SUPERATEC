@@ -855,7 +855,7 @@ const handleSeleccionar = async () => {
 
                 <Button 
                     variant="secondary" 
-                    onClick={() => navigate('/patrocinantes')}
+                    onClick={() => navigate(-1)}
                     className="ms-2"
                 >
                     Volver

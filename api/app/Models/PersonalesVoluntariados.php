@@ -7,21 +7,17 @@ namespace App\Models;
 class PersonalesVoluntariados extends Model
 {
     protected $table = 'personales_voluntariados';
-    protected $primaryKey = 'cedula_identidad';
-    protected $keyType= 'string';
-    public $incrementing = false;
-    public $timestamps = false;
 
     protected $fillable = ['cedula_identidad','nombres','apellidos','fecha_nacimiento',
     'genero_id','telefono_casa','telefono_celular','email','direccion','nivel_instruccion_id','procedencia_id','como_entero_superatec_id','ocupacion'];
 
-    protected $listable = ['cedula_identidad','nombres','apellidos','fecha_nacimiento',
+    protected $listable = ['id','cedula_identidad','nombres','apellidos','fecha_nacimiento',
     'genero_id','telefono_casa','telefono_celular','email','direccion','nivel_instruccion_id','procedencia_id','como_entero_superatec_id','fecha_registro','ocupacion'];
 
 
     public function InformacionVoluntariados()
     {
-        return $this->hasOne(InformacionVoluntariados::class, 'cedula_identidad', 'cedula_identidad');
+        return $this->hasOne(InformacionVoluntariados::class, 'voluntariado_id', 'id');
     }
 
     public function NivelInstruccion()

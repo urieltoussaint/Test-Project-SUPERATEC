@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Button,Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import SelectComponent from '../../../components/SelectComponent';
 import './CreateVoluntariados.css';
 import { toast } from 'react-toastify';
+import { Card, Row, Col } from 'react-bootstrap';
+import { useLoading } from '../../../components/LoadingContext';
+
+
 
 const endpoint = 'http://localhost:8000/api';
 
 const CreateVoluntariados = () => {
+  const { setLoading } = useLoading();
+
   const [cedulaError, setCedulaError] = useState(''); // Estado para almacenar el mensaje de validación
   const [isCedulaValid, setIsCedulaValid] = useState(false);
+ 
   const [formData, setFormData] = useState({
     cedula_identidad: '',
     nombres: '',
@@ -32,8 +39,26 @@ const CreateVoluntariados = () => {
     fecha_inicio: '',
     horas_totales: ''
   });
+  const [filterOptions, setFilterOptions] = useState({
+    generoOptions: [],
+    nivelOptions: [],
+    procedenciaOptions: [],
+    superatecOptions: [],
+    tipoOptions: [],
+    areaOptions: [],
+    centroOptions: [],
+    turnoOptions: []
+  });
 
   const navigate = useNavigate();
+  useEffect(() => {
+    const fetchSelectData = async () => {
+        HandleSelected ();
+      
+    };
+
+    fetchSelectData();
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -52,6 +77,30 @@ const CreateVoluntariados = () => {
       }));
     }
   };
+
+  const HandleSelected = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/filter-voluntariados`, { headers: { Authorization: `Bearer ${token}` } });
+
+        const {centro,area,nivel,genero,procedencia,turno,superatec,tipo}=response.data;
+        setFilterOptions({
+        centroOptions:centro,
+        areaOptions: area,
+        nivelOptions: nivel,
+        generoOptions:genero,
+        procedenciaOptions:procedencia,
+        turnoOptions:turno,
+        superatecOptions:superatec,
+        tipoOptions:tipo,
+
+        });
+ 
+    } catch (error) {
+        console.error('Error fetching filter options:', error);
+    }
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,10 +142,15 @@ const CreateVoluntariados = () => {
   };
 
   return (
-    <div className="container">
-      <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Agregar Nuevo Voluntario</h1>
-      <Form onSubmit={handleSubmit}>
+
+
+    <div className="container-fluid" style={{ marginTop: '50px'}}>
+    <Form onSubmit={(e) => handleSubmit(e, false)} className="custom-gutter">
+  <div className="row justify-content-center" >
+  <div className="col-lg-6 " > {/* Centrado del contenido */}
+  <h2 className="mb-2">Agregar Nuevo voluntariado</h2>
+  <div className="card-box" style={{ padding: '20px',  }}>
+  <h4 className="mb-4">Datos del Voluntariado</h4>
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">
           <div className="col-md-6">
@@ -120,7 +174,8 @@ const CreateVoluntariados = () => {
                 </Form.Control.Feedback>
               )}
             </Form.Group>
-
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="nombres">
               <Form.Label>Nombres</Form.Label>
               <Form.Control
@@ -131,7 +186,8 @@ const CreateVoluntariados = () => {
                 required
               />
             </Form.Group>
-
+            </Col>
+            <Col md={6}>
             <Form.Group controlId="apellidos">
               <Form.Label>Apellidos</Form.Label>
               <Form.Control
@@ -142,7 +198,11 @@ const CreateVoluntariados = () => {
                 required
               />
             </Form.Group>
-
+            </Col>
+            </Row>
+            
+            <Row className="g-2"> 
+            <Col md={6}>
             <Form.Group controlId="fecha_nacimiento">
               <Form.Label>Fecha de Nacimiento</Form.Label>
               <Form.Control
@@ -153,9 +213,11 @@ const CreateVoluntariados = () => {
                 required
               />
             </Form.Group>
+            </Col>
+            <Col md={6}>
 
             <SelectComponent
-              endpoint={`${endpoint}/genero`}
+              options={filterOptions.generoOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.genero_id}
@@ -163,6 +225,11 @@ const CreateVoluntariados = () => {
               controlId="genero_id"
               label="Género"
             />
+
+            </Col>
+            </Row>
+            
+            
 
             <Form.Group controlId="direccion">
               <Form.Label>Dirección</Form.Label>
@@ -185,6 +252,8 @@ const CreateVoluntariados = () => {
                 required
               />
             </Form.Group>
+            <Row className="g-2"> 
+            <Col md={6}>
 
             <Form.Group controlId="telefono_casa">
               <Form.Label>Teléfono de Casa</Form.Label>
@@ -195,6 +264,8 @@ const CreateVoluntariados = () => {
                 onChange={handleChange}
               />
             </Form.Group>
+            </Col>
+            <Col md={6}>
 
             <Form.Group controlId="telefono_celular">
               <Form.Label>Teléfono Celular</Form.Label>
@@ -205,9 +276,25 @@ const CreateVoluntariados = () => {
                 onChange={handleChange}
               />
             </Form.Group>
+            </Col>
+            </Row>
 
+            <Form.Group controlId="ocupacion">
+              <Form.Label>Ocupación</Form.Label>
+              <Form.Control
+                type="text"
+                name="ocupacion"
+                value={formData.ocupacion}
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+
+            <Row className="g-2"> 
+            <Col md={6}>
+              
             <SelectComponent
-              endpoint={`${endpoint}/nivel_instruccion`}
+              options={filterOptions.nivelOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.nivel_instruccion_id}
@@ -216,8 +303,26 @@ const CreateVoluntariados = () => {
               label="Nivel de Instrucción"
             />
 
+            </Col>
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/procedencia`}
+                  options={filterOptions.centroOptions} 
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.centro_id}
+                  handleChange={handleChange}
+                  controlId="centro_id"
+                  label="Centro"
+                />
+
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+
+            <SelectComponent
+              options={filterOptions.procedenciaOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.procedencia_id}
@@ -225,8 +330,10 @@ const CreateVoluntariados = () => {
               controlId="procedencia_id"
               label="Procedencia"
             />
+            </Col>
+            <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/como_entero_superatec`}
+              options={filterOptions.superatecOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.como_entero_superatec_id}
@@ -234,15 +341,22 @@ const CreateVoluntariados = () => {
               controlId="como_entero_superatec_id"
               label="¿Cómo se enteró de SUPERATEC?"
             />
+            </Col>
+            </Row>
+
+            </div>
           </div>
+          </div>
+              </div>
 
-          <div className="col-md-6">
+          <div className="col-lg-5 "style={{ marginTop: '50px'}} >
+          <div className="card-box" style={{ padding: '20px' }}>
             <h2>Información del Voluntariado</h2>
-            
-            
-
+    
+            <Row className="g-2"> 
+            <Col md={6}>
             <SelectComponent
-              endpoint={`${endpoint}/tipo_voluntariado`}
+              options={filterOptions.tipoOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.tipo_voluntariado_id}
@@ -251,8 +365,11 @@ const CreateVoluntariados = () => {
               label="Tipo de Voluntariado"
             />
 
+            </Col>
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/area`}
+              options={filterOptions.areaOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.area_voluntariado_id}
@@ -261,8 +378,13 @@ const CreateVoluntariados = () => {
               label="Área de Voluntariado"
             />
 
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/centro`}
+              options={filterOptions.centroOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.centro_id}
@@ -270,6 +392,9 @@ const CreateVoluntariados = () => {
               controlId="centro_id"
               label="Centro"
             />
+
+            </Col>
+            <Col md={6}>
 
             <Form.Group controlId="actividades_realizar">
               <Form.Label>Actividades a Realizar</Form.Label>
@@ -281,8 +406,13 @@ const CreateVoluntariados = () => {
               />
             </Form.Group>
 
+            </Col>
+            </Row>
+            <Row className="g-2"> 
+            <Col md={6}>
+
             <SelectComponent
-              endpoint={`${endpoint}/turnos`}
+              options={filterOptions.turnoOptions} 
               nameField="descripcion"
               valueField="id"
               selectedValue={formData.turno_id}
@@ -290,6 +420,9 @@ const CreateVoluntariados = () => {
               controlId="turno_id"
               label="Turnos"
             />
+
+            </Col>
+            <Col md={6}>
 
             <Form.Group controlId="fecha_inicio">
               <Form.Label>Fecha de Inicio</Form.Label>
@@ -302,6 +435,9 @@ const CreateVoluntariados = () => {
               />
             </Form.Group>
 
+            </Col>
+            </Row>
+
             <Form.Group controlId="horas_totales">
               <Form.Label>Horas Totales</Form.Label>
               <Form.Control
@@ -313,20 +449,34 @@ const CreateVoluntariados = () => {
               />
             </Form.Group>
           </div>
+          <div className="button-container"  >
+                <Button 
+                    variant="info"
+                    type="submit"
+                    className="ms-2"
+                >
+                    Guardar
+                </Button>
+
+                <Button 
+                    variant="secondary" 
+                    onClick={() => navigate(-1)}
+                    className="ms-2"
+                >
+                    Volver
+                </Button>
+            </div>
         </div>
 
-        <Button variant="success" type="submit">
-          Guardar
-        </Button>
-        <Button 
-          variant="secondary" 
-          onClick={() => navigate('/voluntariados')}
-          className="ms-2"
-        >
-          Volver
-        </Button>
-      </Form>
+        
+      
     </div>
+    </Form>
+    </div>
+    
+
+    
+    
   );
 };
 
