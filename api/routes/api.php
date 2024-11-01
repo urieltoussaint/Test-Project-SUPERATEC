@@ -116,6 +116,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'show'])->middleware('role:admin,superuser,invitado');
     Route::put('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'destroy'])->middleware('role:admin');
+    Route::get('voluntariados/cedula/{cedula_identidad}', [PersonalesVoluntariadosController::class, 'searchByCedula1'])->middleware('role:admin,superuser,invitado');
+
 
     // Promoción
     Route::get('promocion', [PromocionController::class, 'index'])->middleware('role:admin,superuser,invitado');

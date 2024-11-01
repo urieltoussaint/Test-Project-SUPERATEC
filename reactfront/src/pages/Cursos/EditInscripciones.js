@@ -37,6 +37,10 @@ const EditInscripciones = () => {
     const [datos, setDatos] = useState(null);
     const [inscripcion, setInscripcion] = useState(null);
     const [curso, setCurso] = useState(null);
+    const [patrocinanteSeleccionado1, setPatrocinanteSeleccionado1] = useState(null);
+    const [patrocinanteSeleccionado2, setPatrocinanteSeleccionado2] = useState(null);
+    const [patrocinanteSeleccionado3, setPatrocinanteSeleccionado3] = useState(null);
+    const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
 
     const [showCursoModal, setShowCursoModal] = useState(false); // Mostrar/ocultar modal de cursos
 
@@ -84,18 +88,25 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     
 
     const handleSeleccionarPatrocinante = (patrocinante) => {
-        setPatrocinanteSeleccionado(patrocinante);  // Guarda el patrocinante seleccionado
-        setFormData(prevData => ({
-            ...prevData,
-            patrocinante_id: patrocinante.id  // Almacena el ID del patrocinante seleccionado
-        }));
-        handleCloseModal();  // Cierra el modal después de seleccionar
+        if (currentPatrocinante === 1) {
+            setPatrocinanteSeleccionado1(patrocinante);
+            setFormData(prevData => ({ ...prevData, patrocinante_id: patrocinante.id }));
+        } else if (currentPatrocinante === 2) {
+            setPatrocinanteSeleccionado2(patrocinante);
+            setFormData(prevData => ({ ...prevData, patrocinante_id2: patrocinante.id }));
+        } else if (currentPatrocinante === 3) {
+            setPatrocinanteSeleccionado3(patrocinante);
+            setFormData(prevData => ({ ...prevData, patrocinante_id3: patrocinante.id }));
+        }
+        handleCloseModal();
     };
 
     const handleOpenCursoModal = () => {
         fetchCursos(currentPage);  // Obtener los cursos de la página actual
         setShowCursoModal(true);   // Mostrar el modal de cursos
     };
+
+    
     
     
 
@@ -340,7 +351,15 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     
             const response = await axios.put(
                 `${endpoint}/inscripcion_cursos/${inscripcionId}`, 
-                { ...formData }, // Datos a actualizar
+                { ...formData, 
+                status_pay: formData.realiza_aporte === "false" && (!formData.es_patrocinado || formData.es_patrocinado === "false") ? 5 : (formData.es_patrocinado === "true" ? 4 : 1), 
+                patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado1?.id : null,
+                patrocinante_id2: formData.es_patrocinado === "true" ? patrocinanteSeleccionado2?.id || null :null,
+                patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
+
+
+
+                }, // Datos a actualizar
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -515,28 +534,66 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                         </Form.Group>
                         {/* Mostrar el campo de patrocinante solo si es_patrocinado es true */}
                         {formData.es_patrocinado === "true" && (
-                                <Form.Group controlId="patrocinante">
-                                    <Form.Label>Patrocinante seleccionado</Form.Label>
+                            <>
+                                <Form.Group controlId="patrocinante1">
+                                    <Form.Label>Patrocinante 1 (Obligatorio)</Form.Label>
                                     <div className="d-flex">
-                                        {patrocinanteSeleccionado ? (
-                                            <>
-                                                <Form.Control 
-                                                    type="text" 
-                                                    value={patrocinanteSeleccionado.nombre_patrocinante} 
-                                                    readOnly 
-                                                />
-                                                <Button variant="secondary" onClick={handleOpenModal} className="ms-2">
-                                                    Cambiar
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <Button variant="info" onClick={handleOpenModal}>
-                                                Buscar Patrocinante
+                                        <Form.Control 
+                                            type="text" 
+                                            value={patrocinanteSeleccionado1 ? patrocinanteSeleccionado1.nombre_patrocinante : 'No seleccionado'} 
+                                            readOnly 
+                                        />
+                                        <Button variant="secondary" onClick={() => { setCurrentPatrocinante(1); handleOpenModal(); }} className="ms-2">
+                                            {patrocinanteSeleccionado1 ? 'Cambiar' : 'Seleccionar'}
+                                        </Button>
+                                        {patrocinanteSeleccionado1 && (
+                                            <Button variant="danger" onClick={() => setPatrocinanteSeleccionado1(null)} className="ms-2">
+                                                Deseleccionar
                                             </Button>
                                         )}
                                     </div>
                                 </Form.Group>
-                            )}
+                                
+                                <Form.Group controlId="patrocinante2">
+                                    <Form.Label>Patrocinante 2 (Opcional)</Form.Label>
+                                    <div className="d-flex">
+                                        <Form.Control 
+                                            type="text" 
+                                            value={patrocinanteSeleccionado2 ? patrocinanteSeleccionado2.nombre_patrocinante : 'No seleccionado'} 
+                                            readOnly 
+                                        />
+                                        <Button variant="secondary" onClick={() => { setCurrentPatrocinante(2); handleOpenModal(); }} className="ms-2">
+                                            {patrocinanteSeleccionado2 ? 'Cambiar' : 'Seleccionar'}
+                                        </Button>
+                                        {patrocinanteSeleccionado2 && (
+                                            <Button variant="danger" onClick={() => setPatrocinanteSeleccionado2(null)} className="ms-2">
+                                                Deseleccionar
+                                            </Button>
+                                        )}
+                                    </div>
+                                </Form.Group>
+
+                                <Form.Group controlId="patrocinante3">
+                                    <Form.Label>Patrocinante 3 (Opcional)</Form.Label>
+                                    <div className="d-flex">
+                                        <Form.Control 
+                                            type="text" 
+                                            value={patrocinanteSeleccionado3 ? patrocinanteSeleccionado3.nombre_patrocinante : 'No seleccionado'} 
+                                            readOnly 
+                                        />
+                                        <Button variant="secondary" onClick={() => { setCurrentPatrocinante(3); handleOpenModal(); }} className="ms-2">
+                                            {patrocinanteSeleccionado3 ? 'Cambiar' : 'Seleccionar'}
+                                        </Button>
+                                        {patrocinanteSeleccionado3 && (
+                                            <Button variant="danger" onClick={() => setPatrocinanteSeleccionado3(null)} className="ms-2">
+                                                Deseleccionar
+                                            </Button>
+                                        )}
+                                    </div>
+                                </Form.Group>
+                            </>
+                        )}
+
                             {formErrors.general && (
             <div className="text-danger">{formErrors.general}</div>
         )}

@@ -8,6 +8,7 @@ import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer,toast } from 'react-toastify';
 import { Card, Row, Col } from 'react-bootstrap'; 
 
+const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
 const EditPromocion = () => {
@@ -85,22 +86,85 @@ const EditPromocion = () => {
     }));
   };
 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${endpoint}/promocion/${id}`, formData,{
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
+
+
+    // Filtrar los campos vacíos o que contienen solo espacios, asegurando que el valor sea una cadena
+    const emptyFields = Object.keys(formData).filter(key => {
+        const value = formData[key];
+        return value === '' || value === null || (typeof value === 'string' && value.trim() === ''); // Considerar vacíos los campos que están vacíos, son nulos, o tienen solo espacios
     });
-      toast.success('Actualización con Éxito');
-      navigate('/promocion');
+
+    const hasEmptyFields = emptyFields.length > 0;
+
+    try {
+        const token = localStorage.getItem('token');
+
+        // 1. Actualizar los datos del participante
+        await axios.put(`${endpoint}/promocion/${id}`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!hasEmptyFields) {
+            // Si no hay campos vacíos, proceder con la actualización de la petición
+            let allPeticiones = [];
+            let currentPage = 1;
+            let totalPages = 1;
+
+            // 2. Obtener todas las páginas de peticiones y combinarlas
+            while (currentPage <= totalPages) {
+                const response = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                allPeticiones = [...allPeticiones, ...response.data.data];
+                totalPages = response.data.last_page;
+                currentPage++;
+            }
+
+            // Filtrar las peticiones por cedula_identidad, zona_id, y status
+            const peticionesFiltradas = allPeticiones.filter(peticion =>
+                peticion.key === id && peticion.zona_id === 8 && peticion.status === false
+            );
+
+            if (peticionesFiltradas.length > 0) {
+                const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
+
+                // 3. Actualizar el status de la petición a true
+                await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
+                    status: true,   // Cambiar el estado a true
+                    finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }), // Ejemplo para Caracas
+                    user_success: userId, // Enviar el usuario que completó la tarea
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                toast.success('Actualización con Éxito, Petición también actualizada');
+            } else {
+                // Si no hay peticiones, no mencionar en el mensaje de éxito
+                toast.success('Actualización con Éxito');
+            }
+        } else {
+            // Si hay campos vacíos, solo actualizamos los datos del participante
+            toast.success('Formulario actualizado con éxito.');
+        }
+
+        navigate('/promocion');
     } catch (error) {
-      console.error('Error updating data:', error);
-      toast.success('Error al Actualizar');
+        // Captura cualquier error que ocurra en la solicitud
+        toast.error('Error al actualizar Participante o Petición');
+        console.error('Error actualizando:', error);
     }
-  };
+};
 
 
 

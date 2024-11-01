@@ -62,6 +62,7 @@ const ShowMoreInscripciones = ({ onReload }) => {
               <ListGroup.Item>Tipo de Programa: {data?.tipo_programa?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Modalidad: {data?.modalidad?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Nivel: {data?.nivel?.descripcion}</ListGroup.Item>
+              <ListGroup.Item>Observaciones: {data?.observaciones}</ListGroup.Item>
               
             </ListGroup>
   

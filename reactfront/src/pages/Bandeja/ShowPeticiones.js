@@ -198,6 +198,12 @@ const ShowPeticiones = () => {
         else if (id === 7) {
                 navigate(`/procedencias/edit/${peticiones.key}`);
                 }
+        else if (id === 8) {
+                navigate(`/promocion/${peticiones.key}/edit`);
+                }    
+        else if (id === 9) {
+            navigate(`/voluntariados/${peticiones.key}/edit`);
+            }             
         else {
             toast.error('Zona no válida');
         }
@@ -258,8 +264,14 @@ const ShowPeticiones = () => {
     const generateGraphData = (allPeticiones) => {
         const now = moment().endOf('day'); 
         let startDate;
+        const token = localStorage.getItem('token');
+        const roleId = parseInt(localStorage.getItem('role_id'));
     
-       
+        // Filtra peticiones por usuario o rol
+        const userFilteredPeticiones = allPeticiones.filter(
+            (peticion) => (peticion.destinatario_id === userId || peticion.role_id === roleId)
+        );
+    
         switch (selectedDateRange) {
             case '7d':
                 startDate = now.clone().subtract(7, 'days').startOf('day');
@@ -278,24 +290,23 @@ const ShowPeticiones = () => {
                 break;
         }
     
-        // filtra peticiones segun fecha
-        const filteredPeticiones = allPeticiones.filter(p => 
-            moment(p.created_at).isSameOrAfter(startDate) && moment(p.created_at).isSameOrBefore(now)
+        // Filtra peticiones según la fecha y el usuario/rol
+        const filteredPeticiones = userFilteredPeticiones.filter(
+            (p) => moment(p.created_at).isSameOrAfter(startDate) && moment(p.created_at).isSameOrBefore(now)
         );
     
         const graphData = [];
     
-        
         for (let m = startDate.clone(); m.isSameOrBefore(now); m.add(1, 'days')) {
             const day = m.format('YYYY-MM-DD');
     
-            // cuenta las peticiones no atendidas
-            const peticionesCount = filteredPeticiones.filter(p => moment(p.created_at).isSame(day, 'day')).length;
+            // Cuenta las peticiones no atendidas
+            const peticionesCount = filteredPeticiones.filter((p) => moment(p.created_at).isSame(day, 'day')).length;
     
-            // cuenta las peticiones atendidas
-            const attendedCount = filteredPeticiones.filter(p => p.finish_time && moment(p.finish_time).isSame(day, 'day')).length;
+            // Cuenta las peticiones atendidas
+            const attendedCount = filteredPeticiones.filter((p) => p.finish_time && moment(p.finish_time).isSame(day, 'day')).length;
     
-            // Add the data point to the graph data
+            // Agrega el punto de datos a la gráfica
             graphData.push({
                 date: day,
                 received: peticionesCount,
@@ -303,9 +314,9 @@ const ShowPeticiones = () => {
             });
         }
     
-        // actualiza la grafica
-        setGraphData(graphData);
+        setGraphData(graphData); // Actualiza la gráfica
     };
+    
     
     
     

@@ -112,7 +112,7 @@ class AuthController extends Controller
 {
     // Usa paginación para limitar la cantidad de registros por solicitud
     $users = User::with('role','cargo')
-        ->paginate(10); // Cambia el número de registros por página según tu necesidad
+        ->paginate(40); // Cambia el número de registros por página según tu necesidad
 
     return response()->json($users, 200);
 }

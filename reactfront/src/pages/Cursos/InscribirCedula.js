@@ -40,6 +40,10 @@ const InscribirCedula = () => {
     const [patrocinanteSeleccionado2, setPatrocinanteSeleccionado2] = useState(null);
     const [patrocinanteSeleccionado3, setPatrocinanteSeleccionado3] = useState(null);
     const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
+    const [paginatedPatrocinantes, setPaginatedPatrocinantes] = useState([]); // Patrocinantes en la página actual
+    const [currentPagePatrocinantes, setCurrentPagePatrocinantes] = useState(1);
+    const itemsPerPage = 8; // Define el número de elementos por página
+
 
 
     const [showCursoModal, setShowCursoModal] = useState(false); // Mostrar/ocultar modal de cursos
@@ -49,7 +53,6 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
 
 
 
-    const itemsPerPage = 3;  // Definir cuántos elementos por página
 
     useEffect(() => {
         if (cedula) {
@@ -71,6 +74,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
+    
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -142,28 +146,27 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         try {
             const token = localStorage.getItem('token');
             let allCursos = [];
-            let currentPage = 1;
-            let totalPages = 1;
-            
-            // Fetch courses page by page
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/cursos`, {
-                    params: { page: currentPage },
+            let currentPageAPI = 1;
+            let lastPageAPI = 1;
+    
+            do {
+                const response = await axios.get(`${endpoint}/cursos?page=${currentPageAPI}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
     
-                allCursos = [...allCursos, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
-            
-            setCursos(allCursos);  // Guardar todos los cursos en el estado
-            setFilteredCursos(allCursos);  // Inicialmente mostrar todos
+                allCursos = allCursos.concat(response.data.data);
+                lastPageAPI = response.data.last_page;
+                currentPageAPI++;
+            } while (currentPageAPI <= lastPageAPI);
+    
+            setCursos(allCursos); // Guardar todos los cursos en el estado
+            setFilteredCursos(allCursos); // Inicializar los cursos filtrados con todos los cursos
         } catch (error) {
             console.error('Error fetching courses:', error);
             setCursos([]);
         }
     };
+    
     const handleFiltersChange = () => {
         let filtered = cursos;
     
@@ -185,10 +188,17 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         if (filtrosCurso.cod) {
             filtered = filtered.filter(curso => curso.cod.toLowerCase().includes(filtrosCurso.cod.toLowerCase()));
         }
-        
     
-        setFilteredCursos(filtered);  // Actualiza los cursos filtrados
+        setFilteredCursos(filtered); // Actualiza los cursos filtrados
+        setCurrentPage(1); // Reinicia la paginación al aplicar un filtro
     };
+    useEffect(() => {
+        handleFiltersChange();
+    }, [filtrosCurso]);
+    
+ 
+    
+    
     
     
 
@@ -220,49 +230,58 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     };
     
     
-
-    const fetchPatrocinantes = async (page = 1) => {
+    const getAllPatrocinantes = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/patrocinantes?page=${page}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const patrocinantesData = Array.isArray(response.data.data) ? response.data.data : []; // Asegurar que sea un array
-            setPatrocinantes(patrocinantesData);  // Guardar los patrocinantes en el estado
-            setTotalPages(response.data.last_page);  // Actualizar el total de páginas desde la respuesta
+            let allPatrocinantesData = [];
+            let currentPageAPI = 1;
+            let lastPageAPI = 1;
+    
+            do {
+                const response = await axios.get(`${endpoint}/patrocinantes?page=${currentPageAPI}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+    
+                allPatrocinantesData = allPatrocinantesData.concat(response.data.data);
+                lastPageAPI = response.data.last_page;
+                currentPageAPI++;
+            } while (currentPageAPI <= lastPageAPI);
+    
+            setPatrocinantes(allPatrocinantesData); // Guardar todos los patrocinantes
+            setPaginatedPatrocinantes(allPatrocinantesData.slice(0, itemsPerPage)); // Inicializar la paginación
         } catch (error) {
             console.error('Error fetching patrocinantes:', error);
-            setPatrocinantes([]); // En caso de error, definir un array vacío
         }
     };
-    const handleNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(prevPage => prevPage + 1);
-            fetchPatrocinantes(currentPage + 1);
-        }
-    };
-
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(prevPage => prevPage - 1);
-            fetchPatrocinantes(currentPage - 1);
-        }
-    }
-
     
 
-    const filteredPatrocinantes = Array.isArray(patrocinantes) 
-        ? patrocinantes.filter(patrocinante =>
-            patrocinante.rif_cedula.toLowerCase().includes(searchCedula.toLowerCase())
-        )
-        : [];
-    
+        const handlePatrocinantePageChange = (pageNumber) => {
+            const filteredPatrocinantes = patrocinantes.filter((patrocinante) =>
+                patrocinante.rif_cedula.toLowerCase().includes(searchCedula)
+            );
+        
+            const startIndex = (pageNumber - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            setPaginatedPatrocinantes(filteredPatrocinantes.slice(startIndex, endIndex));
+            setCurrentPagePatrocinantes(pageNumber);
+        };
+        
+        const handleSearchCedula = (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            setSearchCedula(searchTerm);
+        
+            const filteredPatrocinantes = patrocinantes.filter((patrocinante) =>
+                patrocinante.rif_cedula.toLowerCase().includes(searchTerm)
+            );
+            
+            setPaginatedPatrocinantes(filteredPatrocinantes.slice(0, itemsPerPage));
+            setCurrentPagePatrocinantes(1);
+        };
+        
     
     // Llama a `fetchPatrocinantes` al abrir el modal:
     const handleOpenModal = () => {
-        fetchPatrocinantes(currentPage);  // Obtener los patrocinantes de la página actual
+        getAllPatrocinantes(currentPage);  // Obtener los patrocinantes de la página actual
         setShowModal(true);               // Mostrar el modal
     };
 
@@ -287,6 +306,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
             setCurrentPage(currentPage - 1);
         }
     };
+    
     
     
     const searchDatos = async () => {
@@ -637,61 +657,65 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
 
                     </div>
                     <Modal show={showModal} onHide={handleCloseModal} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>Seleccionar Patrocinante</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form.Control 
-                        type="text" 
-                        placeholder="Buscar por Rif/Cédula" 
-                        onChange={(e) => setSearchCedula(e.target.value)} 
-                        className="mb-3"
-                    />
-                    <Table striped bordered hover>
-                        <thead>
-                            <tr>
-                                <th>Rif/Cédula</th>
-                                <th>Nombre</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredPatrocinantes.map((patrocinante) => (
-                                <tr key={patrocinante.id}>
-                                    <td>{patrocinante.rif_cedula}</td>
-                                    <td>{patrocinante.nombre_patrocinante}</td>
-                                    <td>
-                                    <div className="d-flex justify-content-center align-items-center">
-                                        <Button variant="info"  onClick={() => handleSeleccionarPatrocinante(patrocinante)} className="me-2">
-                                             <i className="bi bi-check2-square"></i>
-                                        </Button>
-                                        </div>
-                                    </td>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Seleccionar Patrocinante</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form.Control 
+                            type="text" 
+                            placeholder="Buscar por Rif/Cédula" 
+                            value={searchCedula}
+                            onChange={handleSearchCedula} 
+                            className="mb-3"
+                        />
+                        <Table striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Rif/Cédula</th>
+                                    <th>Nombre</th>
+                                    <th>Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-        </Table>
-                </Modal.Body>
-                <Modal.Footer>
-                <Button 
-                    variant="secondary" 
-                    onClick={handlePreviousPage} 
-                    disabled={currentPage === 1}
-                >
-                    Anterior
-                </Button>
-                <Button 
-                    variant="secondary" 
-                    onClick={handleNextPage} 
-                    disabled={currentPage === totalPages}
-                >
-                    Siguiente
-                </Button>
-                <Button variant="secondary" onClick={handleCloseModal}>
-                    Cerrar
-                </Button>
-            </Modal.Footer>
-            </Modal>
+                            </thead>
+                            <tbody>
+                                {paginatedPatrocinantes.map((patrocinante) => (
+                                    <tr key={patrocinante.id}>
+                                        <td>{patrocinante.rif_cedula}</td>
+                                        <td>{patrocinante.nombre_patrocinante}</td>
+                                        <td>
+                                            <div className="d-flex justify-content-center align-items-center">
+                                                <Button variant="info" onClick={() => handleSeleccionarPatrocinante(patrocinante)} className="me-2">
+                                                    <i className="bi bi-check2-square"></i>
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                        <div className="d-flex justify-content-between mt-3">
+                            <Button
+                                variant="secondary"
+                                onClick={() => handlePatrocinantePageChange(currentPagePatrocinantes - 1)}
+                                disabled={currentPagePatrocinantes === 1}
+                            >
+                                Anterior
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => handlePatrocinantePageChange(currentPagePatrocinantes + 1)}
+                                disabled={currentPagePatrocinantes * itemsPerPage >= patrocinantes.length}
+                            >
+                                Siguiente
+                            </Button>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleCloseModal}>
+                            Cerrar
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
 
             <Modal show={showCursoModal} onHide={() => setShowCursoModal(false)} size="lg">
                 <Modal.Header closeButton>
@@ -769,18 +793,18 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                                     <td>{curso.cod}</td>
                                     <td>{curso.descripcion}</td>
                                     <td>{curso.cantidad_horas}</td>
-
                                     <td>
-                                    <div className="d-flex justify-content-center align-items-center">
-                                        <Button variant="info"  onClick={() => handleSeleccionarCurso(curso)} className="me-2">
-                                            <i className="bi bi-check2-square"></i>
-                                        </Button>
-                                    </div>
+                                        <div className="d-flex justify-content-center align-items-center">
+                                            <Button variant="info" onClick={() => handleSeleccionarCurso(curso)} className="me-2">
+                                                <i className="bi bi-check2-square"></i>
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </Table>
+
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handlePreviousCursoPage} disabled={currentPage === 1}>

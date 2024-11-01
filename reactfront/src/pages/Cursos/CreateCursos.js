@@ -28,6 +28,16 @@ const CreateCursos = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [comentario, setComentario] = useState('');  // Nuevo estado para el comentario
 
+  const [allUsers, setAllUsers] = useState([]); // Todos los usuarios cargados
+  const [paginatedUsers, setPaginatedUsers] = useState([]); // Usuarios en la página actual
+  const [currentPageUsers, setCurrentPageUsers] = useState(1);
+  
+  const [allRoles, setAllRoles] = useState([]); // Todos los roles cargados
+  const [paginatedRoles, setPaginatedRoles] = useState([]); // Roles en la página actual
+  const [currentPageRoles, setCurrentPageRoles] = useState(1);
+  
+  const itemsPerPage = 8; // Elementos por página
+
   const [formData, setFormData] = useState({
     descripcion: '',
     cantidad_horas: '',
@@ -66,51 +76,64 @@ const CreateCursos = () => {
   const getAllUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      let allUsers = [];
-      let currentPage = 1;
-      let lastPage = 1;
-      
+      let allUsersData = [];
+      let currentPageAPI = 1;
+      let lastPageAPI = 1;
+  
       do {
-        const response = await axios.get(`${endpoint}/users-with-roles?page=${currentPage}`, {
+        const response = await axios.get(`${endpoint}/users-with-roles?page=${currentPageAPI}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
-        allUsers = allUsers.concat(response.data.data);  // Asumiendo que la respuesta tiene un formato de paginación
-        lastPage = response.data.last_page;  // Asumiendo que la respuesta incluye información de la última página
-        currentPage++;
-      } while (currentPage <= lastPage);
-
-      setUsers(allUsers);
-      setFilteredUsers(allUsers);
+  
+        allUsersData = allUsersData.concat(response.data.data);
+        lastPageAPI = response.data.last_page;
+        currentPageAPI++;
+      } while (currentPageAPI <= lastPageAPI);
+  
+      setAllUsers(allUsersData);
+      setPaginatedUsers(allUsersData.slice(0, itemsPerPage));
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-};
+  };
 
+  const getAllRoles = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      let allRolesData = [];
+      let currentPageAPI = 1;
+      let lastPageAPI = 1;
+  
+      do {
+        const response = await axios.get(`${endpoint}/role?page=${currentPageAPI}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        allRolesData = allRolesData.concat(response.data.data);
+        lastPageAPI = response.data.last_page;
+        currentPageAPI++;
+      } while (currentPageAPI <= lastPageAPI);
+  
+      setAllRoles(allRolesData);
+      setPaginatedRoles(allRolesData.slice(0, itemsPerPage));
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
 
-const getAllRoles = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    let allRoles = [];
-    let currentPage = 1;
-    let lastPage = 1;
-
-    do {
-      const response = await axios.get(`${endpoint}/role?page=${currentPage}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      allRoles = allRoles.concat(response.data.data); // Asumiendo que la respuesta tiene un formato de paginación
-      lastPage = response.data.last_page; // Asumiendo que la respuesta incluye información de la última página
-      currentPage++;
-    } while (currentPage <= lastPage);
-
-    setRoles(allRoles);
-    setFilteredRoles(allRoles);
-  } catch (error) {
-    console.error('Error fetching roles:', error);
-  }
-};
+  const handleUserPageChange = (pageNumber) => {
+    const startIndex = (pageNumber - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedUsers(allUsers.slice(startIndex, endIndex));
+    setCurrentPageUsers(pageNumber);
+  };
+  
+  const handleRolePageChange = (pageNumber) => {
+    const startIndex = (pageNumber - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedRoles(allRoles.slice(startIndex, endIndex));
+    setCurrentPageRoles(pageNumber);
+  };
 
 
 
@@ -455,8 +478,8 @@ const handleSeleccionar = async () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal de búsqueda de usuarios */}
-      <Modal show={showUserSearchModal} onHide={() => setShowUserSearchModal(false)}>
+       {/* Modal de búsqueda de usuarios */}
+       <Modal show={showUserSearchModal} onHide={() => setShowUserSearchModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Buscar Usuario</Modal.Title>
         </Modal.Header>
@@ -476,18 +499,17 @@ const handleSeleccionar = async () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map(user => (
+              {paginatedUsers.length > 0 ? (
+                paginatedUsers.map(user => (
                   <tr key={user.id}>
                     <td>{user.id}</td>
                     <td>{user.username}</td>
                     <td>
-                      <Button
-                        variant="primary"
-                        onClick={() => handleSelectUser(user)}
-                      >
-                        Seleccionar
+                    <div className="d-flex justify-content-around">
+                      <Button variant="info"  onClick={() => handleSelectUser(user)} className="me-2">
+                          <i className="bi bi-check2-square"></i>
                       </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -498,6 +520,22 @@ const handleSeleccionar = async () => {
               )}
             </tbody>
           </Table>
+          <div className="d-flex justify-content-between mt-3">
+            <Button
+              variant="secondary"
+              onClick={() => handleUserPageChange(currentPageUsers - 1)}
+              disabled={currentPageUsers === 1}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleUserPageChange(currentPageUsers + 1)}
+              disabled={currentPageUsers * itemsPerPage >= allUsers.length}
+            >
+              Siguiente
+            </Button>
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowUserSearchModal(false)}>
@@ -533,18 +571,17 @@ const handleSeleccionar = async () => {
               </tr>
             </thead>
             <tbody>
-              {filteredRoles.length > 0 ? (
-                filteredRoles.map(role => (
+              {paginatedRoles.length > 0 ? (
+                paginatedRoles.map(role => (
                   <tr key={role.id}>
                     <td>{role.id}</td>
                     <td>{role.name}</td>
-                    <td>
-                      <Button
-                        variant="primary"
-                        onClick={() => handleSelectRole(role)}
-                      >
-                        Seleccionar
+                    <td >
+                    <div className="d-flex justify-content-around">
+                      <Button variant="info"  onClick={() => handleSelectRole(role)} className="me-2">
+                          <i className="bi bi-check2-square"></i>
                       </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -555,6 +592,22 @@ const handleSeleccionar = async () => {
               )}
             </tbody>
           </Table>
+          <div className="d-flex justify-content-between mt-3">
+            <Button
+              variant="secondary"
+              onClick={() => handleRolePageChange(currentPageRoles - 1)}
+              disabled={currentPageRoles === 1}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleRolePageChange(currentPageRoles + 1)}
+              disabled={currentPageRoles * itemsPerPage >= allRoles.length}
+            >
+              Siguiente
+            </Button>
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowRoleSearchModal(false)}>
@@ -568,6 +621,7 @@ const handleSeleccionar = async () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
 
       {/* Modal de confirmación para enviar la solicitud al usuario */}
       <Modal show={selectedUserId !== null && showConfirmModal} onHide={() => setShowConfirmModal(false)}>

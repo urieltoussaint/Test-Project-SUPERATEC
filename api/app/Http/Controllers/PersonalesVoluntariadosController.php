@@ -63,6 +63,17 @@ class PersonalesVoluntariadosController extends Controller
         ]);
     }
 
+    public function searchByCedula1($cedula_identidad)
+    {
+        $dato = PersonalesVoluntariados::where('cedula_identidad', $cedula_identidad)->first();
+    
+        if (!$dato) {
+            return response()->json(['message' => 'No se encontró la cédula'], 404);
+        }
+    
+        return response()->json($dato);
+    }
+
 
     public function fetchFilterOptions()
     {

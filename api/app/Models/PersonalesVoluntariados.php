@@ -8,7 +8,7 @@ class PersonalesVoluntariados extends Model
 {
     protected $table = 'personales_voluntariados';
 
-    protected $fillable = ['cedula_identidad','nombres','apellidos','fecha_nacimiento',
+    protected $fillable = ['id','cedula_identidad','nombres','apellidos','fecha_nacimiento',
     'genero_id','telefono_casa','telefono_celular','email','direccion','nivel_instruccion_id','procedencia_id','como_entero_superatec_id','ocupacion'];
 
     protected $listable = ['id','cedula_identidad','nombres','apellidos','fecha_nacimiento',
