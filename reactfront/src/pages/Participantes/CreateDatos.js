@@ -226,17 +226,27 @@ const CreateDatos = () => {
     setShowConfirmModal(true);  // Mostrar modal de confirmación
   };
   
-  const handleConfirmSendRequest = async () => {
+  const handleConfirmSendRequest = async (redirectToCursos) => {
     try {
+      let dataToSend = { ...formData }; // Inicia dataToSend con los datos del formulario
+      
+      if (formData.fecha_nacimiento) { // Verifica si fecha_nacimiento NO es nulo
+        const edadCalculada = calcularEdad(formData.fecha_nacimiento);
+        dataToSend = {
+          ...dataToSend,
+          edad: edadCalculada // Agrega la edad calculada solo si fecha_nacimiento no es nulo
+        };
+      }
+    
       const token = localStorage.getItem('token');
-  
+    
       // 1. Crear el nuevo participante primero
-      const response = await axios.post(`${endpoint}/datos`, formData, {
+      const response = await axios.post(`${endpoint}/datos`, dataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+ 
       const newParticipantId = response.data.id;  // Obtener el ID del nuevo participante
   
       // 2. Usar el ID del nuevo participante como clave en la petición
@@ -258,8 +268,11 @@ const CreateDatos = () => {
         },
       });
   
-      toast.success('Solicitud y datos enviados exitosamente');
-      navigate('/datos');
+      if (redirectToCursos) {
+        navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
+      } else {
+        navigate('/datos');
+      }
   
     } catch (error) {
       toast.error('Error al enviar la solicitud o los datos');
@@ -334,6 +347,8 @@ const CreateDatos = () => {
 
   const handleSubmit = async (e, redirectToCursos) => {
   e.preventDefault();
+    // Define los campos que deben ser ignorados al verificar si están vacíos
+const fieldsToIgnore = ['direccion_email', 'telefono_casa'];
 
   setLoading(true);
   // Calcular la edad y agregarla a los datos del formulario
@@ -343,9 +358,13 @@ const CreateDatos = () => {
     edad: edadCalculada // Agregar la edad calculada
   };
 
-  const emptyFields = Object.keys(formData).filter(key => {
-    return !formData[key];
-  });
+ // Filtra los campos vacíos, excepto los de la lista fieldsToIgnore
+const emptyFields = Object.keys(formData).filter(key => {
+  if (fieldsToIgnore.includes(key)) return false;
+  return !formData[key];
+});
+
+
 
   if (emptyFields.length > 0) {
     setShowConfirmModal(true);
@@ -608,7 +627,7 @@ const CreateDatos = () => {
             </Row>
 
             <Form.Group controlId="direccion_email">
-              <Form.Label>Dirección Email</Form.Label>
+              <Form.Label>Dirección Email (Opcional)</Form.Label>
               <Form.Control
                 type="email"
                 name="direccion_email"
@@ -621,7 +640,7 @@ const CreateDatos = () => {
             <Row className="g-2"> 
             <Col md={6}>
             <Form.Group controlId="telefono_casa">
-              <Form.Label>Teléfono de Casa</Form.Label>
+              <Form.Label>Teléfono de Casa (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="telefono_casa"

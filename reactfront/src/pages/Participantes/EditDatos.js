@@ -190,12 +190,13 @@ const handleSeleccionar = async () => {
         ...formData,
         edad: edadCalculada, // Agregar la edad calculada
     };
-
+    const fieldsToIgnore = ['direccion_email', 'telefono_casa'];
     // Filtrar los campos vacíos o que contienen solo espacios, asegurando que el valor sea una cadena
     const emptyFields = Object.keys(formData).filter(key => {
-        const value = formData[key];
-        return value === '' || value === null || (typeof value === 'string' && value.trim() === ''); // Considerar vacíos los campos que están vacíos, son nulos, o tienen solo espacios
+      if (fieldsToIgnore.includes(key)) return false;
+      return !formData[key];
     });
+
 
     const hasEmptyFields = emptyFields.length > 0;
 
@@ -495,7 +496,7 @@ const handleKeyDown = (e) => {
             </Row>
 
             <Form.Group controlId="direccion_email">
-              <Form.Label>Dirección Email</Form.Label>
+              <Form.Label>Dirección Email (Opcional)</Form.Label>
               <Form.Control
                 type="email"
                 name="direccion_email"
@@ -508,7 +509,7 @@ const handleKeyDown = (e) => {
             <Row className="g-2"> 
             <Col md={6}>
             <Form.Group controlId="telefono_casa">
-              <Form.Label>Teléfono de Casa</Form.Label>
+              <Form.Label>Teléfono de Casa (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="telefono_casa"

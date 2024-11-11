@@ -366,7 +366,7 @@ const ShowPagosCursos = () => {
                                 <Button variant="btn custom" onClick={() => navigate(`/pagos/${cedulaInscripcion}/${inscripcion_curso_id}`)} className="btn-custom">
                                     <i className="bi bi-cash-coin me-2"></i> Nuevo
                                 </Button>
-                                <Button variant="secondary" onClick={() => navigate(`/inscritos/${cursoId}`)} className="secondary" style={{ fontSize: '0.9rem' }}>
+                                <Button variant="secondary" onClick={() => navigate(-1)} className="secondary" style={{ fontSize: '0.9rem' }}>
                                     <i className="bi bi-arrow-90deg-left"></i>
                                 </Button>
                             </div>

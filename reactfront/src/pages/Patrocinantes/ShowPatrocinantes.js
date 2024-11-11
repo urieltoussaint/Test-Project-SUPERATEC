@@ -433,7 +433,7 @@ const ShowPatrocinantes = () => {
                     onClick={() => navigate(`/patrocinantes/${dato.id}`)}
                     className="me-2"
                 >
-                    <i className="bi bi-list-task"></i>
+                    <i className="bi bi-eye"></i>
                 </Button>
 
     

@@ -27,7 +27,7 @@ const ShowPeticionesNoAtendidas = () => {
     const { setLoading } = useLoading();
     const [rejectComment, setRejectComment] = useState('');
     const navigate = useNavigate();
-    const itemsPerPage = 4;
+    const itemsPerPage = 5;
     const userId = parseInt(localStorage.getItem('user'));
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
@@ -137,13 +137,12 @@ const ShowPeticionesNoAtendidas = () => {
         setCurrentPage(1);  // Resetea la paginación a la primera página
     };
 
-    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación", "Comentarios", "Fecha Finalizada", "Usuario que Atendió"];
+    const columns = ["Status", "Usuario Request", "Zona", "Fecha de creación", "Comentarios", "Fecha Finalizada", "Usuario que Atendió"];
 
     const renderItem = (peticiones) => (
         <tr key={peticiones.id} className={peticiones.status ? "attended-row" : ""}>
             <td className="text-center">{renderStatusDot(peticiones.created_at, peticiones.status)}</td>
             <td className="text-center">{peticiones.user?.username}</td>
-            <td className="text-center">{peticiones.key}</td>
             <td className="text-center">{peticiones.zonas?.name}</td>
             <td className="text-center">{moment(peticiones.finish_time).format('YYYY-MM-DD')}</td>
             <td className="text-center">{peticiones.comentario}</td>

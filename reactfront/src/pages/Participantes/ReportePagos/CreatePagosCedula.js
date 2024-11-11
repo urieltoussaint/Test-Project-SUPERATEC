@@ -76,31 +76,6 @@ const CreatePagosCedula = () => {
     }
   };
 
-  const getAllCursos = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      let allCursos = [];
-      let currentPage = 1;
-      let totalPages = 1;
-  
-      while (currentPage <= totalPages) {
-        const response = await axios.get(`${endpoint}/cursos?&page=${currentPage}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        allCursos = [...allCursos, ...response.data.data];
-        totalPages = response.data.last_page;
-        currentPage++;
-      }
-  
-      console.log('Cursos obtenidos:', allCursos);
-      return allCursos; // Devolver los cursos obtenidos
-    } catch (error) {
-      console.error('Error fetching cursos:', error);
-      return [];
-    }
-  };
-  
-
 
 
   // Obtener información del curso

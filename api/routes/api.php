@@ -70,6 +70,10 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('datos/{id}', [DatosIdentificacionController::class, 'update'])->middleware('role:admin,superuser'); // Solo admin y superuser pueden editar
     Route::delete('datos/{id}', [DatosIdentificacionController::class, 'destroy'])->middleware('role:admin'); // Solo admin puede eliminar
     Route::get('datos/cedula/{cedula_identidad}', [DatosIdentificacionController::class, 'searchByCedula1'])->middleware('role:admin,superuser,invitado');
+    Route::get('datos-filtrados', [DatosIdentificacionController::class, 'getFilteredDataWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('datos-estadisticas', [DatosIdentificacionController::class, 'getStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+
+
 
 
     // Cursos

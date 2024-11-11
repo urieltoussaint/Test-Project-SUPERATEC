@@ -302,7 +302,7 @@ const [selectVisible, setSelectVisible] = useState(false);  // Control de la vis
   };
 
   const emptyFields = Object.keys(formData).filter(key => {
-    if (key === 'otra_info' || key === 'referido_por' || key === 'web' || key === 'referido_por' 
+    if (key === 'otra_info' || key === 'referido_por' || key === 'web' 
         || key === 'estado_id' || key === 'ciudad' || key === 'nombre_adicional' || key === 'cargo_adicional'
         || key === 'telefono_adicional'   || key === 'email_adicional' 
         || key === 'nombre_adicional2' || key === 'cargo_adicional2'
@@ -616,7 +616,7 @@ const handleSeleccionar = async () => {
                     </Col>
                     <Col md={6}>
                     <Form.Group controlId="web">
-                      <Form.Label>Web</Form.Label>
+                      <Form.Label>Web (Opcional)</Form.Label>
                       <Form.Control
                         type="text"
                         name="web"
@@ -674,7 +674,7 @@ const handleSeleccionar = async () => {
                     </Row>
 
                     <Form.Group controlId="referido_por">
-                      <Form.Label>Referido por</Form.Label>
+                      <Form.Label>Referido por (Opcional)</Form.Label>
                       <Form.Control
                         type="text"
                         name="referido_por"
@@ -684,7 +684,7 @@ const handleSeleccionar = async () => {
                       />
                     </Form.Group>
                     <Form.Group controlId="otra_info">
-                      <Form.Label>Referido por</Form.Label>
+                      <Form.Label>Información Adicional (Opcional)</Form.Label>
                       <Form.Control
                         type="text"
                         name="otra_info"
@@ -760,7 +760,7 @@ const handleSeleccionar = async () => {
           <Row className="g-2"> 
             <Col md={6}>
             <Form.Group controlId="nombre_adicional">
-              <Form.Label>Nombre Adicional</Form.Label>
+              <Form.Label>Nombre Adicional (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="nombre_adicional"
@@ -772,7 +772,7 @@ const handleSeleccionar = async () => {
             </Col>
             <Col md={6}>
             <Form.Group controlId="cargo_adicional">
-              <Form.Label>Cargo Adicional</Form.Label>
+              <Form.Label>Cargo Adicional (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="cargo_adicional"
@@ -786,7 +786,7 @@ const handleSeleccionar = async () => {
           <Row className="g-2"> 
             <Col md={6}>
             <Form.Group controlId="telefono_adicional">
-              <Form.Label>Telefono Adicional</Form.Label>
+              <Form.Label>Telefono Adicional (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="telefono_adicional"
@@ -798,7 +798,7 @@ const handleSeleccionar = async () => {
             </Col>
             <Col md={6}>
             <Form.Group controlId="email_adicional">
-              <Form.Label>Email Adicional</Form.Label>
+              <Form.Label>Email Adicional (Opcional)</Form.Label>
               <Form.Control
                 type="email"
                 name="email_adicional"
@@ -815,7 +815,7 @@ const handleSeleccionar = async () => {
           <Row className="g-2"> 
             <Col md={6}>
             <Form.Group controlId="nombre_adicional2">
-              <Form.Label>Nombre Adicional 2</Form.Label>
+              <Form.Label>Nombre Adicional 2 (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="nombre_adicional2"
@@ -827,7 +827,7 @@ const handleSeleccionar = async () => {
             </Col>
             <Col md={6}>
             <Form.Group controlId="cargo_adicional2">
-              <Form.Label>Cargo Adicional 2</Form.Label>
+              <Form.Label>Cargo Adicional 2 (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="cargo_adicional2"
@@ -841,7 +841,7 @@ const handleSeleccionar = async () => {
           <Row className="g-2"> 
             <Col md={6}>
             <Form.Group controlId="telefono_adicional2">
-              <Form.Label>Telefono Adicional 2</Form.Label>
+              <Form.Label>Telefono Adicional 2 (Opcional)</Form.Label>
               <Form.Control
                 type="text"
                 name="telefono_adicional2"
@@ -853,7 +853,7 @@ const handleSeleccionar = async () => {
             </Col>
             <Col md={6}>
             <Form.Group controlId="email_adicional2">
-              <Form.Label>Email Adicional 2</Form.Label>
+              <Form.Label>Email Adicional 2 (Opcional)</Form.Label>
               <Form.Control
                 type="email"
                 name="email_adicional2"

@@ -450,7 +450,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
                                 <FaSync />
                             )}
                             </Button>
-                            <Button variant="secondary" onClick={() => navigate(-1)} className="secondary" style={{ fontSize: '0.9rem' }}>
+                            <Button variant="secondary" onClick={() => navigate("/datos")} className="secondary" style={{ fontSize: '0.9rem' }}>
                                 <i className="bi bi-arrow-90deg-left"></i>
                             </Button>
                             

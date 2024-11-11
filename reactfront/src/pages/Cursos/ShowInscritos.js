@@ -756,6 +756,7 @@ const handleCursoStatusChange = (e) => {
             Cancelar
           </Button>
           <Button
+          variant="success"
             onClick={handleMarkAsExonerado}
             style={{
               backgroundColor: '#fc53c4', // Rosa

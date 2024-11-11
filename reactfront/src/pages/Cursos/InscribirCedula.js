@@ -436,11 +436,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                     <p className="me-3"><strong>Nombres:</strong> {datos.nombres}</p>
                     <p><strong>Apellidos:</strong> {datos.apellidos}</p>
                 </div>
-                <div className="d-flex">
-                    <p className="me-3"><strong>Edad:</strong> {datos.edad}</p>
-                    <p ><strong>Email:</strong> {datos.direccion_email}</p>
-                    
-                </div>
+               
                 
 
             </div>

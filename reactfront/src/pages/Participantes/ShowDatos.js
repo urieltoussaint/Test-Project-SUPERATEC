@@ -14,7 +14,7 @@ import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, Cartes
 
 
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch  } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import moment from 'moment';  // Asegúrate de tener moment.js instalado para manejar fechas
 
@@ -24,23 +24,45 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F', '#FFBB28'
 
 const ShowDatos = () => {
     const [datos, setDatos] = useState([]);
-    const [filteredDatos, setFilteredDatos] = useState([]);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+
+
     const [searchCedula, setSearchCedula] = useState('');
+
+    const [showModal, setShowModal] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
+    const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
+    const [range, setRange] = useState(30); // Estado por defecto a 30 días
+    const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
+    const [statistics, setStatistics] = useState({});
+    
+
+    // Mueve esto al principio del componente
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+
     const [nivelInstruccionOptions, setNivelInstruccionOptions] = useState([]);
     const [generoOptions, setGeneroOptions] = useState([]);
     const [estadoOptions, setEstadoOptions] = useState([]);
     const [SuperatecOptions, setSuperatecOptions] = useState([]);
     const [grupoPrioritarioOptions, setgrupoPrioritarioOptions] = useState([]);
+    const dataToUse = datos;
 
+    const totalParticipantes = statistics?.totalParticipantes || 0;
+    const mayorEdad = statistics?.mayorEdad || 0;
+    const menorEdad = statistics?.menorEdad || 0;
+    const promedioEdad = statistics?.promedioEdad || 0;
+    const porcentajeMasculino = statistics?.porcentajesGenero?.masculino || 0;
+    const porcentajeFemenino = statistics?.porcentajesGenero?.femenino || 0;
+    const porcentajeOtros = statistics?.porcentajesGenero?.otros || 0;
+
+
+   
     
-
-
-    const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
-    const [showModal, setShowModal] = useState(false);
-    const [selectedId, setSelectedId] = useState(null);
-    const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
-    const [range, setRange] = useState(30); // Estado por defecto a 30 días
-
 
     const [filters, setFilters] = useState({
         nivel_instruccion_id: '',
@@ -53,12 +75,20 @@ const ShowDatos = () => {
         tipo_programa_id: '',
         unidad_id: '',
         cohorte_id: '',
-        como_entero_superatec_id:'',
+        como_entero_superatec_id: '',
+        cedula_identidad: '' 
     });
-    const itemsPerPage = 7; // Número de elementos por página
+    
     const { setLoading } = useLoading();
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+        setCurrentPage(1);
+    };
+    
 
     // Obtener el rol del usuario desde localStorage
     const userRole = localStorage.getItem('role'); // Puede ser 'admin', 'superuser', 'invitado', etc.
@@ -71,73 +101,47 @@ const ShowDatos = () => {
         setShowModal(false); // Cierra el modal
     };
     
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
     useEffect(() => {
         setLoading(true);
-        Promise.all([getAllDatos(), fetchFilterOptions()]) // Agrega aquí la función para obtener como_entero_superatec
-            .finally(() => {
-                setLoading(false);
-            });
-    }, []);
+        getAllDatos ();
+        fetchFilterOptions()
+            .finally(() => setLoading(false));
+    }, []); 
+    
+    
+    
     
 
     const getAllDatos = async () => {
         try {
             const token = localStorage.getItem('token');
-            let allDatos = [];
-            let currentPage = 1;
-            let totalPages = 1;
-    
-            // Loop para obtener todas las páginas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/datos?${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    }
-                });
-    
-                allDatos = [...allDatos, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
-    
-            setDatos(allDatos);
-            setFilteredDatos(allDatos);
-           
-
-            console.log('Datos obtenidos:', allDatos);
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                setError('No estás autenticado. Por favor, inicia sesión.');
-                navigate('/'); // Redirige al login si no está autenticado
-            } else {
-                setError('Error fetching data');
-                console.error('Error fetching data:', error);
-            }
-        }
-    };
-    
-
-    
-    
-
-    const deleteDatos = async () => {
-        const token = localStorage.getItem('token');
-        try {
-            await axios.delete(`${endpoint}/datos/${selectedId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const response = await axios.get(`${endpoint}/datos-filtrados`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filters },
             });
-            toast.success('Participante eliminado con Éxito');             
-            getAllDatos();
-            setShowModal(false); // Cierra el modal tras la eliminación exitosa
+            
+            const estadisticas = response.data.estadisticas || {}; // Asegúrate de que sea un objeto
+            estadisticas.rangoEdades = estadisticas.rangoEdades || []; // Si `rangoEdades` es `undefined`, establece un array vacío
+            
+            setDatos(Array.isArray(response.data.datos.data) ? response.data.datos.data : []);
+            setStatistics(estadisticas);
         } catch (error) {
-            setError('Error deleting data');
-            console.error('Error deleting data:', error);
-            toast.error('Error al eliminar Participante');
-            setShowModal(false); // Cierra el modal tras el error
+            console.error('Error fetching data:', error);
+            toast.error('Error fetching data');
+            setDatos([]);
+            setStatistics({ rangoEdades: [] }); // Si hay error, asegura que `rangoEdades` es un array vacío
         }
     };
+    
+    
+    
+    
+    
+    
     const fetchFilterOptions = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -157,73 +161,28 @@ const ShowDatos = () => {
         }
     };
 
+
+    const deleteDatos = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            await axios.delete(`${endpoint}/datos/${selectedId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            toast.success('Participante eliminado con Éxito');             
+            getAllDatos();
+            setShowModal(false); // Cierra el modal tras la eliminación exitosa
+        } catch (error) {
+            setError('Error deleting data');
+            console.error('Error deleting data:', error);
+            toast.error('Error al eliminar Participante');
+            setShowModal(false); // Cierra el modal tras el error
+        }
+    };
     
 
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchCedula(value);
-        applyFilters({ ...filters, searchCedula: value });
-    };
 
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        const newFilters = { ...filters, [name]: value };
-        setFilters(newFilters);
-        applyFilters(newFilters);
-    };
-
-    const applyFilters = (filters) => {
-        let filtered = datos;
-
-        if (filters.searchCedula) {
-            filtered = filtered.filter(dato =>
-                dato.cedula_identidad.toLowerCase().includes(filters.searchCedula.toLowerCase())
-            );
-        }
-
-        if (filters.nivel_instruccion_id) {
-            filtered = filtered.filter(dato =>
-                dato.nivel_instruccion_id === parseInt(filters.nivel_instruccion_id)
-            );
-        }
-
-        if (filters.genero_id) {
-            filtered = filtered.filter(dato =>
-                dato.genero_id === parseInt(filters.genero_id)
-            );
-        }
-
-        if (filters.estado_id) {
-            filtered = filtered.filter(dato =>
-                dato.estado_id === parseInt(filters.estado_id)
-            );
-        }
-      
-
-        if (filters.como_entero_superatec_id) {
-            filtered = filtered.filter(dato =>
-                dato.como_entero_superatec_id === parseInt(filters.como_entero_superatec_id)
-            );
-        }
-        if (filters.grupo_prioritario_id) {
-            filtered = filtered.filter(dato =>
-                dato.grupo_prioritario_id === parseInt(filters.grupo_prioritario_id)
-            );
-        }
-        if (filters.status_seleccion_id) {
-            filtered = filtered.filter(dato =>
-                dato.status_seleccion_id === parseInt(filters.status_seleccion_id)
-            );
-        }
-
-        
-        setFilteredDatos(filtered);
-        setCurrentPage(1);
-    };
-
-    if (error) {
-        return <div>{error}</div>;
-    }
 
 
     const loadData = async () => {
@@ -237,200 +196,75 @@ const ShowDatos = () => {
         }
     };
     
-
-
-      // Cálculo de datos según filtros
-    const activeFilters = Object.values(filters).some(val => val); // Comprobar si hay filtros activos
-    const dataToUse = activeFilters ? filteredDatos : datos; // Usar filteredDatos si hay filtros activos, de lo contrario usar datos
-
-    // Total de participantes basado en filtros activos
-    const totalParticipantes = dataToUse.length;
-
-    // Promedio de Edad basado en filtros activos
-    const promedioEdad = dataToUse.length > 0 ? dataToUse.reduce((acc, curr) => acc + curr.edad, 0) / dataToUse.length : 0;
-
-    // Porcentaje de Género basado en filtros activos
-    const totalMasculino = dataToUse.filter(d => d.genero_id === 1).length;
-    const totalFemenino = dataToUse.filter(d => d.genero_id === 3).length;
-    const totalOtros = dataToUse.filter(d => d.genero_id === 2).length;
-
-    const porcentajeMasculino = totalMasculino > 0 ? (totalMasculino / dataToUse.length) * 100 : 0;
-    const porcentajeFemenino = totalFemenino > 0 ? (totalFemenino / dataToUse.length) * 100 : 0;
-    const porcentajeOtros = totalOtros > 0 ? (totalOtros / dataToUse.length) * 100 : 0;
-
-    // Cálculo de la mayor y menor edad
-    const mayorEdad = dataToUse.length > 0 ? Math.max(...dataToUse.map(d => d.edad)) : 0;
-    const menorEdad = dataToUse.length > 0 ? Math.min(...dataToUse.map(d => d.edad)) : 0;
    
 
 
-    const getFilteredDataByDate = () => {
-        const today = moment();
-        const filteredData = dataToUse.filter(dato => {
-            const inscripcionDate = moment(dato.created_at);
-            return inscripcionDate.isAfter(today.clone().subtract(range, 'days'));
-        });
+    // const getFilteredDataByDate = () => {
+    //     const today = moment();
+    //     const filteredData = dataToUse.filter(dato => {
+    //         const inscripcionDate = moment(dato.created_at);
+    //         return inscripcionDate.isAfter(today.clone().subtract(range, 'days'));
+    //     });
     
-        // Agrupar por fecha
-        const dateCounts = filteredData.reduce((acc, dato) => {
-            const fecha = moment(dato.created_at).format('YYYY-MM-DD');
-            acc[fecha] = (acc[fecha] || 0) + 1;
-            return acc;
-        }, {});
+    //     // Agrupar por fecha
+    //     const dateCounts = filteredData.reduce((acc, dato) => {
+    //         const fecha = moment(dato.created_at).format('YYYY-MM-DD');
+    //         acc[fecha] = (acc[fecha] || 0) + 1;
+    //         return acc;
+    //     }, {});
     
-        return Object.keys(dateCounts).map(date => ({
-            fecha: date,
-            count: dateCounts[date]
-        }));
-    };
+    //     return Object.keys(dateCounts).map(date => ({
+    //         fecha: date,
+    //         count: dateCounts[date]
+    //     }));
+    // };
 
-    const getNivelInstruccionData = () => {
-        // Crear un diccionario que mapea nivel_instruccion_id a descripcion
-        const nivelDict = nivelInstruccionOptions.reduce((acc, nivel) => {
-            acc[nivel.id] = nivel.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos filtrados por nivel de instrucción
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const nivel = nivelDict[dato.nivel_instruccion_id] || 'Desconocido'; // Usar el nivelDict para obtener la descripción
-    
-            if (!acc[nivel]) {
-                acc[nivel] = { name: nivel, count: 0 };
-            }
-            acc[nivel].count += 1;
-    
-            return acc;
-        }, {});
-    
-        // Convertir el objeto en un array para usar en el gráfico
-        return Object.values(groupedData);
-    };
-    
-    console.log('filteredDatos:', filteredDatos);
+
 
     
-    
-
-    const getParticipantsByEstado = () => {
-        // Crear un diccionario que mapea estado_id con la descripción
-        const estadoDict = estadoOptions.reduce((acc, estado) => {
-            acc[estado.id] = estado.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos de participantes por estado_id
-        const groupedData = filteredDatos.reduce((acc, dato) => {
-            const estadoId = dato?.estado_id || 'Desconocido';
-            const estadoName = estadoDict[estadoId] || 'Desconocido';  // Obtiene el nombre del estado desde estadoDict
-    
-            if (!acc[estadoName]) {
-                acc[estadoName] = { name: estadoName, count: 0 };
-            }
-            acc[estadoName].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un array
-        return Object.values(groupedData);
-    };
-    
-    
-   // Función para procesar y agrupar los datos de como_entero_superatec
-   const getComoEnteroSuperatecChartData = () => {
-
-    // Crear un diccionario que mapea como_entero_superatec_id con la descripción
-    const superatecDict = SuperatecOptions.reduce((acc, superatec) => {
-        acc[superatec.id] = superatec.descripcion;
-        return acc;
-    }, {});
-
-    // Usar rawComoEnteroData, ya que contiene los datos de las personas
-    const groupedData = filteredDatos.reduce((acc, dato) => {
-        // Asegúrate de que el dato tenga el campo `como_entero_superatec_id`
-        const superatecId = dato?.como_entero_superatec_id || 'Desconocido'; 
-        const superatecName = superatecDict[superatecId] || 'Desconocido';
-
-        if (!acc[superatecName]) {
-            acc[superatecName] = { name: superatecName, count: 0 };
-        }
-        acc[superatecName].count += 1;
-        return acc;
-    }, {});
-
-    console.log("Agrupación de superatec", groupedData);
-
-    const total = Object.values(groupedData).reduce((sum, dato) => sum + dato.count, 0); // Total de personas
-
-    // Convertir el total a porcentaje para cada categoría
-    return Object.values(groupedData).map(item => ({
-        name: item.name,
-        value: parseFloat(((item.count / total) * 100).toFixed(2)), // Calcular el porcentaje
-    }));
-};
-
-const getGroupPrioritarioChartData = () => {
-    const grupoDict = grupoPrioritarioOptions.reduce((acc, grupo) => {
-        acc[grupo.id] = grupo.descripcion;
-        return acc;
-    }, {});
-
-    const groupedData = filteredDatos.reduce((acc, dato) => {
-        const grupoId = dato?.grupo_prioritario_id || 'Desconocido';
-        const grupoName = grupoDict[grupoId] || 'Desconocido';
-
-        if (!acc[grupoName]) {
-            acc[grupoName] = { name: grupoName, count: 0 };
-        }
-        acc[grupoName].count += 1;
-        return acc;
-    }, {});
-
-    const total = Object.values(groupedData).reduce((sum, dato) => sum + dato.count, 0);
-
-    return Object.values(groupedData).map(item => ({
-        name: item.name,
-        value: parseFloat(((item.count / total) * 100).toFixed(2)),
-    }));
-};
-
-
-const getAgeRangeData = (filteredDatos) => {
-    const ageRanges = {
-        '6-12': 0,
-        '13-17': 0,
-        '18-25': 0,
-        '26-35': 0,
-        'Más de 35': 0,
-    };
-
-    filteredDatos.forEach(dato => {
-        const edad = dato.edad;
-
-        if (edad >= 6 && edad <= 12) {
-            ageRanges['6-12'] += 1;
-        } else if (edad >= 13 && edad <= 17) {
-            ageRanges['13-17'] += 1;
-        } else if (edad >= 18 && edad <= 25) {
-            ageRanges['18-25'] += 1;
-        } else if (edad >= 26 && edad <= 35) {
-            ageRanges['26-35'] += 1;
-        } else if (edad > 35) {
-            ageRanges['Más de 35'] += 1;
-        }
-    });
-
-    // Convertir `ageRanges` a un array adecuado para el gráfico
-    const total = filteredDatos.length || 1;  // Evitar dividir por cero
-    return Object.entries(ageRanges).map(([name, count]) => ({
+    const rangoEdades = statistics?.rangoEdades
+    ? Object.entries(statistics.rangoEdades).map(([name, percentage]) => ({
         name,
-        value: parseFloat(((count / total) * 100).toFixed(2)),  // Calcular el porcentaje
-    }));
-};
-const ageRangeData = getAgeRangeData(filteredDatos);
+        value: percentage,
+    }))
+    : [];
 
 
-    const columns = ["Cédula", "Nombres", "Apellidos","Email","Tlf", "Acciones"];
+    const comoEnteroSuperatecData = statistics?.comoEnteroSuperatec
+    ? Object.entries(statistics.comoEnteroSuperatec).map(([name, obj]) => ({
+        name,
+        value: obj.percentage,
+    }))
+    : [];
+
+const grupoPrioritarioData = statistics?.grupoPrioritario
+    ? Object.entries(statistics.grupoPrioritario).map(([name, obj]) => ({
+        name,
+        value: obj.percentage,
+    }))
+    : [];
+
+
+
+    const nivelesInstruccionData = statistics?.nivelesInstruccion
+    ? Object.entries(statistics.nivelesInstruccion).map(([name, obj]) => ({
+        name,
+        count: obj.count,
+    }))
+    : [];
+
+const participantesPorEstadoData = statistics?.participantesPorEstado
+    ? Object.entries(statistics.participantesPorEstado).map(([name, obj]) => ({
+        name,
+        count: obj.count,
+    }))
+    : [];
+
+
+
+ 
+    const columns = ["Cédula", "Nombres", "Apellidos", "Email", "Teléfono", "Acciones"];
+
 
     const renderItem = (dato) => (
         <tr key={dato.id}>
@@ -606,39 +440,43 @@ const ageRangeData = getAgeRangeData(filteredDatos);
 
                 {/* Promedio de Aporte y Patrocinado */}
                 <div className="stat-card" style={{ padding: '0', margin: '0 10px', width: '100%', maxWidth: '300px' }}> 
-                {/* <h4 style={{ fontSize: '1.2rem', color: 'gray' }}>Distribución por Rango de Edad</h4> */}
-        <ResponsiveContainer width="100%" height={120}>
-            <PieChart>
-                <Pie
-                    data={ageRangeData}
-                    dataKey="value"
-                    startAngle={180}
-                    endAngle={0}
-                    cx="50%"
-                    cy="70%"
-                    outerRadius="80%"
-                    label={({ name, percent }) => `${(percent * 100).toFixed(2)}%`}
-                    labelLine
-                >
-                    {ageRangeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${value}%`} />
-                <Legend 
-                    layout="horizontal" 
-                    verticalAlign="bottom" 
-                    align="center" 
-                    wrapperStyle={{ 
-                    width: "88%", 
-                    textAlign: "center", 
-                    marginTop: "-15px", 
-                    fontSize: '10px' 
-                    }}
-                    formatter={(value, entry) => <span style={{ color: entry.color }}>{value}</span>}
-                />
-            </PieChart>
-        </ResponsiveContainer>
+                {rangoEdades.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={120}>
+                        <PieChart>
+                            <Pie
+                                data={rangoEdades}
+                                startAngle={180} // Semicírculo
+                                endAngle={0}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="70%"
+                                outerRadius="70%"
+                                fill="#82ca9d"
+                                label={({ name, percent }) => `${(percent * 100).toFixed(2)}%`}
+                            >
+                                {rangoEdades.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `${value}%`} />
+                            <Legend 
+                            layout="horizontal" 
+                            verticalAlign="bottom" 
+                            align="center" 
+                            wrapperStyle={{ 
+                            width: "88%", 
+                            textAlign: "center", 
+                            marginTop: "-15px", 
+                            fontSize: '10px' 
+                            }}
+                        />
+                        </PieChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <p>0</p>
+                )}
+
                 </div>
 
             </div>
@@ -651,13 +489,15 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h2 style={{ fontSize: '1.8rem' }}>Lista de Participantes</h2>
                             <div className="d-flex align-items-center">
-                                <Form.Control
-                                        type="text"
-                                        placeholder="Buscar por Cedula"
-                                        value={searchCedula}
-                                        onChange={handleSearchChange}
-                                        className="me-2"
-                                    />
+                            <Form.Control
+                                type="text"
+                                placeholder="Buscar por Cédula"
+                                value={filters.cedula_identidad} // Conecta el campo de cédula al estado de filtros
+                                name="cedula_identidad"
+                                onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
+                                className="me-2"
+                            />
+
 
                                     <Button
                                     variant="info me-2"
@@ -666,6 +506,8 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
 
                                 >
+                                    
+
                                     {/* Icono de recarga */}
                                     {loadingData ? (
                                     <FaSync className="spin" /> // Ícono girando si está cargando
@@ -673,6 +515,15 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                                     <FaSync />
                                     )}
                                 </Button>
+
+                                <Button 
+                                    variant="info me-2" 
+                                    onClick={getAllDatos}
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                >
+                                    <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                                </Button>
+                                
 
 
                                 {userRole === 'admin' || userRole === 'superuser' ? (
@@ -698,9 +549,10 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                                 className="me-2"
                             >
                                 <option value="">Nivel de Instrucción</option>
-                                {nivelInstruccionOptions.map(option => (
+                                {nivelInstruccionOptions?.map(option => (
                                     <option key={option.id} value={option.id}>{option.descripcion}</option>
                                 ))}
+
                             </Form.Select>
 
                             <Form.Select
@@ -754,16 +606,17 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                            
                         </div>
                         
-                            
-                        {/* Tabla paginada */}
                         <PaginationTable
-                        data={filteredDatos}  // Datos filtrados
-                        itemsPerPage={itemsPerPage}
-                        columns={columns}
-                        renderItem={renderItem}
-                        currentPage={currentPage}  // Página actual
-                        onPageChange={setCurrentPage}  // Función para cambiar de página
+                            data={datos}
+                            itemsPerPage={itemsPerPage}
+                            columns={columns}
+                            renderItem={renderItem}
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
                         />
+
+
+
 
                         
 
@@ -792,28 +645,26 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                         <h4 style={{ fontSize: '1.2rem' }}>¿Cómo se enteró de Superatec?</h4>
 
                         {SuperatecOptions.length > 0 && (
-                        <ResponsiveContainer width='100%' height={300}>
-                            <PieChart >
-                                <Pie
-                                margin={{  right: 30, left: -20 }}
-                                    data={getComoEnteroSuperatecChartData()}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={80}
-                                    outerRadius={100}
-                                    fill="#82ca9d"
-                                    label={({ value }) => `${value}%`}
-                                >
-                                    {getComoEnteroSuperatecChartData().map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                {/* <Legend/> */}
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
+                         <ResponsiveContainer width='100%' height={300}>
+                         <PieChart>
+                             <Pie
+                                 data={comoEnteroSuperatecData} // Usa comoEnteroSuperatecData
+                                 dataKey="value"
+                                 nameKey="name"
+                                 cx="50%"
+                                 cy="50%"
+                                 innerRadius={80}
+                                 outerRadius={100}
+                                 fill="#82ca9d"
+                                 label={({ value }) => `${value}%`}
+                             >
+                                 {comoEnteroSuperatecData.map((entry, index) => (
+                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                 ))}
+                             </Pie>
+                             <Tooltip />
+                         </PieChart>
+                     </ResponsiveContainer>
                     )}
 
                     </div>
@@ -824,14 +675,16 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                     <h4 style={{ fontSize: '1.2rem' }}>Nivel de Instrucción</h4>
 
                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={getNivelInstruccionData()} margin={{  right: 30, left: -20 }} >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Bar dataKey="count" fill="#8884d8" name="Participantes" />
-                        </BarChart>
+                    {nivelesInstruccionData.length > 0 && (
+                            <BarChart data={nivelesInstruccionData} margin={{ right: 30, left: -20 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Bar dataKey="count" fill="#8884d8" name="Participantes" />
+                            </BarChart>
+                        )}
                     </ResponsiveContainer>
                 </div>
 
@@ -850,44 +703,55 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                 <   h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Estado</h4>
     
                     {estadoOptions.length > 0 && (
-                        <ResponsiveContainer width="100%" height={400}>
-                            <BarChart data={getParticipantsByEstado()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="count" name="Participantes">
-                                    {getParticipantsByEstado().map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                       <ResponsiveContainer width="100%" height={400}>
+                     {participantesPorEstadoData.length > 0 && (
+                        <BarChart data={participantesPorEstadoData} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="count" fill="#8884d8" name="Participantes" />
+                        </BarChart>
+                    )}
+                   </ResponsiveContainer>
                     )}
                 </div>
 
                 <div className="chart-box " style={{flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
                 <h4 style={{ fontSize: '1.2rem' }}>Porcentaje por Grupo Prioritario</h4>
                     {grupoPrioritarioOptions.length > 0 && (
-                        <ResponsiveContainer width='100%' height={300}>
-                            <PieChart>
-                                <Pie
-                                    data={getGroupPrioritarioChartData()}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={120}
-                                    fill="#82ca9d"
-                                    label={({ value }) => `${value}%`}
-                                >
-                                    {getGroupPrioritarioChartData().map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
+                       <ResponsiveContainer width='100%' height={300}>
+                       <PieChart>
+                           <Pie
+                               data={grupoPrioritarioData} // Usa grupoPrioritarioData
+                               dataKey="value"
+                               nameKey="name"
+                               cx="50%"
+                               cy="60%"
+                               outerRadius={120}
+                               fill="#82ca9d"
+                               label={({ value }) => `${value}%`}
+                           >
+                               {grupoPrioritarioData.map((entry, index) => (
+                                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                               ))}
+                           </Pie>
+                           <Tooltip />
+                           <Legend 
+                                layout="horizontal" 
+                                verticalAlign="bottom" 
+                                align="center" 
+                                wrapperStyle={{ 
+                                    position: "relative",  // Hace que "top" funcione
+                                    top: "20px",  // Ajusta el valor para empujar la leyenda hacia abajo
+                                    width: "90%", 
+                                    textAlign: "center", 
+                                    fontSize: '15px' 
+                                }}
+                            />
+                       </PieChart>
+                   </ResponsiveContainer>
                     )}
                         
 
@@ -897,7 +761,7 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                     <ResponsiveContainer width="100%" height={300} >
                         <PieChart>
                             <Pie
-                                data={ageRangeData}
+                                data={rangoEdades}
                                 dataKey="value"
                                 nameKey="name"
                                 cx="50%"
@@ -906,7 +770,7 @@ const ageRangeData = getAgeRangeData(filteredDatos);
                                 fill="#82ca9d"
                                 label={({ name, percent }) => `${(percent * 100).toFixed(2)}%`}
                             >
-                                {ageRangeData.map((entry, index) => (
+                                {rangoEdades.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
@@ -935,44 +799,7 @@ const ageRangeData = getAgeRangeData(filteredDatos);
 
 
 
-             {/* Gráfica tercera fila*/}
-             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
-
-
-              
-
-                <div className="chart-box" style={{flex: '1 1 100%', maxWidth: '100%', marginRight: '10px'}}>
-                    <div className="d-flex justify-content-between align-items-center" >
-                        <h4 style={{ fontSize: '1.2rem' }}>Registro de Participantes</h4>
-                        {/* Selector de rango de fechas */}
-                        <Form.Select 
-                            value={range} 
-                            onChange={(e) => setRange(parseInt(e.target.value))} 
-                            style={{ width: '150px', fontSize: '0.85rem' }} // Ajustar el tamaño del selector
-                        >
-                            <option value={7}>Últimos 7 días</option>
-                            <option value={30}>Últimos 30 días</option>
-                            <option value={60}>Últimos 60 días</option>
-                        </Form.Select>
-                    </div>
-                    
-                    <ResponsiveContainer  width="100%" height={400}>
-                        <AreaChart data={getFilteredDataByDate()} margin={{  right: 30, left: -20}}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="fecha" />
-                            <YAxis />
-                            <Tooltip />
-                            <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-
-                </div>
-                
-
-
-
-            </div>
-
+             
                         
 
     </div>

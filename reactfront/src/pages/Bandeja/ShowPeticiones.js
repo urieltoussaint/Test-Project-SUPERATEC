@@ -33,7 +33,7 @@ const ShowPeticiones = () => {
     const [rejectComment, setRejectComment] = useState('');
 
     const navigate = useNavigate();
-    const itemsPerPage = 4;
+    const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const userId = parseInt(localStorage.getItem('user'));
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
@@ -328,24 +328,23 @@ const ShowPeticiones = () => {
     const redCount = filteredPeticiones.filter(peticion => getStatusColor(peticion.created_at) === 'red').length;
 
 
-    const columns = ["Status", "Usuario Request", "key", "Zona", "Fecha de creación", "Comentarios", "Acciones"];
+    const columns = ["Status", "Usuario Request", "Zona", "Fecha de creación", "Comentarios", "Acciones"];
 
     const renderItem = (peticiones) => (
         <tr key={peticiones.id}>
             <td className="status">{renderStatusDot(peticiones.created_at)}</td>
             <td className="usuario">{peticiones.user?.username}</td>
-            <td className="key">{peticiones.key}</td>
             <td className="zona">{peticiones.zonas?.name}</td>
             <td className="fecha">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
             <td className="comentarios">{peticiones.comentario}</td>
             <td className="acciones">
             <div className="d-flex justify-content-around">
             <Button
-                variant="btn btn-warning"
+                variant="btn btn-success"
                 onClick={() => handleNavigate(peticiones)}
                 className="me-2 icon-white"
             >
-                <i className="bi bi-pencil-fill"></i> 
+                <i className="bi bi-check-square"></i> 
             </Button>
             <Button
                 variant="btn btn-danger"
@@ -537,7 +536,7 @@ const ShowPeticiones = () => {
                 <Modal.Body>
                     {selectedPeticion && (
                     <>
-                        <p>¿Estás seguro de que deseas rechazar la petición de {selectedPeticion.user?.name}?</p>
+                        <p>¿Estás seguro de que deseas rechazar la petición de {selectedPeticion.user?.username}?</p>
                         <Form.Group controlId="rejectComment">
                         <Form.Label>Comentario (opcional)</Form.Label>
                         <Form.Control

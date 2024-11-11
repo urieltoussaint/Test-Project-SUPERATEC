@@ -86,6 +86,18 @@ body {
   down:auto;
   
 }
+.dropdown-menux {
+  position: absolute;
+  top: 5%;  /* Coloca el menú inmediatamente debajo del ícono */
+  right: 0;  /* Alinea el menú a la derecha del contenedor */
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  padding: 10px;
+  z-index: 1000;
+  down:auto;
+}
 
 .logout-option {
   display: flex;
@@ -160,8 +172,9 @@ body {
 }
 
 
-.sidebar a.active i {
-  color:rgb(17, 39, 66); /* Cambiar el color del ícono cuando el enlace está activo */
+.sidebar a.active {
+  color: rgb(59, 59, 59); /* Color del texto cuando está activo */
+  font-weight: bold; /* Opcional: hace el texto en negrita para resaltar */
 }
 
 
@@ -317,7 +330,7 @@ body {
 }
 
 .dropdown-menu li a {
-  color: rgb(44, 44, 44);
+  color: rgb(193, 0, 0);
   text-decoration: none;
   display: flex;
   align-items: center;

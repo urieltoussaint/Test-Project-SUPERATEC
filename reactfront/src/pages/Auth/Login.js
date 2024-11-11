@@ -25,7 +25,7 @@ const Login = () => {
 
       navigate('/peticiones'); // Redirige a la página principal después de iniciar sesión
     } catch (error) {
-      setError('Invalid login credentials');
+      setError('Error, credenciales inválidas');
     }
   };
 

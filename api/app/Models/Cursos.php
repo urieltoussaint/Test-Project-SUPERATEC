@@ -48,7 +48,7 @@ class Cursos extends Model
 
         // Al eliminar un curso, también eliminar las inscripciones y pagos relacionados
         static::deleting(function ($curso) {
-            $curso->InscripcionCursos()->each(function ($inscripcionCurso) {
+            $curso->InformacionInscripcion()->each(function ($inscripcionCurso) {
                 // Eliminar todos los pagos relacionados con esta inscripción
                 $inscripcionCurso->ReportePagos()->delete();
 

@@ -1,7 +1,12 @@
 import React from 'react';
 import { Button, Table } from 'react-bootstrap';
 
-const PaginationTable = ({ data, itemsPerPage, columns, renderItem, currentPage, onPageChange }) => {
+const PaginationTable = ({ data = [], itemsPerPage, columns, renderItem, currentPage, onPageChange }) => {
+    // Asegura que data sea un array
+    if (!Array.isArray(data)) {
+        console.warn('Expected data to be an array but received:', data);
+        data = []; // Falla seguro: establece data como un array vacío
+    }
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
