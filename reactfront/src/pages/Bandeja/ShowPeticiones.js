@@ -41,61 +41,51 @@ const ShowPeticiones = () => {
     const [selectedDateRange, setSelectedDateRange] = useState('7d');
     const [graphData, setGraphData] = useState([]);
     const [allPeticiones, setAllPeticiones] = useState([]);
+    const [greenCount, setGreenCount] = useState(0);
+    const [orangeCount, setOrangeCount] = useState(0);
+    const [redCount, setRedCount] = useState(0);
 
 
 
 
     useEffect(() => {
         setLoading(true);
-        getAllPeticiones().finally(() => {
-            setLoading(false);
-        });
-    }, []);
+        getAllPeticiones ()
+            .finally(() => setLoading(false));
+    }, []); 
+    
 
     const getAllPeticiones = async () => {
         try {
             const token = localStorage.getItem('token');
-            const roleId = parseInt(localStorage.getItem('role_id'));
-            let allPeticiones = [];
-            let currentPage = 1;
-            let totalPages = 1;
+            const response = await axios.get(`${endpoint}/peticiones-estadisticas`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
     
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/peticiones?with=user,zonas&page=${currentPage}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+            // Desestructurar los datos de la respuesta correctamente
+            const { peticiones, estadisticas } = response.data;
     
-                allPeticiones = [...allPeticiones, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
-    
-            // Filtrar peticiones no atendidas (status=false)
-            const filteredPeticiones = allPeticiones.filter(
-                (peticion) => (peticion.destinatario_id === userId || peticion.role_id === roleId) && peticion.status === false
-            );
-    
-            // Filtrar peticiones atendidas (status=true)
-            const attended = allPeticiones.filter(
-                (peticion) => (peticion.destinatario_id === userId || peticion.role_id === roleId) && peticion.status === true
-            );
-    
-            // Ordenar las peticiones por fecha de creación de forma descendente
-            const sortedPeticiones = filteredPeticiones.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    
-            setPeticiones(sortedPeticiones);          // Peticiones no atendidas
-            setFilteredPeticiones(sortedPeticiones);  // Actualiza el estado de peticiones no atendidas
-            setAttendedPeticiones(attended);          // Actualiza el estado de peticiones atendidas
-            generateGraphData(allPeticiones); 
-            setAllPeticiones(allPeticiones);
+            // Peticiones paginadas
+            setPeticiones(peticiones.data || []); // Usar directamente `peticiones.data` según la estructura que muestra la consola
+            setFilteredPeticiones(peticiones.data || []);
             setCurrentPage(1);
-
-
+    
+            // Actualizar estadísticas
+            setAttendedPeticiones(estadisticas.totalAtendidas || 0);
+            setGraphData(estadisticas.graphData || []);
+    
+            // Actualizar los contadores de estados
+            setGreenCount(estadisticas.clasificacionAntiguedad.reciente || 0);
+            setOrangeCount(estadisticas.clasificacionAntiguedad.urgente || 0);
+            setRedCount(estadisticas.clasificacionAntiguedad.critico || 0);
+    
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
+    
+    
 
        // UseEffect para regenerar grafica
        useEffect(() => {
@@ -106,79 +96,56 @@ const ShowPeticiones = () => {
     const handleDateRangeChange = (e) => {
         const value = e.target.value;
         setSelectedDateRange(value);
-        applyDateFilter(value);
     };
 
 
-    const applyDateFilter = (range) => {
-        const now = moment();  // Momento actual
-        let filtered = [...peticiones];
-    
-        if (range === 'hoy') {
-            filtered = filtered.filter(peticion => moment(peticion.created_at).isSame(now, 'day'));
-        } else if (range === '3dias') {
-            filtered = filtered.filter(peticion => moment(peticion.created_at).isAfter(now.subtract(3, 'days')));
-        } else if (range === '7dias') {
-            filtered = filtered.filter(peticion => moment(peticion.created_at).isAfter(now.subtract(7, 'days')));
-        } else if (range === '30dias') {
-            filtered = filtered.filter(peticion => moment(peticion.created_at).isAfter(now.subtract(30, 'days')));
-        } else if (range === '60dias') {
-            filtered = filtered.filter(peticion => moment(peticion.created_at).isAfter(now.subtract(60, 'days')));
-        }
-    
-        setFilteredPeticiones(filtered);  // Actualiza el estado con las peticiones filtradas por fecha
-        setCurrentPage(1);  // Resetea la paginación a la primera página
-    };
-        
-    
+// Función para calcular el número de días desde la creación
+const calculateDaysSinceCreation = (created_at) => {
+    const creationDate = moment(created_at); // Convierte la fecha de creación en un objeto moment
+    const now = moment(); // Obtiene la fecha actual
+    return now.diff(creationDate, 'days'); // Calcula la diferencia en días
+};
 
-    const calculateDaysSinceCreation = (created_at) => {
-        const creationDate = moment(created_at);
-        const now = moment();
-        return now.diff(creationDate, 'days');
-    };
+// Definimos los colores en un objeto de configuración
+const statusColors = {
+    reciente: 'green',
+    urgente: 'orange',
+    critico: 'red'
+};
 
-    const getStatusColor = (created_at) => {
-        const daysSinceCreation = calculateDaysSinceCreation(created_at);
-        if (daysSinceCreation > 10) return 'red';
-        if (daysSinceCreation > 2) return 'orange';
-        return 'green';
-    };
+// Función para obtener el color de estado basado en la antigüedad de creación
+const getStatusColor = (created_at) => {
+    const daysSinceCreation = calculateDaysSinceCreation(created_at);
+    if (daysSinceCreation > 10) return statusColors.critico;
+    if (daysSinceCreation > 2) return statusColors.urgente;
+    return statusColors.reciente;
+};
 
-    const renderStatusDot = (created_at) => {
-        const color = getStatusColor(created_at);
-        return (
-            <div
-                style={{
-                    height: '20px',
-                    width: '20px',
-                    borderRadius: '50%',
-                    backgroundColor: color,
-                    display: 'inline-block',
-                }}
-            ></div>
-        );
-    };
+// Función para renderizar el punto de estado
+const renderStatusDot = (created_at) => {
+    const color = getStatusColor(created_at);
+    return (
+        <div
+            style={{
+                height: '20px',
+                width: '20px',
+                borderRadius: '50%',
+                backgroundColor: color,
+                display: 'inline-block',
+            }}
+        ></div>
+    );
+};
+
+
 
 
     const handleStatusChange = (e) => {
         const value = e.target.value;
         setSelectedStatus(value);
-        applyFilters(value);
     };
 
-    const applyFilters = (statusValue) => {
-        let filtered = [...peticiones];
-        if (statusValue === 'green') {
-            filtered = filtered.filter(peticion => calculateDaysSinceCreation(peticion.created_at) <= 3);
-        } else if (statusValue === 'orange') {
-            filtered = filtered.filter(peticion => calculateDaysSinceCreation(peticion.created_at) > 3 && calculateDaysSinceCreation(peticion.created_at) <= 10);
-        } else if (statusValue === 'red') {
-            filtered = filtered.filter(peticion => calculateDaysSinceCreation(peticion.created_at) > 10);
-        }
-        setFilteredPeticiones(filtered);
-        setCurrentPage(1);
-    };
+  
 
     const handleNavigate = (peticiones) => {
         const { id } = peticiones.zonas || {};
@@ -316,16 +283,8 @@ const ShowPeticiones = () => {
     
         setGraphData(graphData); // Actualiza la gráfica
     };
-    
-    
-    
-    
 
 
-
-    const greenCount = filteredPeticiones.filter(peticion => getStatusColor(peticion.created_at) === 'green').length;
-    const orangeCount = filteredPeticiones.filter(peticion => getStatusColor(peticion.created_at) === 'orange').length;
-    const redCount = filteredPeticiones.filter(peticion => getStatusColor(peticion.created_at) === 'red').length;
 
 
     const columns = ["Status", "Usuario Request", "Zona", "Fecha de creación", "Comentarios", "Acciones"];
@@ -333,8 +292,8 @@ const ShowPeticiones = () => {
     const renderItem = (peticiones) => (
         <tr key={peticiones.id}>
             <td className="status">{renderStatusDot(peticiones.created_at)}</td>
-            <td className="usuario">{peticiones.user?.username}</td>
-            <td className="zona">{peticiones.zonas?.name}</td>
+            <td className="usuario">{peticiones.user_username}</td>
+            <td className="zona">{peticiones.zona_name}</td>
             <td className="fecha">{moment(peticiones.created_at).format('YYYY-MM-DD')}</td>
             <td className="comentarios">{peticiones.comentario}</td>
             <td className="acciones">
@@ -498,19 +457,6 @@ const ShowPeticiones = () => {
                         <option value="red">Crítico (Rojo)</option>
                         </Form.Select>
 
-                        <Form.Select
-                            value={selectedDateRange}
-                            onChange={handleDateRangeChange}
-                            className="me-0"
-                            style={{ width: 'auto' }}
-                        >
-                            <option value="">Filtrar por Fecha</option>
-                            <option value="hoy">Hoy</option>
-                            <option value="3dias">Últimos 3 días</option>
-                            <option value="7dias">Últimos 7 días</option>
-                            <option value="30dias">Últimos 30 días</option>
-                            <option value="60dias">Últimos 60 días</option>
-                        </Form.Select>
 
                         <div className="ms-auto">
                         <span className="status-dot green"></span> Reciente (Verde)
@@ -521,7 +467,7 @@ const ShowPeticiones = () => {
                     </div>
 
                     <PaginationTable
-                        data={filteredPeticiones}
+                        data={peticiones}
                         itemsPerPage={itemsPerPage}
                         columns={columns}
                         renderItem={renderItem}

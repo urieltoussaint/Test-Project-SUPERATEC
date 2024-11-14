@@ -1,21 +1,25 @@
 import React from 'react';
 import { Button, Table } from 'react-bootstrap';
 
-const PaginationTable = ({ data = [], itemsPerPage, columns, renderItem, currentPage, onPageChange }) => {
+const PaginationTable = ({ data = [], itemsPerPage = 10, columns, renderItem, currentPage, onPageChange, totalPages }) => {
     // Asegura que data sea un array
     if (!Array.isArray(data)) {
         console.warn('Expected data to be an array but received:', data);
         data = []; // Falla seguro: establece data como un array vacío
     }
 
+    // Si `totalPages` no está definido, calculamos el número total de páginas en función de los datos locales
+    const calculatedTotalPages = totalPages || Math.ceil(data.length / itemsPerPage);
+
+    // Si `totalPages` no está definido, calculamos `currentItems` aquí
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = totalPages ? data : data.slice(indexOfFirstItem, indexOfLastItem);
 
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    // Configuración de la paginación visible
     const visiblePageRange = 3;
     const startPage = Math.max(1, currentPage - Math.floor(visiblePageRange / 2));
-    const endPage = Math.min(totalPages, startPage + visiblePageRange - 1);
+    const endPage = Math.min(calculatedTotalPages, startPage + visiblePageRange - 1);
 
     const pageNumbers = [];
     for (let i = startPage; i <= endPage; i++) {
@@ -27,7 +31,7 @@ const PaginationTable = ({ data = [], itemsPerPage, columns, renderItem, current
     };
 
     const handleNextPage = () => {
-        if (currentPage < totalPages) onPageChange(currentPage + 1);
+        if (currentPage < calculatedTotalPages) onPageChange(currentPage + 1);
     };
 
     return (
@@ -41,7 +45,7 @@ const PaginationTable = ({ data = [], itemsPerPage, columns, renderItem, current
                     </tr>
                 </thead>
                 <tbody>
-                    {currentItems.map(renderItem)}
+                    {(totalPages ? data : currentItems).map(renderItem)} {/* Renderiza `data` directamente si paginación en servidor */}
                 </tbody>
             </Table>
 
@@ -66,11 +70,11 @@ const PaginationTable = ({ data = [], itemsPerPage, columns, renderItem, current
                             </Button>
                         </li>
                     ))}
-                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <li className={`page-item ${currentPage === calculatedTotalPages ? 'disabled' : ''}`}>
                         <Button
                             className="page-link"
                             onClick={handleNextPage}
-                            disabled={currentPage === totalPages}
+                            disabled={currentPage === calculatedTotalPages}
                         >
                             Siguiente
                         </Button>

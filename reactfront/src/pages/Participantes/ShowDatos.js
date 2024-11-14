@@ -83,11 +83,11 @@ const ShowDatos = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-        setCurrentPage(1);
-    };
+   const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+};
+
     
 
     // Obtener el rol del usuario desde localStorage
@@ -101,10 +101,9 @@ const ShowDatos = () => {
         setShowModal(false); // Cierra el modal
     };
     
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
+ 
 
+    
     useEffect(() => {
         setLoading(true);
         getAllDatos ();
@@ -114,34 +113,35 @@ const ShowDatos = () => {
     
     
     
-    
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        getAllDatos(page); // Llama a `getAllDatos` con el nuevo número de página
+        
+    };
 
-    const getAllDatos = async () => {
+    const getAllDatos = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${endpoint}/datos-filtrados`, {
                 headers: { Authorization: `Bearer ${token}` },
-                params: { ...filters },
+                params: { ...filters, page }, // Incluye `page` en los parámetros
             });
             
-            const estadisticas = response.data.estadisticas || {}; // Asegúrate de que sea un objeto
-            estadisticas.rangoEdades = estadisticas.rangoEdades || []; // Si `rangoEdades` es `undefined`, establece un array vacío
+            const estadisticas = response.data.estadisticas || {};
+            estadisticas.rangoEdades = estadisticas.rangoEdades || [];
             
             setDatos(Array.isArray(response.data.datos.data) ? response.data.datos.data : []);
             setStatistics(estadisticas);
+            setTotalPages(response.data.datos.last_page || 1); // Actualiza el total de páginas
         } catch (error) {
             console.error('Error fetching data:', error);
             toast.error('Error fetching data');
             setDatos([]);
-            setStatistics({ rangoEdades: [] }); // Si hay error, asegura que `rangoEdades` es un array vacío
+            setStatistics({ rangoEdades: [] });
         }
     };
-    
-    
-    
-    
-    
-    
+
+
     const fetchFilterOptions = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -188,7 +188,7 @@ const ShowDatos = () => {
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
         try {
-            await getAllDatos(); // Espera a que getAllDatos haga la solicitud y actualice los datos
+            await (getAllDatos(),fetchFilterOptions()); // Espera a que getAllDatos haga la solicitud y actualice los datos
         } catch (error) {
             console.error('Error recargando los datos:', error); // Maneja el error si ocurre
         } finally {
@@ -196,28 +196,6 @@ const ShowDatos = () => {
         }
     };
     
-   
-
-
-    // const getFilteredDataByDate = () => {
-    //     const today = moment();
-    //     const filteredData = dataToUse.filter(dato => {
-    //         const inscripcionDate = moment(dato.created_at);
-    //         return inscripcionDate.isAfter(today.clone().subtract(range, 'days'));
-    //     });
-    
-    //     // Agrupar por fecha
-    //     const dateCounts = filteredData.reduce((acc, dato) => {
-    //         const fecha = moment(dato.created_at).format('YYYY-MM-DD');
-    //         acc[fecha] = (acc[fecha] || 0) + 1;
-    //         return acc;
-    //     }, {});
-    
-    //     return Object.keys(dateCounts).map(date => ({
-    //         fecha: date,
-    //         count: dateCounts[date]
-    //     }));
-    // };
 
 
 
@@ -606,6 +584,14 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                            
                         </div>
                         
+                        {/* <PaginationTable
+                            data={datos}
+                            itemsPerPage={itemsPerPage}
+                            columns={columns}
+                            renderItem={renderItem}
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
+                        /> */}
                         <PaginationTable
                             data={datos}
                             itemsPerPage={itemsPerPage}
@@ -613,7 +599,10 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                             renderItem={renderItem}
                             currentPage={currentPage}
                             onPageChange={handlePageChange}
+                            totalPages={totalPages}  // <--- Añade esta línea si aún no está
                         />
+
+                  
 
 
 

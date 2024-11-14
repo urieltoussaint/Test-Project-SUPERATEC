@@ -70,7 +70,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('datos/{id}', [DatosIdentificacionController::class, 'update'])->middleware('role:admin,superuser'); // Solo admin y superuser pueden editar
     Route::delete('datos/{id}', [DatosIdentificacionController::class, 'destroy'])->middleware('role:admin'); // Solo admin puede eliminar
     Route::get('datos/cedula/{cedula_identidad}', [DatosIdentificacionController::class, 'searchByCedula1'])->middleware('role:admin,superuser,invitado');
-    Route::get('datos-filtrados', [DatosIdentificacionController::class, 'getFilteredDataWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('datos-filtrados', [DatosIdentificacionController::class, 'getDataWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('datos-estadisticas', [DatosIdentificacionController::class, 'getStatistics'])->middleware('role:admin,superuser,invitado,pagos');
 
 
@@ -82,6 +82,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('cursos/{id}', [CursosController::class, 'show'])->middleware('role:admin,superuser,invitad,pagos');
     Route::put('cursos/{id}', [CursosController::class, 'update'])->middleware('role:admin,superuser ,pagos');
     Route::delete('cursos/{id}', [CursosController::class, 'destroy'])->middleware('role:admin');
+    Route::get('cursos-estadisticas', [CursosController::class, 'getCursosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+
     
 
     // Inscripción Cursos
@@ -135,6 +137,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::post('peticiones', [PeticionesController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
     Route::put('peticiones/{id}', [PeticionesController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
     Route::delete('peticiones/{id}', [PeticionesController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('peticiones-estadisticas', [PeticionesController::class, 'getPeticionesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+
 
      // Patrocinantes
      Route::get('patrocinantes', [PatrocinanteController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');

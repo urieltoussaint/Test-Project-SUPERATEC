@@ -77,7 +77,7 @@ public function searchByCedula2(Request $request)
 
 
 
-    public function getFilteredDataWithStatistics(Request $request)
+    public function getDataWithStatistics(Request $request)
 {
     // 1. Consulta para obtener los datos paginados que se mostrarán en la tabla
     $queryPaginated = DatosIdentificacion::query()
@@ -105,7 +105,7 @@ public function searchByCedula2(Request $request)
     }
 
     // Obtener los datos paginados para mostrar en la tabla
-    $datosPaginados = $queryPaginated->paginate(20);
+    $datosPaginados = $queryPaginated->paginate(9);
 
     // 2. Consulta para obtener todos los datos filtrados (sin paginación) para las estadísticas
     $queryStatistics = DatosIdentificacion::query();
