@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';
 import { Modal } from 'react-bootstrap';
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-import { FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { FaLocationDot } from "react-icons/fa6";
 const endpoint = 'http://localhost:8000/api';
 
@@ -27,7 +27,10 @@ const ShowPromocion = () => {
     const [cohorteOptions, setCohorteOptions] = useState([]);
     const [mencionOptions, setMencionOptions] = useState([]);
     const [procedenciaOptions, setProcedenciaOptions] = useState([]);
+    const [statistics,setStatistics]=useState([]);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
+    const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
+
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FF4567'];
 
 
@@ -41,6 +44,7 @@ const ShowPromocion = () => {
         cohorte_id: '',
         mencion_id: '',
         procedencia_id:'',
+        comentarios:''
     });
     const { setLoading } = useLoading();
     const [error, setError] = useState(null);
@@ -62,34 +66,26 @@ const ShowPromocion = () => {
         });
     }, []);
 
-    const getAllPromociones = async () => {
+    
+
+    const getAllPromociones = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            let allPromociones = [];
-            let currentPage = 1;
-            let totalPages = 1;
-    
-            // Loop para obtener todas las páginas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/promocion?page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-    
-                allPromociones = [...allPromociones, ...response.data.data];
-                totalPages = response.data.last_page; // Total de páginas
-                currentPage++;
-            }
-    
-            // Ordenar las promociones por ID en orden descendente
-            const sortedPromociones = allPromociones.sort((a, b) => b.id - a.id);
-            setPromociones(sortedPromociones);
-            setFilteredPromociones(sortedPromociones);
-            console.log('Promociones obtenidas:', sortedPromociones);
+            const response = await axios.get(`${endpoint}/promociones-estadisticas`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filters, page }, // Incluye `page` en los parámetros
+            });
+            
+            const estadisticas = response.data.estadisticas || {};
+            
+            setPromociones(Array.isArray(response.data.datos.data) ? response.data.datos.data : []);
+            setStatistics(estadisticas);
+            setTotalPages(response.data.datos.last_page || 1); // Actualiza el total de páginas
         } catch (error) {
-            setError('Error fetching data');
             console.error('Error fetching data:', error);
+            toast.error('Error fetching data');
+            setPromociones([]);
+            setStatistics({});
         }
     };
 
@@ -116,17 +112,16 @@ const ShowPromocion = () => {
         
     };
 
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchComentario(value);
-        applyFilters({ ...filters, searchComentario: value });
-    };
-
+    
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        const newFilters = { ...filters, [name]: value };
-        setFilters(newFilters);
-        applyFilters(newFilters);
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
+ 
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        getAllPromociones(page); // Llama a `getAllDatos` con el nuevo número de página
+        
     };
 
     const fetchFilterOptions = async () => {
@@ -146,56 +141,11 @@ const ShowPromocion = () => {
         }
     };
 
-    const applyFilters = (filters) => {
-        let filtered = promociones;
-
-        if (filters.searchComentario) {
-            filtered = filtered.filter(promocion =>
-                promocion.comentarios.toLowerCase().includes(filters.searchComentario.toLowerCase())
-            );
-        }
-
-        if (filters.centro_id) {
-            filtered = filtered.filter(promocion =>
-                promocion.centro_id === parseInt(filters.centro_id)
-            );
-        }
-
-        if (filters.periodo_id) {
-            filtered = filtered.filter(promocion =>
-                promocion.periodo_id === parseInt(filters.periodo_id)
-            );
-        }
-
-        if (filters.cohorte_id) {
-            filtered = filtered.filter(promocion =>
-                promocion.cohorte_id === parseInt(filters.cohorte_id)
-            );
-        }
-
-        if (filters.mencion_id) {
-            filtered = filtered.filter(promocion =>
-                promocion.mencion_id === parseInt(filters.mencion_id)
-            );
-        }
-        if (filters.procedencia_id) {
-            filtered = filtered.filter(promocion =>
-                promocion.procedencia_id === parseInt(filters.procedencia_id)
-            );
-        }
-
-        setFilteredPromociones(filtered);
-        setCurrentPage(1);
-    };
-
-    if (error) {
-        return <div>{error}</div>;
-    };
 
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
         try {
-            await getAllPromociones(); // Espera a que getAllDatos haga la solicitud y actualice los datos
+            await (getAllPromociones(),fetchFilterOptions()); // Espera a que getAllDatos haga la solicitud y actualice los datos
         } catch (error) {
             console.error('Error recargando los datos:', error); // Maneja el error si ocurre
         } finally {
@@ -204,92 +154,39 @@ const ShowPromocion = () => {
     };
 
 
-    const activeFilters = Object.values(filters).some(val => val); // Comprobar si hay filtros activos
-    const dataToUse = activeFilters ? filteredPromociones : promociones; // Usar filteredDatos si hay filtros activos, de lo contrario usar datos
+    const totalPromociones = statistics.totalPromociones || 0;
+    const totalInteresados=statistics.totalInteresados || 0;
+    const totalAsistentes=statistics.totalAsistentes || 0;
 
-    // Total de participantes basado en filtros activos
-    const totalPromociones = dataToUse.length;
+    const mencionData = Object.entries(statistics.mencion || {}).map(([name, data]) => ({
+        name,
+        value: data.percentage || 0
+    }));
+    const procedenciaData = Object.entries(statistics.procedencia || {}).map(([name, data]) => ({
+        name,
+        value: data.count || 0
+    }));
+    const centroData = Object.entries(statistics.centro || {}).map(([name, data]) => ({
+        name,
+        value: data.count || 0
+    }));
 
-    const getMencionChartData = () => {
-        const mencionDict = mencionOptions.reduce((acc, mencion) => {
-            acc[mencion.id] = mencion.descripcion;
-            return acc;
-        }, {});
-    
-        const groupedData = filteredPromociones.reduce((acc, promocion) => {
-            const mencionName = mencionDict[promocion.mencion_id] || 'Desconocido';
-            if (!acc[mencionName]) {
-                acc[mencionName] = { name: mencionName, count: 0 };
-            }
-            acc[mencionName].count += 1;
-            return acc;
-        }, {});
-    
-        const total = Object.values(groupedData).reduce((sum, item) => sum + item.count, 0);
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            value: parseFloat(((item.count / total) * 100).toFixed(2)), // Calcular el porcentaje
-        }));
-    };
-    
-    const getProcedenciaChartData = () => {
-        const grupoDict = procedenciaOptions.reduce((acc, grupo) => {
-            acc[grupo.id] = grupo.descripcion;
-            return acc;
-        }, {});
-    
-        const groupedData = filteredPromociones.reduce((acc, promocion) => {
-            const grupoName = grupoDict[promocion.procedencia_id] || 'Desconocido';
-            if (!acc[grupoName]) {
-                acc[grupoName] = { name: grupoName, count: 0 };
-            }
-            acc[grupoName].count += 1;
-            return acc;
-        }, {});
-    
-        return Object.values(groupedData);
-    };
-
-    const getCentroChartData = () => {
-        const centroDict = centroOptions.reduce((acc, centro) => {
-            acc[centro.id] = centro.descripcion;
-            return acc;
-        }, {});
-    
-        const groupedData = filteredPromociones.reduce((acc, promocion) => {
-            const centroName = centroDict[promocion.centro_id] || 'Desconocido';
-            if (!acc[centroName]) {
-                acc[centroName] = { name: centroName, count: 0 };
-            }
-            acc[centroName].count += 1;
-            return acc;
-        }, {});
-    
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            value: item.count
-        }));
-    };
-    
-    // Agrega estas funciones dentro del componente ShowPromocion
-const getTotalEstudiantesAsistentes = () => {
-    return filteredPromociones.reduce((acc, promocion) => acc + (promocion.estudiantes_asistentes || 0), 0);
-};
-
-const getTotalEstudiantesInteresados = () => {
-    return filteredPromociones.reduce((acc, promocion) => acc + (promocion.estudiantes_interesados || 0), 0);
-};
-
+    const totalData = [
+        { name: 'Asistentes', value: totalAsistentes },
+        { name: 'Interesados', value: totalInteresados }
+    ];
     
 
 
-    const columns = [ "id", "Fecha de Registro", "Comentarios", "Acciones"];
+    const columns = [ "id", "Fecha de Registro", "Comentarios","Estudiantes Asistentes","Estudiantes Interesados", "Acciones"];
 
     const renderItem = (dato) => (
         <tr key={dato.id}>
         <td >{dato.id}</td>
         <td  >{moment(dato.fecha_registro).format('YYYY-MM-DD')}</td>
         <td  >{dato.comentarios}</td>
+        <td  >{dato.estudiantes_asistentes}</td>
+        <td  >{dato.estudiantes_interesados}</td>
         <td >
             <div className="d-flex justify-content-around">
 
@@ -337,13 +234,13 @@ const getTotalEstudiantesInteresados = () => {
                          {/* Total de Asistentes */}
                          <div className="stat-card" style={{  }}>
                             <div className="stat-icon"><i className="bi bi-people-fill"></i></div>
-                            <div className="stat-number" style={{ color: '#4b9cd3', fontSize: '1.2rem' }}>{getTotalEstudiantesAsistentes()}</div>
+                            <div className="stat-number" style={{ color: '#4b9cd3', fontSize: '1.2rem' }}>{totalAsistentes}</div>
                             <div className="stat-label">Total de Asistentes</div>
                         </div>
                         {/*  Total de  interesados */}
                         <div className="stat-card" style={{  }}>
                             <div className="stat-icon"><i className="bi bi-people"></i></div>
-                            <div className="stat-number" style={{ color: '#f0ad4e', fontSize: '1.2rem' }}>{getTotalEstudiantesInteresados()}</div>
+                            <div className="stat-number" style={{ color: '#f0ad4e', fontSize: '1.2rem' }}>{totalInteresados}</div>
                             <div className="stat-label">Total de Interesados</div>
                         </div>
                 </div>
@@ -357,10 +254,11 @@ const getTotalEstudiantesInteresados = () => {
                             <h1>Lista de Promociones</h1>
                             <div className="d-flex align-items-center">
                                 <Form.Control
+                                    name="comentarios"
                                     type="text"
                                     placeholder="Buscar por comentario"
-                                    value={searchComentario}
-                                    onChange={handleSearchChange}
+                                    value={filters.comentarios}
+                                    onChange={handleFilterChange}
                                     className="me-2"
                                 />
 
@@ -377,6 +275,14 @@ const getTotalEstudiantesInteresados = () => {
                                     ) : (
                                     <FaSync />
                                     )}
+                                </Button>
+
+                                <Button 
+                                    variant="info me-2" 
+                                    onClick={getAllPromociones}
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                >
+                                    <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
                                 {userRole === 'admin' || userRole === 'superuser' ? (
 
@@ -449,13 +355,15 @@ const getTotalEstudiantesInteresados = () => {
                             </Form.Select>
                         </div>
 
+                       
                         <PaginationTable
-                            data={filteredPromociones}  // Datos filtrados
+                            data={promociones}
                             itemsPerPage={itemsPerPage}
                             columns={columns}
                             renderItem={renderItem}
-                            currentPage={currentPage}  // Página actual
-                            onPageChange={setCurrentPage}  // Función para cambiar de página
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
+                            totalPages={totalPages}  
                         />
 
             
@@ -487,7 +395,7 @@ const getTotalEstudiantesInteresados = () => {
                 <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                         <Pie
-                            data={getMencionChartData()}
+                            data={mencionData}
                             dataKey="value"
                             nameKey="name"
                             cx="50%"
@@ -496,7 +404,7 @@ const getTotalEstudiantesInteresados = () => {
                             label={({ name, value }) => `${name}: ${value}%`}
                             labelLine
                         >
-                            {getMencionChartData().map((entry, index) => (
+                            {mencionData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
@@ -521,14 +429,18 @@ const getTotalEstudiantesInteresados = () => {
             <h4 style={{ fontSize: '1.2rem', textAlign: 'center' }}>Distribución por Procedencia</h4>
                 {procedenciaOptions.length > 0 && (
                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={getProcedenciaChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                        <BarChart data={procedenciaData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
+                            <XAxis
+                             dataKey="name"
+                            
+                            />
+                            <YAxis
+                            />
                             <Tooltip />
                             <Legend />
-                            <Bar dataKey="count" fill="#8884d8" name="Promociones">
-                                {getProcedenciaChartData().map((entry, index) => (
+                            <Bar dataKey="value" fill="#8884d8" name="Promociones">
+                                {procedenciaData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Bar>
@@ -544,7 +456,7 @@ const getTotalEstudiantesInteresados = () => {
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                             <Pie
-                                data={getCentroChartData()}
+                                data={centroData}
                                 dataKey="value"
                                 nameKey="name"
                                 cx="50%"
@@ -554,7 +466,7 @@ const getTotalEstudiantesInteresados = () => {
                                 fill="#82ca9d"
                                 label={({  percent }) => ` ${(percent * 100).toFixed(2)}%`}
                             >
-                                {getCentroChartData().map((entry, index) => (
+                                {centroData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
@@ -588,19 +500,24 @@ const getTotalEstudiantesInteresados = () => {
 
             <ResponsiveContainer width="100%" height={400}>
                 <BarChart
-                    data={dataToUse}
+                    data={totalData}  // Usamos los datos totales aquí
                     layout="vertical"
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" />
-                    <YAxis dataKey="id" type="category" label={{ value: "Promociones", position: "insideLeft", angle: 0 }} />
+                    <YAxis dataKey="name" type="category" label={{ value: "Total", position: "insideLeft", angle: 0 }} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="estudiantes_asistentes" fill="#4b9cd3" name="Asistentes" />
-                    <Bar dataKey="estudiantes_interesados" fill="#f0ad4e" name="Interesados" />
+                    <Bar dataKey="value" fill="#8884d8" name="Promociones">
+                                {totalData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Bar>
                 </BarChart>
             </ResponsiveContainer>
+
+
 
 
             </div>

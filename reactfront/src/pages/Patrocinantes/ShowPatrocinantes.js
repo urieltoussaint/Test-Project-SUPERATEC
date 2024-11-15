@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { FaUserFriends, FaClock, FaBook,FaSync,FaBuilding  } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaUserFriends, FaClock, FaBook,FaSync,FaBuilding,FaSearch  } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import moment from 'moment';  // Asegúrate de tener moment.js instalado para manejar fechas
 
@@ -32,7 +32,10 @@ const ShowPatrocinantes = () => {
     const [paisOptions, setPaisOptions] = useState([]);  // Inicializa con un array vacío
     const [tipoPatrocinanteOptions, setTipoPatrocinanteOptions] = useState([]);  // Inicializa con un array vacío
     const [tipoIndustriaOptions, setTipoIndustriaOptions] = useState([]);  // Inicializa con un array vacío
-   
+    const [statistics, setStatistics] = useState({});
+    const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
+
+
 
     const [filters, setFilters] = useState({
         estado_id: '',
@@ -40,9 +43,11 @@ const ShowPatrocinantes = () => {
         tipo_patrocinante_id: '',
         tipo_industria_id: '',
         empresa_persona: '',
-        es_patrocinante: '',  // Nuevo filtro
-        exterior: '',         // Nuevo filtro
-        bolsa_empleo: ''      // Nuevo filtro
+        es_patrocinante: '',  
+        exterior: '',         
+        bolsa_empleo: '' ,
+        rif_cedula:''     
+
     });
     
     
@@ -71,39 +76,24 @@ const ShowPatrocinantes = () => {
     }, []);
     
 
-    const getAllPatrocinantes = async () => {
+    const getAllPatrocinantes = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            let allPatrocinantes = [];
-            let currentPage = 1;
-            let totalPages = 1;
-    
-            // Loop para obtener todas las páginas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/patrocinantes?with=contactoPatrocinante&page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    }
-                });
-    
-                allPatrocinantes = [...allPatrocinantes, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
-    
-            setPatrocinantes(allPatrocinantes);
-            setFilteredPatrocinantes(allPatrocinantes);
-           
-
-            console.log('Patrocinantes obtenidos:', allPatrocinantes);
+            const response = await axios.get(`${endpoint}/patrocinantes-estadisticas`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filters, page }, // Incluye `page` en los parámetros
+            });
+            
+            const estadisticas = response.data.estadisticas || {};
+            
+            setPatrocinantes(Array.isArray(response.data.datos.data) ? response.data.datos.data : []);
+            setStatistics(estadisticas);
+            setTotalPages(response.data.datos.last_page || 1); // Actualiza el total de páginas
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                setError('No estás autenticado. Por favor, inicia sesión.');
-                navigate('/'); // Redirige al login si no está autenticado
-            } else {
-                setError('Error fetching data');
-                console.error('Error fetching data:', error);
-            }
+            console.error('Error fetching data:', error);
+            toast.error('Error fetching data');
+            setPatrocinantes([]);
+            setStatistics({});
         }
     };
  
@@ -141,102 +131,24 @@ const ShowPatrocinantes = () => {
         }
     }
 
-    
-
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchCedula(value);
-        applyFilters({ ...filters, searchCedula: value });
-    };
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        const newFilters = { ...filters, [name]: value };
-        setFilters(newFilters);
-        applyFilters(newFilters);
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
+ 
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        getAllPatrocinantes(page); // Llama a `getAllDatos` con el nuevo número de página
+        
     };
 
-    const applyFilters = (filters) => {
-        let filtered = Patrocinantes;
-    
-        // Filtrado por Rif/Cédula
-        if (filters.searchCedula) {
-            filtered = filtered.filter(dato =>
-                dato.rif_cedula.toLowerCase().includes(filters.searchCedula.toLowerCase())
-            );
-        }
-    
-        // Filtrado por Estado
-        if (filters.estado_id) {
-            filtered = filtered.filter(dato =>
-                dato.estado_id === parseInt(filters.estado_id)
-            );
-        }
-    
-        // Filtrado por Tipo de Patrocinante
-        if (filters.tipo_patrocinante_id) {
-            filtered = filtered.filter(dato =>
-                dato.tipo_patrocinante_id === parseInt(filters.tipo_patrocinante_id)
-            );
-        }
-    
-        // Filtrado por Tipo de Industria
-        if (filters.tipo_industria_id) {
-            filtered = filtered.filter(dato =>
-                dato.tipo_industria_id === parseInt(filters.tipo_industria_id)
-            );
-        }
-    
-        // Filtrado por País
-        if (filters.pais_id) {
-            filtered = filtered.filter(dato =>
-                dato.pais_id === parseInt(filters.pais_id)
-            );
-        }
-    
-        // Filtrado por Empresa o Persona
-        if (filters.empresa_persona) {
-            filtered = filtered.filter(dato =>
-                dato.empresa_persona === filters.empresa_persona
-            );
-        }
-    
-        // Filtrado por es_patrocinante
-        if (filters.es_patrocinante !== '') {
-            filtered = filtered.filter(dato =>
-                dato.es_patrocinante === (filters.es_patrocinante === 'true')
-            );
-        }
-    
-        // Filtrado por bolsa_empleo
-        if (filters.bolsa_empleo !== '') {
-            filtered = filtered.filter(dato =>
-                dato.bolsa_empleo === (filters.bolsa_empleo === 'true')
-            );
-        }
-    
-        // Filtrado por exterior
-        if (filters.exterior !== '') {
-            filtered = filtered.filter(dato =>
-                dato.exterior === (filters.exterior === 'true')
-            );
-        }
-    
-        setFilteredPatrocinantes(filtered);
-        setCurrentPage(1);  // Resetear a la primera página tras aplicar los filtros
-    };
-    
-    
-
-    if (error) {
-        return <div>{error}</div>;
-    }
 
 
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
         try {
-            await getAllPatrocinantes(); // Espera a que getAllPatrocinantes haga la solicitud y actualice los Patrocinantes
+            await (getAllPatrocinantes(),fetchFilterOptions()); // Espera a que getAllPatrocinantes haga la solicitud y actualice los Patrocinantes
         } catch (error) {
             console.error('Error recargando los Patrocinantes:', error); // Maneja el error si ocurre
         } finally {
@@ -244,177 +156,47 @@ const ShowPatrocinantes = () => {
         }
     };
 
-      // Cálculo de Patrocinantes según filtros
-    const activeFilters = Object.values(filters).some(val => val); // Comprobar si hay filtros activos
-    const dataToUse = activeFilters ? filteredPatrocinantes : Patrocinantes; // Usar filteredPatrocinantes si hay filtros activos, de lo contrario usar Patrocinantes
+    const totalPatrocinados = statistics.totalPatrocinantes || 0;
+    const porcentajeEmpresa = statistics.porcentajesTipo?.Empresa || 0;
+    const porcentajePersona = statistics.porcentajesTipo?.Persona || 0;
 
-    // Total de participantes basado en filtros activos
-    const totalPatrocinados = dataToUse.length;
+    // Datos para el gráfico de barr
+    const exteriorData= statistics.exterior?.Exterior || 0;
+    const noExteriorData= statistics.exterior?.NoExterior || 0;
 
 
-    const totalEmpresas = filteredPatrocinantes.filter(dato => dato.empresa_persona === 'Empresa').length;
-    const totalPersonas = filteredPatrocinantes.filter(dato => dato.empresa_persona === 'Persona').length;
-
-    const total = totalEmpresas + totalPersonas;
-    const porcentajeEmpresa = total > 0 ? (totalEmpresas / total) * 100 : 0;
-    const porcentajePersona = total > 0 ? (totalPersonas / total) * 100 : 0;
-
-    // Filtrar los datos según el valor de bolsa_empleo (true o false)
-    const bolsaEmpleoTrueCount = filteredPatrocinantes.filter(dato => dato.bolsa_empleo === true).length;
-    const bolsaEmpleoFalseCount = filteredPatrocinantes.filter(dato => dato.bolsa_empleo === false).length;
-
-    // Datos para el gráfico de barras
-    const bolsa = [
-        { name: 'Sí', value: bolsaEmpleoTrueCount },
-        { name: 'No', value: bolsaEmpleoFalseCount },
+    const esPatrocinadoData = [
+        { name: 'Sí', value: statistics.esPatrocinado?.Si || 0 },
+        { name: 'No', value: statistics.esPatrocinado?.No || 0 }
     ];
+
+    const paisData = Object.entries(statistics.pais || {}).map(([name, data]) => ({
+        name,
+        value: data.count || 0
+    }));
+
+    const estadoData = Object.entries(statistics.estado || {}).map(([name, data]) => ({
+        name,
+        value: data.count || 0
+    }));
+
+    const tipoIndustriaData = Object.entries(statistics.tipoIndustria || {}).map(([name, data]) => ({
+        name,
+        value: data.percentage || 0
+    }));
+
+    const tipoPatrocinanteData = Object.entries(statistics.tipoPatrocinante || {}).map(([name, data]) => ({
+        name,
+        value: data.percentage || 0
+    }));
+
+    const bolsaEmpleoData = [
+        { name: 'Sí', value: statistics.bolsaEmpleo?.Si || 0 },
+        { name: 'No', value: statistics.bolsaEmpleo?.No || 0 }
+    ];
+    
+    
     const colors = ['#0088FE', 'rgba(255, 74, 74, 0.9)']; // Azul para true, naranja para false
-
-     // Filtrar los datos según el valor de es_patrocinante (true o false)
-     const esPatrocinanteTrueCount = filteredPatrocinantes.filter(dato => dato.es_patrocinante === true).length;
-     const esPatrocinanteFalseCount = filteredPatrocinantes.filter(dato => dato.es_patrocinante === false).length;
- 
-     // Datos para el gráfico de dona
-     const patrocinante = [
-         { name: 'Es Patrocinante (Sí)', value: esPatrocinanteTrueCount },
-         { name: 'Es Patrocinante (No)', value: esPatrocinanteFalseCount },
-     ];
-
-
-    
-
-    const getFilteredDataByDate = () => {
-        const today = moment();
-        const filteredData = dataToUse.filter(dato => {
-            const inscripcionDate = moment(dato.created_at);
-            return inscripcionDate.isAfter(today.clone().subtract(range, 'days'));
-        });
-    
-        // Agrupar por fecha
-        const dateCounts = filteredData.reduce((acc, dato) => {
-            const fecha = moment(dato.created_at).format('YYYY-MM-DD');
-            acc[fecha] = (acc[fecha] || 0) + 1;
-            return acc;
-        }, {});
-    
-        return Object.keys(dateCounts).map(date => ({
-            fecha: date,
-            count: dateCounts[date]
-        }));
-    };
-
-    // Función para procesar los datos de patrocinantes y agruparlos por tipo de industria
-    const getTipoIndustriaChartData = () => {
-
-        // mapea tipo_industria_id con la descripción
-        const industriaDict = tipoIndustriaOptions.reduce((acc, industria) => {
-            acc[industria.id] = industria.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos filtrados por tipo de industria
-        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
-            // Asegúrate de que el dato tenga el campo `tipo_industria_id`
-            const industriaId = dato?.tipo_industria_id || 'Desconocido'; 
-            const industriaName = industriaDict[industriaId] || 'Desconocido';
-    
-            if (!acc[industriaName]) {
-                acc[industriaName] = { name: industriaName, count: 0 };
-            }
-            acc[industriaName].count += 1;
-            return acc;
-        }, {});
-    
-        console.log("Agrupación por tipo de industria:", groupedData);
-    
-        const total = Object.values(groupedData).reduce((sum, dato) => sum + dato.count, 0); // Total de patrocinantes
-    
-        // Convertir el total a porcentaje para cada categoría
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            value: parseFloat(((item.count / total) * 100).toFixed(2)), // Calcular el porcentaje
-        }));
-    };
-
-
-    const getTipoPatrocinanteChartData = () => {
-
-        // Crear un diccionario que mapea tipo_patrocinante_id con la descripción
-        const patrocinanteDict = tipoPatrocinanteOptions.reduce((acc, patrocinante) => {
-            acc[patrocinante.id] = patrocinante.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos filtrados por tipo de patrocinante
-        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
-            // Asegúrate de que el dato tenga el campo `tipo_patrocinante_id`
-            const patrocinanteId = dato?.tipo_patrocinante_id || 'Desconocido'; 
-            const patrocinanteName = patrocinanteDict[patrocinanteId] || 'Desconocido';
-    
-            if (!acc[patrocinanteName]) {
-                acc[patrocinanteName] = { name: patrocinanteName, count: 0 };
-            }
-            acc[patrocinanteName].count += 1;
-            return acc;
-        }, {});
-    
-        console.log("Agrupación por tipo de patrocinante:", groupedData);
-    
-        const total = Object.values(groupedData).reduce((sum, dato) => sum + dato.count, 0); // Total de patrocinantes
-    
-        // Convertir el total a porcentaje para cada categoría
-        return Object.values(groupedData).map(item => ({
-            name: item.name,
-            value: parseFloat(((item.count / total) * 100).toFixed(2)), // Calcular el porcentaje
-        }));
-    };
-
-
-    const getPatrocinantesByEstado = () => {
-        // Crear un diccionario que mapea estado_id con la descripción
-        const estadoDict = estadoOptions.reduce((acc, estado) => {
-            acc[estado.id] = estado.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos de participantes por estado_id
-        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
-            const estadoId = dato?.estado_id || 'Desconocido';
-            const estadoName = estadoDict[estadoId] || 'Desconocido';  // Obtiene el nombre del estado desde estadoDict
-    
-            if (!acc[estadoName]) {
-                acc[estadoName] = { name: estadoName, count: 0 };
-            }
-            acc[estadoName].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un array
-        return Object.values(groupedData);
-    };
-
-    const getPatrocinantesByPais = () => {
-        // Crear un diccionario que mapea estado_id con la descripción
-        const paisDict = paisOptions.reduce((acc, pais) => {
-            acc[pais.id] = pais.descripcion;
-            return acc;
-        }, {});
-    
-        // Agrupar los datos de participantes por pais_id
-        const groupedData = filteredPatrocinantes.reduce((acc, dato) => {
-            const paisId = dato?.pais_id || 'Desconocido';
-            const paisName = paisDict[paisId] || 'Desconocido';  // Obtiene el nombre del estado desde estadoDict
-    
-            if (!acc[paisName]) {
-                acc[paisName] = { name: paisName, count: 0 };
-            }
-            acc[paisName].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un array
-        return Object.values(groupedData);
-    };
 
     const columns = ["Rif/Cedula", "Nombre", "Telefono","Email","Web", "Acciones"];
 
@@ -524,13 +306,13 @@ const ShowPatrocinantes = () => {
                         <div style={{ textAlign: 'center', marginLeft: '40px' }}>
                             <h4 style={{ fontSize: '1.1rem', color: 'gray' }}>Exterior</h4>
                             <div className="stat-number" style={{ color: '#8884d8', fontSize: '1.8rem' }}>
-                                {filteredPatrocinantes.filter(dato => dato.exterior === true).length}
+                                {exteriorData}
                             </div>
                         </div>
                         <div style={{ textAlign: 'center', marginRight: '40px' }}>
                             <h4 style={{ fontSize: '1.1rem', color: 'gray' }}>No Exterior</h4>
                             <div className="stat-number" style={{ color: '#82ca9d', fontSize: '1.8rem' }}>
-                                {filteredPatrocinantes.filter(dato => dato.exterior === false).length}
+                            {noExteriorData}
                             </div>
                         </div>
                     </div>
@@ -547,10 +329,11 @@ const ShowPatrocinantes = () => {
                             <h2 style={{ fontSize: '1.8rem' }}>Lista de Patrocinantes</h2>
                             <div className="d-flex align-items-center">
                                 <Form.Control
+                                        name="rif_cedula"
                                         type="text"
                                         placeholder="Buscar por Rif/Cédula"
-                                        value={searchCedula}
-                                        onChange={handleSearchChange}
+                                        value={filters.rif_cedula}
+                                        onChange={handleFilterChange}
                                         className="me-2"
                                     />
 
@@ -567,6 +350,14 @@ const ShowPatrocinantes = () => {
                                     ) : (
                                     <FaSync />
                                     )}
+                                </Button>
+
+                                <Button 
+                                    variant="info me-2" 
+                                    onClick={getAllPatrocinantes}
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                >
+                                    <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
 
 
@@ -683,20 +474,17 @@ const ShowPatrocinantes = () => {
                                 </Form.Select>
                             </div>        
 
-                        
-                        
-                            
-                        {/* Tabla paginada */}
-                        <PaginationTable
-                        data={filteredPatrocinantes}  // Patrocinantes filtrados
-                        itemsPerPage={itemsPerPage}
-                        columns={columns}
-                        renderItem={renderItem}
-                        currentPage={currentPage}  // Página actual
-                        onPageChange={setCurrentPage}  // Función para cambiar de página
-                        />
-                        
+                       
 
+                        <PaginationTable
+                            data={Patrocinantes}
+                            itemsPerPage={itemsPerPage}
+                            columns={columns}
+                            renderItem={renderItem}
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
+                            totalPages={totalPages}  
+                        />
                         
 
                         {/* Modal  de eliminación */}
@@ -725,7 +513,7 @@ const ShowPatrocinantes = () => {
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
-                                    data={getTipoIndustriaChartData()} // Los datos procesados
+                                    data={tipoIndustriaData} // Los datos procesados
                                     dataKey="value"
                                     nameKey="name"
                                     cx="50%"
@@ -736,7 +524,7 @@ const ShowPatrocinantes = () => {
                                     label={({ value }) => ` ${value}%`} // Etiquetas que muestran el nombre y valor
                                     labelLine={false}
                                 >
-                                    {getTipoIndustriaChartData().map((entry, index) => (
+                                    {tipoIndustriaData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                    
@@ -755,7 +543,7 @@ const ShowPatrocinantes = () => {
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
-                                    data={getTipoPatrocinanteChartData()} // Los datos procesados
+                                    data={tipoIndustriaData} // Los datos procesados
                                     dataKey="value"
                                     nameKey="name"
                                     cx="50%"
@@ -765,7 +553,7 @@ const ShowPatrocinantes = () => {
                                     label={({ value }) => ` ${value}%`} // Etiquetas que muestran el nombre y valor
                                     labelLine={false}
                                 >
-                                    {getTipoPatrocinanteChartData().map((entry, index) => (
+                                    {tipoIndustriaData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                    
@@ -783,31 +571,31 @@ const ShowPatrocinantes = () => {
                 <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
                 <h4 style={{ fontSize: '1.2rem' }}>¿Actualmente es Patrocinante?</h4>
                     
-                <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                        <Pie
-                            data={patrocinante}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={140}
-                            innerRadius={50} 
-                            fill="#8884d8"
-                            label={({  value }) => ` ${value}`} // Muestra el nombre y valor en la etiqueta
-                            labelLine={false}
-                        >
-                            {/* Asignamos los colores según el índice */}
-                            {patrocinante.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                            ))}
-                        </Pie>
-                        <Legend />
-                        <Tooltip />
-                    </PieChart>
-                </ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={esPatrocinadoData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={140}
+                                    innerRadius={50} 
+                                    fill="#8884d8"
+                                    label={({  value }) => ` ${value}`} // Muestra el nombre y valor en la etiqueta
+                                    labelLine={false}
+                                >
+                                    {/* Asignamos los colores según el índice */}
+                                    {esPatrocinadoData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                    ))}
+                                </Pie>
+                                <Legend />
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
                 </div>
-data
+
                 <div className="chart-box " style={{flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
                 <   h4 style={{ fontSize: '1.2rem' }}>¿Posible para bolsa de Empleo </h4>
                 {paisOptions.length > 0 && (
@@ -815,7 +603,7 @@ data
                             <BarChart
                                 width={500}
                                 height={300}
-                                data={bolsa}
+                                data={bolsaEmpleoData}
                                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                             >
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -825,7 +613,7 @@ data
                                 <Legend />
                                 <Bar dataKey="value" fill="#8884d8">
                                     {/* Asignamos los colores según el índice */}
-                                    {bolsa.map((entry, index) => (
+                                    {bolsaEmpleoData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                                     ))}
                                 </Bar>
@@ -848,13 +636,13 @@ data
                 <   h4 style={{ fontSize: '1.2rem' }}>Cantidad de Patrocinados por País</h4>
                 {paisOptions.length > 0 && (
                         <ResponsiveContainer width="100%" height={400}>
-                            <BarChart data={getPatrocinantesByPais()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
+                            <BarChart data={paisData} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis />
                                 <Tooltip />
-                                <Bar dataKey="count" name="Participantes">
-                                    {getPatrocinantesByPais().map((entry, index) => (
+                                <Bar dataKey="value" name="Participantes">
+                                    {paisData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Bar>
@@ -868,13 +656,13 @@ data
                 <h4 style={{ fontSize: '1.2rem' }}>Cantidad de Patrocinados por Estados/Venezuela</h4>
                 {estadoOptions.length > 0 && (
                         <ResponsiveContainer width="100%" height={400}>
-                            <BarChart data={getPatrocinantesByEstado()} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
+                            <BarChart data={estadoData} margin={{ top: 40, right: 30, left: -20, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis />
                                 <Tooltip />
-                                <Bar dataKey="count" name="Participantes">
-                                    {getPatrocinantesByEstado().map((entry, index) => (
+                                <Bar dataKey="value" name="Participantes">
+                                    {estadoData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Bar>
@@ -888,44 +676,6 @@ data
                 
             </div>
 
-
-
-
-             {/* Gráfica tercera fila*/}
-             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
-                <div className="chart-box" style={{flex: '1 1 100%', maxWidth: '100%', marginRight: '10px'}}>
-                    <div className="d-flex justify-content-between align-items-center" >
-                        <h4 style={{ fontSize: '1.2rem' }}>Registro de Patrocinantes</h4>
-                        {/* Selector de rango de fechas */}
-                        <Form.Select 
-                            value={range} 
-                            onChange={(e) => setRange(parseInt(e.target.value))} 
-                            style={{ width: '150px', fontSize: '0.85rem' }} // Ajustar el tamaño del selector
-                        >
-                            <option value={7}>Últimos 7 días</option>
-                            <option value={30}>Últimos 30 días</option>
-                            <option value={60}>Últimos 60 días</option>
-                        </Form.Select>
-                    </div>
-                    
-                    <ResponsiveContainer  width="100%" height={400}>
-                        <AreaChart data={getFilteredDataByDate()} margin={{  right: 30, left: -20}}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="fecha" />
-                            <YAxis />
-                            <Tooltip />
-                            <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-
-                </div>
-                
-
-
-
-            </div>
-
-                        
 
     </div>
                     

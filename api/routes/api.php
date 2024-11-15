@@ -134,6 +134,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('promocion/{id}', [PromocionController::class, 'show'])->middleware('role:admin,superuser,invitado');
     Route::put('promocion/{id}', [PromocionController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('promocion/{id}', [PromocionController::class, 'destroy'])->middleware('role:admin');
+    Route::get('promociones-estadisticas', [PromocionController::class, 'getPromocionesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
 
     // Peticiones
     Route::get('peticiones', [PeticionesController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
@@ -143,8 +144,6 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('peticiones-estadisticas', [PeticionesController::class, 'getPeticionesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('peticionesAtendidas', [PeticionesController::class, 'getPeticionesAtendidas'])->middleware('role:admin,superuser,invitado,pagos');
 
-
-
      // Patrocinantes
      Route::get('patrocinantes', [PatrocinanteController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
      Route::post('patrocinantes', [PatrocinanteController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
@@ -152,6 +151,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
      Route::delete('patrocinantes/{id}', [PatrocinanteController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
      Route::get('patrocinantes/rif-cedula/{rif_cedula}', [PatrocinanteController::class, 'searchByRifCedula'])->middleware('role:admin,superuser,invitado');
      Route::get('patrocinantes/{id}', [PatrocinanteController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
+     Route::get('patrocinantes-estadisticas', [PatrocinanteController::class, 'getPatrocinantesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
 
     // Procedencia
     Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado');
@@ -160,10 +160,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('procedencia/{id}', [ProcedenciaController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('procedencia/{id}', [ProcedenciaController::class, 'destroy'])->middleware('role:admin');
     Route::get('/validate-cod/{cod}', [ProcedenciaController::class, 'validateCOD'])->middleware('role:admin,superuser,invitado'); 
-
-
-
-
+    Route::get('procedencia-estadisticas', [ProcedenciaController::class, 'getProcedenciasWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
 
     // Rutas solo para ver (invitado, superuser y admin)
     Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');

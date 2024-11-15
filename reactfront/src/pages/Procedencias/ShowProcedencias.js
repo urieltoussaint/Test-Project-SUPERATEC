@@ -11,7 +11,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable'; 
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-import { FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { FaLocationDot } from "react-icons/fa6";
 
 
@@ -33,12 +33,18 @@ const ShowProcedencias = () => {
     const userRole = localStorage.getItem('role'); // Obtener el rol del usuario desde el localStorage
     const itemsPerPage = 4; // Número de elementos por página
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
-    const [totalProcedencias, setTotalProcedencias] = useState(0);
     const [avgMontoCancelado, setAvgMontoCancelado] = useState(0);
     const [latestTasa, setLatestTasa] = useState({ tasa: 0, created_at: '' });
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [range, setRange] = useState(30); // Estado para seleccionar el rango de días
+    const [statistics, setStatistics] = useState({});
+    const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
 
+
+    const [filters, setFilters] = useState({
+        descripcion: '',    
+
+    });
     
     const handleShowModal = (id) => {
         setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
@@ -56,31 +62,25 @@ const ShowProcedencias = () => {
         });
     }, []);
 
-    const getAllProcedencias = async () => {
+
+    const getAllProcedencias = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            let allProcedencias = [];
-            let currentPage = 1;
-            let totalPages = 1;
-    
-            // Loop para obtener todas las páginas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/procedencia?page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                allProcedencias = [...allProcedencias, ...response.data.data];
-                totalPages = response.data.last_page; // Total de páginas
-                currentPage++;
-            }
-    
-            setProcedencias(allProcedencias); 
-            setFilteredReportes(allProcedencias); // Mostrar todos los datos inicialmente
-            setTotalProcedencias(allProcedencias.length); // Actualizar total
+            const response = await axios.get(`${endpoint}/procedencia-estadisticas`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filters, page }, // Incluye `page` en los parámetros
+            });
+            
+            const estadisticas = response.data.estadisticas || {};
+            
+            setProcedencias(Array.isArray(response.data.datos.data) ? response.data.datos.data : []);
+            setStatistics(estadisticas);
+            setTotalPages(response.data.datos.last_page || 1); // Actualiza el total de páginas
         } catch (error) {
-            setError('Error fetching data');
             console.error('Error fetching data:', error);
+            toast.error('Error fetching data');
+            setProcedencias([]);
+            setStatistics({});
         }
     };
     
@@ -102,25 +102,8 @@ const ShowProcedencias = () => {
             }
         
     };
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setsearchName(value);
-    
-        const filtered = procedencias.filter(procedencia =>
-            procedencia.descripcion.toLowerCase().includes(value.toLowerCase())
-        );
-    
-        setFilteredReportes(filtered);
-        setTotalProcedencias(filtered.length); // Actualizar el total con el filtro
-        setCurrentPage(1);
-    };
-    
-    
-
-    if (error) {
-        return <div>{error}</div>;
-    }
-
+ 
+  
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
         try {
@@ -132,31 +115,19 @@ const ShowProcedencias = () => {
         }
     };
 
-
-       
-
-
-    const getFilteredDataByFecha = () => {
-        const today = moment();
-        const filteredData = filteredReportes.filter(reporte => {
-            const procedenciaDate = moment(reporte.fecha);
-            return procedenciaDate.isAfter(today.clone().subtract(range, 'days'));
-        });
-    
-        // Agrupar por fecha
-        const dateCounts = filteredData.reduce((acc, reporte) => {
-            const fecha = moment(reporte.fecha).format('YYYY-MM-DD');
-            acc[fecha] = (acc[fecha] || 0) + 1;
-            return acc;
-        }, {});
-    
-        return Object.keys(dateCounts).map(date => ({
-            fecha: date,
-            count: dateCounts[date]
-        }));
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
     };
-    
-    
+ 
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        getAllProcedencias(page); // Llama a `getAllDatos` con el nuevo número de página
+        
+    };
+
+    const totalProcedencias = statistics.totalProcedencias || 0;
+
 
     const columns = ["id", "Nombre", "Dirección","COD","Fecha de Creación", "Acciones"];
 
@@ -218,10 +189,11 @@ const ShowProcedencias = () => {
                         <h2>Lista de Procedencias</h2>
                         <div className="d-flex align-items-center">
                             <Form.Control
+                                name='descripcion'
                                 type="text"
                                 placeholder="Buscar por Nombre"
-                                value={searchName}
-                                onChange={handleSearchChange}
+                                value={filters.descripcion}
+                                onChange={handleFilterChange}
                                 className="me-2"
                             />
                             <Button
@@ -238,6 +210,13 @@ const ShowProcedencias = () => {
                                     <FaSync />
                                 )}
                             </Button>
+                            <Button 
+                                    variant="info me-2" 
+                                    onClick={getAllProcedencias}
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                >
+                                    <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                                </Button>
                             {userRole === 'admin' ||userRole === 'pagos' ? (
 
                             <Button variant="btn custom" onClick={() => navigate('/procedencias/create')} className="btn-custom">
@@ -247,13 +226,22 @@ const ShowProcedencias = () => {
                         </div>
                     </div>
                     {/* Tabla paginada */}
-                    <PaginationTable
+                    {/* <PaginationTable
                         data={filteredReportes}  // Datos filtrados
                         itemsPerPage={itemsPerPage}
                         columns={columns}
                         renderItem={renderItem}
                         currentPage={currentPage}  // Página actual
                         onPageChange={setCurrentPage}  // Función para cambiar de página
+                        /> */}
+                        <PaginationTable
+                            data={procedencias}
+                            itemsPerPage={itemsPerPage}
+                            columns={columns}
+                            renderItem={renderItem}
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
+                            totalPages={totalPages}  
                         />
 
 
@@ -274,34 +262,7 @@ const ShowProcedencias = () => {
             </Modal>
             <ToastContainer />
         </div>
-        <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
-            <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
-                <div className="d-flex justify-content-between align-items-center">
-                    <h4 style={{ fontSize: '1.2rem' }}>Registro de Procedencias</h4>
-                    {/* Selector de rango de fechas */}
-                    <Form.Select 
-                        value={range} 
-                        onChange={(e) => setRange(parseInt(e.target.value))} 
-                        style={{ width: '150px', fontSize: '0.85rem' }}
-                    >
-                        <option value={7}>Últimos 7 días</option>
-                        <option value={30}>Últimos 30 días</option>
-                        <option value={60}>Últimos 60 días</option>
-                    </Form.Select>
-                </div>
-                
-              
-            </div>
-                <ResponsiveContainer width="100%" height={400}>
-                    <AreaChart data={getFilteredDataByFecha()} margin={{ right: 30, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="fecha" />
-                        <YAxis />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
+        
         </div>
         </div>
         </div>
