@@ -33,12 +33,12 @@ class User extends Authenticatable
 
     public function Cargo()
     {
-        return $this->belongsTo(Cargo::class, 'cargo_id');
+        return $this->belongsTo(Cargo::class, 'cargo_id','id');
     }
    
     public function role()
 {
-    return $this->belongsTo(Role::class);
+    return $this->belongsTo(Role::class, 'role_id','id');
 }
 
 

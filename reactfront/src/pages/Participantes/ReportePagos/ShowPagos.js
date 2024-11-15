@@ -12,7 +12,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../../components/PaginationTable';
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { RiCoinsFill} from "react-icons/ri";
 import { TbCoins } from "react-icons/tb";
 
@@ -40,6 +40,8 @@ const ShowPagos = () => {
     const [latestTasa, setLatestTasa] = useState({ tasa: 0, created_at: '' });
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [range, setRange] = useState(30); // Estado para seleccionar el rango de días
+    const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
+
 
     
     const handleShowModal = (id) => {
@@ -58,40 +60,50 @@ const ShowPagos = () => {
         });
     }, []);
 
-    const getAllReportes = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            let allReportes = [];
-            let currentPage = 1;
-            let totalPages = 1;
-    
-            // Loop para obtener todas las páginas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/pagos?page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-    
-                allReportes = [...allReportes, ...response.data.data];
-                totalPages = response.data.last_page; // Total de páginas
-                currentPage++;
-            }
-    
-            // Ordenar los reportes por ID
-            const sortedReportes = allReportes.sort((a, b) => b.id - a.id);
-            setReportes(sortedReportes);
-            setFilteredReportes(sortedReportes);
-    
-            // Calcular estadísticas iniciales
-            calculateStats(sortedReportes);
-    
-            console.log('Datos obtenidos:', sortedReportes);
-        } catch (error) {
-            setError('Error fetching data');
-            console.error('Error fetching data:', error);
-        }
-    };
+   // Nueva función para obtener los reportes y estadísticas en una sola solicitud
+const getAllReportes = async (page = 1) => {
+    try {
+        const token = localStorage.getItem('token');
+
+        // Parámetros de solicitud incluyendo cédula y página actual
+        const params = {
+            page,
+            ...(searchCedula && { cedula_identidad: searchCedula }) // Solo envía `cedula_identidad` si `searchCedula` tiene valor
+        };
+
+        // Realiza la solicitud a la nueva ruta con estadísticas
+        const response = await axios.get(`${endpoint}/pagos-estadisticas`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params
+        });
+
+        // Actualiza los datos de la tabla paginada
+        const reportes = response.data.datos.data || []; // Asegura que no haya errores si `data` está vacío
+        setReportes(reportes);
+        setFilteredReportes(reportes);
+        setCurrentPage(page); // Actualiza el estado de la página actual
+        setTotalPagos(response.data.estadisticas.totalPagos); // Total de pagos de las estadísticas
+        setAvgMontoCancelado(response.data.estadisticas.promedioMontoCancelado); // Promedio del monto cancelado
+        setTotalPages(response.data.datos.last_page || 1); // Total de páginas para la paginación
+
+    } catch (error) {
+        setError('Error fetching data');
+        console.error('Error fetching data:', error);
+    }
+};
+
+// Función para manejar el cambio de página
+const handlePageChange = (newPage) => {
+    setCurrentPage(newPage); // Actualiza la página actual
+    getAllReportes(newPage); // Obtiene los datos para la nueva página
+};
+
+// Función para manejar el clic en el botón de búsqueda
+const handleSearchClick = () => {
+    getAllReportes(1); // Realiza la búsqueda en la primera página
+};
+
+
 
     const getLatestTasaBCV = async () => {
         try {
@@ -128,16 +140,7 @@ const ShowPagos = () => {
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchCedula(value);
-    
-        const filtered = reportes.filter(reporte =>
-            reporte.cedula_identidad.toLowerCase().includes(value.toLowerCase())
-        );
-    
-        setFilteredReportes(filtered);
-        setCurrentPage(1);
-    
-        // Calcular estadísticas basadas en los reportes filtrados
-        calculateStats(filtered);
+ 
     };
     
 
@@ -281,6 +284,14 @@ const ShowPagos = () => {
                                     <FaSync />
                                 )}
                             </Button>
+                            <Button 
+                                    variant="info me-2" 
+                                    onClick={getAllReportes}
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                >
+                                    <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                                </Button>
+
                             {userRole === 'admin' ||userRole === 'pagos' ? (
 
                             <Button variant="btn custom" onClick={() => navigate('/pagos/create')} className="btn-custom">
@@ -291,13 +302,14 @@ const ShowPagos = () => {
                     </div>
                     {/* Tabla paginada */}
                     <PaginationTable
-                        data={filteredReportes}  // Datos filtrados
+                        data={filteredReportes}
                         itemsPerPage={itemsPerPage}
                         columns={columns}
                         renderItem={renderItem}
-                        currentPage={currentPage}  // Página actual
-                        onPageChange={setCurrentPage}  // Función para cambiar de página
-                        />
+                        currentPage={currentPage}
+                        onPageChange={handlePageChange} // Llama a `handlePageChange` para cambiar la página
+                        totalPages={totalPages}
+                    />
 
 
                     {/* Modal  de eliminación */}
@@ -317,34 +329,7 @@ const ShowPagos = () => {
             </Modal>
             <ToastContainer />
         </div>
-        <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
-            <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
-                <div className="d-flex justify-content-between align-items-center">
-                    <h4 style={{ fontSize: '1.2rem' }}>Registro de Pagos</h4>
-                    {/* Selector de rango de fechas */}
-                    <Form.Select 
-                        value={range} 
-                        onChange={(e) => setRange(parseInt(e.target.value))} 
-                        style={{ width: '150px', fontSize: '0.85rem' }}
-                    >
-                        <option value={7}>Últimos 7 días</option>
-                        <option value={30}>Últimos 30 días</option>
-                        <option value={60}>Últimos 60 días</option>
-                    </Form.Select>
-                </div>
-                
-              
-            </div>
-  <ResponsiveContainer width="100%" height={400}>
-                    <AreaChart data={getFilteredDataByFecha()} margin={{ right: 30, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="fecha" />
-                        <YAxis />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
+       
         </div>
         </div>
         </div>

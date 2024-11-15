@@ -10,7 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';
 import moment from 'moment';
 import './ShowPeticiones.css'; 
-import { FaCheckCircle, FaSync, FaUserFriends, } from 'react-icons/fa';
+import { FaCheckCircle, FaSync, FaUserFriends,FaSearch } from 'react-icons/fa';
 import { ProgressBar } from 'react-bootstrap';
 import { RiCheckboxBlankCircleFill, RiCheckboxIndeterminateFill } from "react-icons/ri";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -37,65 +37,78 @@ const ShowPeticiones = () => {
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const userId = parseInt(localStorage.getItem('user'));
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
-    const [attendedPeticiones, setAttendedPeticiones] = useState([]);
-    const [selectedDateRange, setSelectedDateRange] = useState('7d');
+    const [atendidas, setAtendidas] = useState([]);
+    const [noAtendidas, setNoAtendidas] = useState([]);
+
     const [graphData, setGraphData] = useState([]);
     const [allPeticiones, setAllPeticiones] = useState([]);
     const [greenCount, setGreenCount] = useState(0);
     const [orangeCount, setOrangeCount] = useState(0);
     const [redCount, setRedCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [filteredGraphData, setFilteredGraphData] = useState([]); // Nuevo estado para datos de la gráfica filtrados
+    const [selectedDateRange, setSelectedDateRange] = useState('30d');
+
+
 
 
 
 
     useEffect(() => {
         setLoading(true);
-        getAllPeticiones ()
-            .finally(() => setLoading(false));
-    }, []); 
+        getAllPeticiones(currentPage, selectedStatus)
+          setLoading(false);
+    }, [currentPage, selectedStatus]);
+    
+    
     
 
-    const getAllPeticiones = async () => {
+    const getAllPeticiones = async (page = 1, status = '') => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${endpoint}/peticiones-estadisticas`, {
                 headers: { Authorization: `Bearer ${token}` },
+                params: { page, status },
             });
     
-            // Desestructurar los datos de la respuesta correctamente
             const { peticiones, estadisticas } = response.data;
     
-            // Peticiones paginadas
-            setPeticiones(peticiones.data || []); // Usar directamente `peticiones.data` según la estructura que muestra la consola
-            setFilteredPeticiones(peticiones.data || []);
-            setCurrentPage(1);
-    
-            // Actualizar estadísticas
-            setAttendedPeticiones(estadisticas.totalAtendidas || 0);
+            setPeticiones(peticiones.data || []);
+            setTotalPages(peticiones.last_page || 1);
+            setCurrentPage(page);
+
+            setAtendidas(estadisticas.totalAtendidas || 0);
+            setNoAtendidas(estadisticas.totalNoAtendidas || 0);
             setGraphData(estadisticas.graphData || []);
-    
-            // Actualizar los contadores de estados
             setGreenCount(estadisticas.clasificacionAntiguedad.reciente || 0);
             setOrangeCount(estadisticas.clasificacionAntiguedad.urgente || 0);
             setRedCount(estadisticas.clasificacionAntiguedad.critico || 0);
+            generateGraphData();
+            
     
         } catch (error) {
-            setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
     
     
 
-       // UseEffect para regenerar grafica
-       useEffect(() => {
-        if (allPeticiones.length > 0) {
-            generateGraphData(allPeticiones);  
-        }
-    }, [selectedDateRange, allPeticiones]);  
+    // Ejecutar generateGraphData cuando graphData y selectedDateRange cambien
+    useEffect(() => {
+        generateGraphData();
+    }, [selectedDateRange, graphData]);
+
+    
+   
+
+    
     const handleDateRangeChange = (e) => {
         const value = e.target.value;
         setSelectedDateRange(value);
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
     };
 
 
@@ -140,41 +153,36 @@ const renderStatusDot = (created_at) => {
 
 
 
-    const handleStatusChange = (e) => {
-        const value = e.target.value;
-        setSelectedStatus(value);
-    };
+const handleStatusChange = (e) => {
+    const value = e.target.value;
+    setSelectedStatus(value);
+};
 
   
 
-    const handleNavigate = (peticiones) => {
-        const { id } = peticiones.zonas || {};
-        if (id === 1) {
-            navigate(`/datos/${peticiones.key}/edit`);
-        } else if (id === 2) {
-            navigate(`/cursos/${peticiones.key}/edit`);
-        } else if (id === 3) {
-            navigate(`/pagos/curso/${peticiones.key}`);
-        } 
-         else if (id === 4) {
+const handleNavigate = (peticiones) => {
+    const id = peticiones.zona_id;  // Usa `zona_id` directamente
+    if (id === 1) {
+        navigate(`/datos/${peticiones.key}/edit`);
+    } else if (id === 2) {
+        navigate(`/cursos/${peticiones.key}/edit`);
+    } else if (id === 3) {
+        navigate(`/pagos/curso/${peticiones.key}`);
+    } else if (id === 4) {
         navigate(`/cursos/${peticiones.key}/pagos`);
-        }
-        else if (id === 6) {
-            navigate(`/patrocinantes/${peticiones.key}/edit`);
-            }
-        else if (id === 7) {
-                navigate(`/procedencias/edit/${peticiones.key}`);
-                }
-        else if (id === 8) {
-                navigate(`/promocion/${peticiones.key}/edit`);
-                }    
-        else if (id === 9) {
-            navigate(`/voluntariados/${peticiones.key}/edit`);
-            }             
-        else {
-            toast.error('Zona no válida');
-        }
-    };
+    } else if (id === 6) {
+        navigate(`/patrocinantes/${peticiones.key}/edit`);
+    } else if (id === 7) {
+        navigate(`/procedencias/edit/${peticiones.key}`);
+    } else if (id === 8) {
+        navigate(`/promocion/${peticiones.key}/edit`);
+    } else if (id === 9) {
+        navigate(`/voluntariados/${peticiones.key}/edit`);
+    } else {
+        toast.error('Zona no válida');
+    }
+};
+
 
     const handleRejectClick = (peticion) => {
         setSelectedPeticion(peticion);
@@ -228,64 +236,43 @@ const renderStatusDot = (created_at) => {
         }
     };
 
-    const generateGraphData = (allPeticiones) => {
-        const now = moment().endOf('day'); 
-        let startDate;
-        const token = localStorage.getItem('token');
-        const roleId = parseInt(localStorage.getItem('role_id'));
+    const generateGraphData = () => {
+        if (!graphData || graphData.length === 0) {
+            return; // Sal de la función si no hay datos
+        }
     
-        // Filtra peticiones por usuario o rol
-        const userFilteredPeticiones = allPeticiones.filter(
-            (peticion) => (peticion.destinatario_id === userId || peticion.role_id === roleId)
-        );
+        const latestDate = moment(graphData[graphData.length - 1].date, 'YYYY-MM-DD').endOf('day');
+        let startDate;
     
         switch (selectedDateRange) {
             case '7d':
-                startDate = now.clone().subtract(7, 'days').startOf('day');
+                startDate = latestDate.clone().subtract(7, 'days').startOf('day');
                 break;
             case '15d':
-                startDate = now.clone().subtract(15, 'days').startOf('day');
+                startDate = latestDate.clone().subtract(15, 'days').startOf('day');
                 break;
             case '30d':
-                startDate = now.clone().subtract(30, 'days').startOf('day');
+                startDate = latestDate.clone().subtract(30, 'days').startOf('day');
                 break;
             case '60d':
-                startDate = now.clone().subtract(60, 'days').startOf('day');
+                startDate = latestDate.clone().subtract(60, 'days').startOf('day');
                 break;
             default:
-                startDate = now.clone().subtract(7, 'days').startOf('day'); // Default to last 7 days
+                startDate = latestDate.clone().subtract(7, 'days').startOf('day');
                 break;
         }
     
-        // Filtra peticiones según la fecha y el usuario/rol
-        const filteredPeticiones = userFilteredPeticiones.filter(
-            (p) => moment(p.created_at).isSameOrAfter(startDate) && moment(p.created_at).isSameOrBefore(now)
-        );
+        const filteredData = graphData.filter((p) => {
+            const currentDate = moment(p.date, 'YYYY-MM-DD');
+            return currentDate.isSameOrAfter(startDate) && currentDate.isSameOrBefore(latestDate);
+        });
     
-        const graphData = [];
-    
-        for (let m = startDate.clone(); m.isSameOrBefore(now); m.add(1, 'days')) {
-            const day = m.format('YYYY-MM-DD');
-    
-            // Cuenta las peticiones no atendidas
-            const peticionesCount = filteredPeticiones.filter((p) => moment(p.created_at).isSame(day, 'day')).length;
-    
-            // Cuenta las peticiones atendidas
-            const attendedCount = filteredPeticiones.filter((p) => p.finish_time && moment(p.finish_time).isSame(day, 'day')).length;
-    
-            // Agrega el punto de datos a la gráfica
-            graphData.push({
-                date: day,
-                received: peticionesCount,
-                attended: attendedCount,
-            });
-        }
-    
-        setGraphData(graphData); // Actualiza la gráfica
+        setFilteredGraphData(filteredData);
     };
-
-
-
+    
+    
+    
+    
 
     const columns = ["Status", "Usuario Request", "Zona", "Fecha de creación", "Comentarios", "Acciones"];
 
@@ -315,16 +302,15 @@ const renderStatusDot = (created_at) => {
             </td>
         </tr>
     );
+    const totalPeticiones = greenCount + orangeCount + redCount;
 
-    const totalPeticiones=filteredPeticiones.length;
 
     return (
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
             <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
-                {/* Total de Participantes */}
                 <div className="stat-card" style={{  }}>
                     <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><RiCheckboxBlankCircleFill /></div>
-                    <div className="stat-number" style={{ color: 'rgba(255, 74, 74, 0.9) ', fontSize: '1.8rem' }}>{filteredPeticiones.length}</div>
+                    <div className="stat-number" style={{ color: 'rgba(255, 74, 74, 0.9) ', fontSize: '1.8rem' }}>{noAtendidas}</div>
                     <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Peticiones No Atentidas</h4>
                     
                 </div>
@@ -398,7 +384,7 @@ const renderStatusDot = (created_at) => {
                         <FaCheckCircle /> {/* Icono de peticiones atendidas */}
                     </div>
                     <div className="stat-number" style={{ color: '#58c765', fontSize: '1.8rem' }}>
-                        {attendedPeticiones.length} {/* Aquí se mostrará el total de peticiones atendidas */}
+                        {atendidas} {/* Aquí se mostrará el total de peticiones atendidas */}
                     </div>
                     <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Peticiones Atendidas</h4>
                 </div>
@@ -430,6 +416,7 @@ const renderStatusDot = (created_at) => {
                                 <FaSync />
                             )}
                             </Button>
+                           
                             
                             <Button 
                             variant="succes" 
@@ -466,13 +453,14 @@ const renderStatusDot = (created_at) => {
 
                     </div>
 
+
                     <PaginationTable
                         data={peticiones}
-                        itemsPerPage={itemsPerPage}
                         columns={columns}
                         renderItem={renderItem}
                         currentPage={currentPage}
-                        onPageChange={setCurrentPage}
+                        onPageChange={handlePageChange}
+                        totalPages={totalPages} // Muestra el total de páginas según el backend
                     />
             {/* Modal de confirmación para rechazar petición */}
             <Modal show={showRejectModal} onHide={() => setShowRejectModal(false)}>
@@ -514,7 +502,7 @@ const renderStatusDot = (created_at) => {
                         value={selectedDateRange}
                         onChange={(e) => {
                             setSelectedDateRange(e.target.value);
-                            generateGraphData(allPeticiones);  // Call the graph generation with the updated date range
+                            generateGraphData();  // Generar la gráfica con el nuevo rango
                         }}
                         className="me-1"
                         style={{ width: 'auto' }}
@@ -526,9 +514,13 @@ const renderStatusDot = (created_at) => {
                     </Form.Select>
 
 
+
+
+
+
                         </div>
                         <ResponsiveContainer width="100%" height={400}>
-                            <LineChart data={graphData}>
+                            <LineChart data={filteredGraphData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="date" />
                                 <YAxis />

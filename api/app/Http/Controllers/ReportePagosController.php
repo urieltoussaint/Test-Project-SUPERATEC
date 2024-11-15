@@ -8,6 +8,7 @@ use App\Models\ReportePagos as Model;
 use App\Models\ReportePagos;
 use App\Models\TasaBcv;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReportePagosController extends Controller
 {
@@ -133,6 +134,67 @@ class ReportePagosController extends Controller
 
         return response()->json($data);
     }
+
+
+    public function getPagosWithStatistics(Request $request)
+{
+    // Filtro opcional por cédula de identidad
+    $cedulaFilter = $request->input('cedula_identidad');
+
+    // Consulta para obtener los datos paginados que se mostrarán en la tabla
+    $queryPaginated = DB::table('reporte_pagos')
+        ->orderBy('fecha', 'desc'); // Ordena por fecha descendente para mostrar los últimos pagos primero
+
+    // Aplicar el filtro de cédula de identidad a la consulta paginada
+    if ($request->filled('cedula_identidad')) {
+        $queryPaginated->where('cedula_identidad', 'LIKE', "%{$cedulaFilter}%");
+    }
+
+    // Obtener los datos paginados para mostrar en la tabla
+    $pagosPaginados = $queryPaginated->paginate(10);
+
+    // Consulta para obtener todos los datos filtrados (sin paginación) para las estadísticas
+    $queryStatistics = DB::table('reporte_pagos');
+
+    // Aplicar el mismo filtro de cédula a la consulta de estadísticas
+    if ($request->filled('cedula_identidad')) {
+        $queryStatistics->where('cedula_identidad', 'LIKE', "%{$cedulaFilter}%");
+    }
+
+    // Obtener todos los datos filtrados para las estadísticas sin paginación
+    $pagosParaEstadisticas = $queryStatistics->get();
+
+    // Calcular estadísticas generales
+    $totalPagos = $pagosParaEstadisticas->count();
+    $promedioMontoCancelado = $totalPagos > 0 ? $pagosParaEstadisticas->avg('monto_cancelado') : 0;
+
+    // Retornar los datos paginados y las estadísticas
+    return response()->json([
+        'datos' => $pagosPaginados,
+        'estadisticas' => [
+            'totalPagos' => $totalPagos,
+            'promedioMontoCancelado' => $promedioMontoCancelado,
+        ],
+    ]);
+}
+
+public function getPagosByInscripcion(Request $request)
+{
+    $query = ReportePagos::query();
+
+    // Aplicar el filtro de `informacion_inscripcion_id` si se proporciona
+    if ($request->filled('informacion_inscripcion_id')) {
+        $query->where('informacion_inscripcion_id', $request->informacion_inscripcion_id);
+    }
+
+    // Ejecutar la consulta y obtener todos los pagos que coinciden con el filtro
+    $pagos = $query->get();
+
+    return response()->json($pagos);
+}
+
+
+
 
 
 

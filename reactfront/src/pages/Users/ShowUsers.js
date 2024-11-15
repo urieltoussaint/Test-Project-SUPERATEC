@@ -9,7 +9,7 @@ import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer,toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';
-import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { Modal } from 'react-bootstrap';
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
@@ -46,15 +46,25 @@ const ShowUsers = () => {
     const [cargoOptions, setCargoOptions] = useState([]);
     const [range, setRange] = useState(30); // Estado para seleccionar rango de días
 
+    const [totalPages, setTotalPages] = useState(1);  // Total de páginas desde el backend
+    const [totalUsers, setTotalUsers] =useState (0);  // Total de páginas desde el backend
+    const [averageAntiquity, setAverageAntiquity] = useState(0);  // Total de páginas desde el backend
+
+    const [statistics, setStatistics] = useState({});  // Datos de estadísticas
 
 
 
     
 
     const [filters, setFilters] = useState({
-        // centro_id: '',
-    
+        role_id:'',
+        cargo_id:'',
+        username:'',
     });
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
     const { setLoading } = useLoading();
     const [error, setError] = useState(null);
     const navigate = useNavigate();
@@ -68,65 +78,33 @@ const ShowUsers = () => {
             setLoading(false);
         });
     }, []);
-
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage); // Actualiza la página actual
+        getAllUsers(newPage); // Obtiene los datos para la nueva página
+    };
     
     
-    const averageAntiquity = users.length > 0 ? calculateAverageAntiquity(users) : 0;
+    
 
-    const getAllUsers = async () => {
-
+    const getAllUsers = async (page = currentPage) => {
         try {
             const token = localStorage.getItem('token');
-            let allUsers = [];
-            let currentPage = 1;
-    
-            // Primera llamada para obtener el número total de páginas
-            const initialResponse = await axios.get(`${endpoint}/users-with-roles?page=${currentPage}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const response = await axios.get(`${endpoint}/users-estadisticas`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filters, page }, // Incluye `page` en los parámetros
             });
     
-            // Guardar los datos de la primera página
-            allUsers = [...initialResponse.data.data]; 
-            const totalPages = initialResponse.data.last_page;
-    
-            // Crear un array de promesas para las siguientes páginas si hay más de una página
-            if (totalPages > 1) {
-                const requests = [];
-                for (let i = 2; i <= totalPages; i++) {
-                    requests.push(
-                        axios.get(`${endpoint}/users-with-roles?page=${i}`, {
-                            headers: {
-                                Authorization: `Bearer ${token}`
-                            }})
-                    );
-                }
-    
-                // Esperar a que todas las promesas se resuelvan
-                const responses = await Promise.all(requests);
-    
-                // Añadir los datos de las otras páginas
-                responses.forEach(response => {
-                    allUsers = [...allUsers, ...response.data.data];
-                });
-            }
-    
-            // Actualizar el estado con todos los usuarios obtenidos
-            setUsers(allUsers);
-            setFilteredUsers(allUsers);
-    
-            console.log('Usuarios obtenidos:', allUsers);
+            setUsers(response.data.users.data);  // Datos paginados
+            setTotalPages(response.data.users.last_page);  // Total de páginas
+            setStatistics(response.data.estadisticas);  // Estadísticas
+            setTotalUsers(response.data.estadisticas.totalUsers);
+            setAverageAntiquity(response.data.estadisticas.averageAntiquityInDays);
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                setError('No estás autenticado. Por favor, inicia sesión.');
-                navigate('/'); // Redirige al login si no está autenticado
-            } else {
-                setError('Error fetching data');
-                console.error('Error fetching data:', error);
-            }
+            console.error('Error fetching users:', error);
+            toast.error('Error al obtener usuarios');
         }
     };
+    
     
     const handleShowModal = (id) => {
         setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
@@ -137,26 +115,7 @@ const ShowUsers = () => {
         setShowModal(false); // Cierra el modal
     };
 
-    const getFilteredDataByDate = () => {
-        const today = moment();
-        const filteredData = users.filter(user => {
-            const userCreationDate = moment(user.created_at);
-            return userCreationDate.isAfter(today.clone().subtract(range, 'days'));
-        });
-    
-        // Agrupar por fecha
-        const dateCounts = filteredData.reduce((acc, user) => {
-            const fecha = moment(user.created_at).format('YYYY-MM-DD');
-            acc[fecha] = (acc[fecha] || 0) + 1;
-            return acc;
-        }, {});
-    
-        // Convertir el objeto en un array para Recharts
-        return Object.keys(dateCounts).map(date => ({
-            fecha: date,
-            count: dateCounts[date]
-        }));
-    };
+
     
 
 
@@ -200,61 +159,6 @@ const ShowUsers = () => {
         }
     };
 
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchName(value);  // Actualiza el estado de búsqueda de username
-        applyFilters(value, selectedRole,selectedCargo);  // Aplica los filtros basados en el nuevo valor
-    };
-    
-    const handleRoleChange = (e) => {
-        const value = e.target.value;
-        setSelectedRole(value);
-        applyFilters(searchName, value,selectedCargo);  // Asegurarse de pasar searchName como cadena, no como un objeto
-    };
-    
-    const handleCargoChange = (e) => {
-        const value = e.target.value;
-        setSelectedCargo(value);
-        applyFilters(searchName, selectedRole, value);  // Asegúrate de que el valor de cargo se esté pasando correctamente
-    };
-    
-    
-    
-    
-
-
-    const applyFilters = (searchName, roleValue, cargoValue) => {
-        let filtered = users;
-    
-        // Filtrar por nombre de usuario
-        if (typeof searchName === 'string' && searchName.trim() !== '') {
-            filtered = filtered.filter(user =>
-                user.username.toLowerCase().includes(searchName.toLowerCase())
-            );
-        }
-    
-        // Filtrar por rol
-        if (roleValue) {
-            filtered = filtered.filter(user => user.role_id === parseInt(roleValue));
-        }
-    
-        // Filtrar por cargo
-        if (cargoValue) {
-            filtered = filtered.filter(user => user.cargo_id === parseInt(cargoValue));
-        }
-    
-        setFilteredUsers(filtered);
-        setCurrentPage(1);
-
-    };
-    
-
-
-    if (error) {
-        return <div>{error}</div>;
-    };
-
-
 
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
@@ -267,47 +171,20 @@ const ShowUsers = () => {
         }
     };
 
-    const getCargoDataForChart = () => {
-        // Agrupar los usuarios por cargo
-        const groupedData = filteredUsers.reduce((acc, user) => {
-            const cargo = user.cargo?.descripcion || 'Desconocido';
-            if (!acc[cargo]) {
-                acc[cargo] = { name: cargo, count: 0 };
-            }
-            acc[cargo].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir el objeto en un array para Recharts
-        return Object.values(groupedData);
-    };
-    const getRoleDataForChart = () => {
-        // Agrupar los usuarios por rol
-        const groupedData = filteredUsers.reduce((acc, user) => {
-            const role = user.role?.name || 'Desconocido';
-            if (!acc[role]) {
-                acc[role] = { name: role, count: 0 };
-            }
-            acc[role].count += 1;
-            return acc;
-        }, {});
-    
-        // Convertir el objeto en un array para Recharts
-        return Object.values(groupedData);
-    };
-   
-    
-    
+    const cargoData = statistics?.usersByCargo
+    ? Object.entries(statistics.usersByCargo).map(([name, obj]) => ({
+        name,
+        count: obj.count,  // Cambia 'value' a 'count'
+    }))
+    : [];
 
-       // Cálculo de datos según filtros
-        const activeFilters = selectedRole || searchName || selectedCargo;  // Comprobar si hay filtros activos (nombre o rol)
-        const dataToUse = activeFilters ? filteredUsers : users ;  // Usar filteredUsers si hay filtros, de lo contrario usar users
+    const roleData = statistics?.usersByRole
+    ? Object.entries(statistics.usersByRole).map(([name, obj]) => ({
+        name,
+        count: obj.count,  // Cambia 'value' a 'count'
+    }))
+    : [];
 
-        // Total de usuarios basado en los datos mostrados
-        const totalUsers = dataToUse.length;
-
-        
-        
 
 
     const columns = [ "id", "Nombre de Usuario","Nombre","Apellido", "Email","Cargo", "Fecha de Registro","Rol","Acciones"];
@@ -391,6 +268,13 @@ const ShowUsers = () => {
                                 <FaSync />
                             )}
                             </Button>
+                            <Button 
+                                    variant="info me-2" 
+                                    onClick={getAllUsers}
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                >
+                                    <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                                </Button>
                             
                             <Button variant="btn custom" onClick={() => navigate('/users/create')} className="btn-custom">
                                 <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
@@ -402,16 +286,18 @@ const ShowUsers = () => {
 
                     <div className="d-flex mb-3 custom-width">
                         <Form.Control
+                            name='username'
                             type="text"
                             placeholder="Buscar por Nombre de Usuario"
-                            value={searchName}
-                            onChange={handleSearchChange}  // Asocia la función handleSearchChange
+                            value={filters.username}
+                            onChange={handleFilterChange}  // Asocia la función handleSearchChange
                             className="me-2"
                         />
 
                         <Form.Select
-                            value={selectedRole}
-                            onChange={handleRoleChange}
+                            name='role_id'
+                            value={filters.role_id}
+                            onChange={handleFilterChange}
                             className="me-2"
                         >
                             <option value="">Filtrar por Rol</option>
@@ -421,8 +307,9 @@ const ShowUsers = () => {
                         </Form.Select>
 
                         <Form.Select
-                            value={selectedCargo}
-                            onChange={handleCargoChange}
+                            name='cargo_id'
+                            value={filters.cargo_id}
+                            onChange={handleFilterChange}
                             className="me-2"
                         >
                             <option value="">Filtrar por Cargo</option>
@@ -436,12 +323,13 @@ const ShowUsers = () => {
 
 
                     <PaginationTable
-                        data={dataToUse}  // Pasamos los datos calculados con o sin filtros
+                        data={users}
                         itemsPerPage={itemsPerPage}
                         columns={columns}
                         renderItem={renderItem}
-                        currentPage={currentPage}  // Página actual
-                        onPageChange={setCurrentPage}  // Función para cambiar de página
+                        currentPage={currentPage}
+                        onPageChange={handlePageChange} // Llama a `handlePageChange` para cambiar la página
+                        totalPages={totalPages}
                     />
 
 
@@ -471,7 +359,7 @@ const ShowUsers = () => {
                     <ResponsiveContainer width="100%" height={400}>
                         <PieChart>
                             <Pie
-                                data={getCargoDataForChart()}
+                                data={cargoData}
                                 dataKey="count"
                                 nameKey="name"
                                 cx="50%"
@@ -481,7 +369,7 @@ const ShowUsers = () => {
                                 fill="#82ca9d"
                                 label={({ value }) => `${value}`}  // Mostrar solo el valor
                             >
-                                {getCargoDataForChart().map((entry, index) => (
+                                {cargoData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
@@ -494,7 +382,7 @@ const ShowUsers = () => {
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
                 <h4 style={{ fontSize: '1.2rem' }}>Distribución de Roles</h4>
                     <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={getRoleDataForChart()} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
+                        <BarChart data={roleData} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
                             <CartesianGrid stroke="#f5f5f5" />
                             <XAxis dataKey="name" />
                             <YAxis />
@@ -510,36 +398,10 @@ const ShowUsers = () => {
 
         
         </div>
-        <div className="col-lg-11 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
-            <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
-            <div className="d-flex justify-content-between align-items-center">
-                <h4 style={{ fontSize: '1.2rem' }}>Registro de Usuarios</h4>
-                {/* Selector de rango de fechas */}
-                <Form.Select 
-                    value={range} 
-                    onChange={(e) => setRange(parseInt(e.target.value))} 
-                    style={{ width: '150px', fontSize: '0.85rem' }} // Ajustar el tamaño del selector
-                >
-                    <option value={7}>Últimos 7 días</option>
-                    <option value={30}>Últimos 30 días</option>
-                    <option value={60}>Últimos 60 días</option>
-                </Form.Select>
-            </div>
-            
-            <ResponsiveContainer width="100%" height={400}>
-                <AreaChart data={getFilteredDataByDate()} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="fecha" />
-                    <YAxis />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-                </AreaChart>
-            </ResponsiveContainer>
-        </div>
+       
         </div>
         
 
-        </div>
         </div>
     );
 };

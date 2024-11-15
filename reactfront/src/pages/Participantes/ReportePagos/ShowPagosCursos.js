@@ -90,26 +90,16 @@ const ShowPagosCursos = () => {
     const getInscripcionCurso = async (id) => {
         try {
             const token = localStorage.getItem('token');
-            let allInscripciones = [];
-            let currentPage = 1;
-            let totalPages = 1;
+            
+            // Realiza la solicitud GET a la ruta específica para obtener la inscripción con el ID dado
+            const response = await axios.get(`${endpoint}/cursos_inscripcion/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
     
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/cursos_inscripcion?page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-    
-                allInscripciones = [...allInscripciones, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
-    
-            // Filtrar explícitamente por el inscripcion_curso_id correcto
-            const inscripcion = allInscripciones.find(informacion_inscripcion => 
-                String(informacion_inscripcion.id) === String(id)  // Convertimos a cadenas
-            );
+            // Extrae la información necesaria de la respuesta
+            const inscripcion = response.data;
     
             if (inscripcion) {
                 console.log("Inscripción encontrada:", inscripcion);
@@ -124,6 +114,7 @@ const ShowPagosCursos = () => {
             throw error;
         }
     };
+    
 
     // Función para obtener el código del curso usando el curso_id
     const getCursoCod = async (cursoId) => {
@@ -171,58 +162,43 @@ const ShowPagosCursos = () => {
     const getPagosByCurso = async () => {
         try {
             const token = localStorage.getItem('token');
-            let allPagos = [];
-            let currentPage = 1;
-            let totalPages = 1;
+            
+            // Realiza la solicitud GET a la ruta con el parámetro `informacion_inscripcion_id`
+            const response = await axios.get(`${endpoint}/pagos`, {
+                params: {
+                    informacion_inscripcion_id: inscripcion_curso_id, // Pasa el ID de la inscripción como parámetro
+                    page: currentPage, // Envía la página actual para la paginación
+                },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
     
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/pagos`, {
-                    params: {
-                        curso_id: inscripcion_curso_id,
-                        page: currentPage,
-                    },
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+            const pagosFiltrados = response.data.data; // Datos paginados
+            const totalPages = response.data.last_page;
     
-                allPagos = [...allPagos, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
-    
-            const pagosFiltrados = allPagos.filter(
-                (reporte) => reporte.informacion_inscripcion_id === parseInt(inscripcion_curso_id)
-            );
-    
-            // Si no hay pagos encontrados, devuelve advertencia
-            if (pagosFiltrados.length === 0) {
-                console.warn("No se encontraron pagos con inscripcion_curso_id:", inscripcion_curso_id);
-            }
-    
-            // Calcular total de pagos
+            // Calcula el total de pagos y monto cancelado
             const totalPagos = pagosFiltrados.length;
             setTotalPagos(totalPagos);
     
-            // Calcular el monto total cancelado
             const totalMontoCancelado = pagosFiltrados.reduce((acc, reporte) => acc + parseFloat(reporte.monto_cancelado), 0);
-            setTotalMontoCancelado(totalMontoCancelado.toFixed(2)); // Formatear a dos decimales
+            setTotalMontoCancelado(totalMontoCancelado.toFixed(2));
     
-            // Obtener la última fecha de pago
+            // Obtiene la última fecha de pago
             const ultimaFechaPago = pagosFiltrados.length > 0 ? pagosFiltrados[0].fecha : null;
             setUltimaFechaPago(ultimaFechaPago);
     
-            // Ordenar pagos por ID (más recientes primero)
+            // Ordena los pagos por ID (más recientes primero)
             const sortedReportes = pagosFiltrados.sort((a, b) => b.id - a.id);
             setReportes(sortedReportes);
             setFilteredReportes(sortedReportes);
-            setCurrentPage(1);
-    
+            
         } catch (error) {
             setError('Error fetching data');
             console.error('Error fetching data:', error);
         }
     };
+    
     const getFilteredDataByFecha = () => {
         const today = moment(); // Usar moment.js para la fecha actual
         const filteredData = filteredReportes.filter(reporte => {

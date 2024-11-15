@@ -108,14 +108,88 @@ class AuthController extends Controller
     }
     // app/Http/Controllers/AuthController.php
 
-    public function getAllUsersWithRoles(Request $request)
+    public function getUsersWithStatistics(Request $request)
 {
-    // Usa paginación para limitar la cantidad de registros por solicitud
-    $users = User::with('role','cargo')
-        ->paginate(40); // Cambia el número de registros por página según tu necesidad
+    // Consulta paginada para obtener los usuarios a mostrar en la tabla
+    $queryPaginated = User::query()
+        ->with(['role:id,name', 'cargo:id,descripcion']) // Asegúrate de cargar solo los campos necesarios
+        ->orderBy('id', 'desc');
 
-    return response()->json($users, 200);
+    // Aplicar filtros a la consulta paginada
+    if ($request->filled('username')) {
+        $queryPaginated->where('username', 'LIKE', "%{$request->username}%");
+    }
+    if ($request->filled('role_id')) {
+        $queryPaginated->where('role_id', $request->role_id);
+    }
+    if ($request->filled('cargo_id')) {
+        $queryPaginated->where('cargo_id', $request->cargo_id);
+    }
+
+    // Obtener los datos paginados para mostrar en la tabla
+    $usersPaginated = $queryPaginated->paginate(10);
+
+    // Consulta sin paginación para calcular estadísticas
+    $queryStatistics = User::query()->with(['role:id,name', 'cargo:id,descripcion']);
+
+    // Aplicar los mismos filtros para la consulta de estadísticas
+    if ($request->filled('username')) {
+        $queryStatistics->where('username', 'LIKE', "%{$request->username}%");
+    }
+    if ($request->filled('role_id')) {
+        $queryStatistics->where('role_id', $request->role_id);
+    }
+    if ($request->filled('cargo_id')) {
+        $queryStatistics->where('cargo_id', $request->cargo_id);
+    }
+
+    // Obtener todos los datos filtrados para estadísticas
+    $usersForStatistics = $queryStatistics->get();
+
+    // Calcular estadísticas
+    $totalUsers = $usersForStatistics->count();
+
+    // Calcular la antigüedad en días y luego el promedio
+    $totalAntiquityDays = $usersForStatistics->sum(function ($user) {
+        return now()->diffInDays($user->created_at);
+    });
+    $averageAntiquity = $totalUsers > 0 ? ($totalAntiquityDays / $totalUsers) : 0;
+
+    // Distribución de usuarios por roles (usando role.name)
+    $usersByRole = $usersForStatistics->groupBy(function ($user) {
+        return $user->role ? $user->role->name : 'Sin Rol';
+    })->map(function ($group) use ($totalUsers) {
+        $count = $group->count();
+        return [
+            'count' => $count,
+            'percentage' => $totalUsers > 0 ? ($count / $totalUsers) * 100 : 0
+        ];
+    });
+
+    // Distribución de usuarios por cargos (usando cargo.descripcion)
+    $usersByCargo = $usersForStatistics->groupBy(function ($user) {
+        return $user->cargo ? $user->cargo->descripcion : 'Sin Cargo';
+    })->map(function ($group) use ($totalUsers) {
+        $count = $group->count();
+        return [
+            'count' => $count,
+            'percentage' => $totalUsers > 0 ? ($count / $totalUsers) * 100 : 0
+        ];
+    });
+
+    // Retornar los datos paginados y las estadísticas
+    return response()->json([
+        'users' => $usersPaginated,
+        'estadisticas' => [
+            'totalUsers' => $totalUsers,
+            'averageAntiquityInDays' => $averageAntiquity, // Promedio en días de antigüedad
+            'usersByRole' => $usersByRole,
+            'usersByCargo' => $usersByCargo,
+        ],
+    ]);
 }
+
+    
 
 
     public function destroy($id)

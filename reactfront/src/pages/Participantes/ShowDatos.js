@@ -475,8 +475,6 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
                                 className="me-2"
                             />
-
-
                                     <Button
                                     variant="info me-2"
                                     onClick={loadData}
@@ -584,14 +582,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                            
                         </div>
                         
-                        {/* <PaginationTable
-                            data={datos}
-                            itemsPerPage={itemsPerPage}
-                            columns={columns}
-                            renderItem={renderItem}
-                            currentPage={currentPage}
-                            onPageChange={handlePageChange}
-                        /> */}
+                       
                         <PaginationTable
                             data={datos}
                             itemsPerPage={itemsPerPage}
@@ -602,12 +593,6 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                             totalPages={totalPages}  // <--- Añade esta línea si aún no está
                         />
 
-                  
-
-
-
-
-                        
 
                         {/* Modal  de eliminación */}
                         <Modal show={showModal} onHide={handleCloseModal}>

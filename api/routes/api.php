@@ -61,6 +61,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('users-with-roles', [AuthController::class, 'getAllUsersWithRoles'])->middleware('role:admin,superuser,invitado'); 
     Route::get('role', [RoleController::class, 'index'])->middleware('role:admin,superuser,invitado'); 
     Route::get('/validate-username/{username}', [AuthController::class, 'validateUsername'])->middleware('role:admin,superuser,invitado'); 
+    Route::get('users-estadisticas', [AuthController::class, 'getUsersWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
 
     
     // Datos Identificación
@@ -106,6 +107,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('pagos/{id}', [ReportePagosController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
     Route::put('pagos/{id}', [ReportePagosController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('pagos/{id}', [ReportePagosController::class, 'destroy'])->middleware('role:admin');
+    Route::get('pagos-estadisticas', [ReportePagosController::class, 'getPagosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+
 
     // Tasa BCV
     Route::get('tasa_bcv', [TasaBcvController::class, 'index'])->middleware('role:admin,superuser,invitado');
@@ -138,6 +141,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('peticiones/{id}', [PeticionesController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
     Route::delete('peticiones/{id}', [PeticionesController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('peticiones-estadisticas', [PeticionesController::class, 'getPeticionesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('peticionesAtendidas', [PeticionesController::class, 'getPeticionesAtendidas'])->middleware('role:admin,superuser,invitado,pagos');
+
 
 
      // Patrocinantes
