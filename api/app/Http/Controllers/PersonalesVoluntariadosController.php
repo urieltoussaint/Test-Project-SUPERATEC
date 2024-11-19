@@ -98,6 +98,133 @@ class PersonalesVoluntariadosController extends Controller
             ]);
     } 
 
+
+
+    public function getVoluntariadosWithStatistics(Request $request)
+{
+    // 1. Consulta para obtener los datos paginados que se mostrarán en la tabla
+    $queryPaginated = PersonalesVoluntariados::query()
+        ->with([
+            'nivelInstruccion',
+            'genero',
+            'InformacionVoluntariados',
+            'InformacionVoluntariados.centro',
+            'InformacionVoluntariados.area'
+        ])
+        ->orderBy('id', 'desc'); // Ordena por id de forma descendente para mostrar los últimos primero
+
+    // Aplicar filtros
+    if ($request->filled('nivel_instruccion_id')) {
+        $queryPaginated->where('nivel_instruccion_id', $request->nivel_instruccion_id);
+    }
+    if ($request->filled('genero_id')) {
+        $queryPaginated->where('genero_id', $request->genero_id);
+    }
+    if ($request->filled('cedula_identidad')) {
+        $queryPaginated->where('cedula_identidad', 'LIKE', "%{$request->cedula_identidad}%");
+    }
+    if ($request->filled('area_voluntariado_id')) {
+        $queryPaginated->whereHas('InformacionVoluntariados.area', function ($query) use ($request) {
+            $query->where('id', $request->area_voluntariado_id);
+        });
+    }
+    if ($request->filled('centro_id')) {
+        $queryPaginated->whereHas('InformacionVoluntariados.centro', function ($query) use ($request) {
+            $query->where('id', $request->centro_id);
+        });
+    }
+
+    // Obtener los datos paginados para mostrar en la tabla
+    $datosPaginados = $queryPaginated->paginate(9);
+
+    // 2. Consulta para obtener todos los datos filtrados (sin paginación) para las estadísticas
+    $queryStatistics = PersonalesVoluntariados::query()
+        ->with([
+            'nivelInstruccion',
+            'genero',
+            'InformacionVoluntariados',
+            'InformacionVoluntariados.centro',
+            'InformacionVoluntariados.area'
+        ]);
+
+    // Aplicar los mismos filtros que en la consulta paginada
+    if ($request->filled('nivel_instruccion_id')) {
+        $queryStatistics->where('nivel_instruccion_id', $request->nivel_instruccion_id);
+    }
+    if ($request->filled('genero_id')) {
+        $queryStatistics->where('genero_id', $request->genero_id);
+    }
+    if ($request->filled('cedula_identidad')) {
+        $queryStatistics->where('cedula_identidad', 'LIKE', "%{$request->cedula_identidad}%");
+    }
+    if ($request->filled('area_voluntariado_id')) {
+        $queryStatistics->whereHas('InformacionVoluntariados.area', function ($query) use ($request) {
+            $query->where('id', $request->area_voluntariado_id);
+        });
+    }
+    if ($request->filled('centro_id')) {
+        $queryStatistics->whereHas('InformacionVoluntariados.centro', function ($query) use ($request) {
+            $query->where('id', $request->centro_id);
+        });
+    }
+
+    // Obtener todos los datos filtrados para las estadísticas sin paginación
+    $datosParaEstadisticas = $queryStatistics->get();
+
+    // Calcular estadísticas generales en todos los datos filtrados
+    $totalVoluntariados = $datosParaEstadisticas->count();
+
+    // Calcular porcentajes de género
+    $totalMasculino = $datosParaEstadisticas->where('genero_id', 1)->count();
+    $totalFemenino = $datosParaEstadisticas->where('genero_id', 3)->count();
+    $totalOtros = $datosParaEstadisticas->where('genero_id', 2)->count();
+    $porcentajeMasculino = $totalVoluntariados > 0 ? ($totalMasculino / $totalVoluntariados) * 100 : 0;
+    $porcentajeFemenino = $totalVoluntariados > 0 ? ($totalFemenino / $totalVoluntariados) * 100 : 0;
+    $porcentajeOtros = $totalVoluntariados > 0 ? ($totalOtros / $totalVoluntariados) * 100 : 0;
+
+    // Agrupar y calcular estadísticas adicionales
+    $nivelesInstruccion = $datosParaEstadisticas->groupBy('nivelInstruccion.descripcion')->map(function ($group) use ($totalVoluntariados) {
+        $count = $group->count();
+        return [
+            'count' => $count,
+            'percentage' => $totalVoluntariados > 0 ? ($count / $totalVoluntariados) * 100 : 0
+        ];
+    });
+
+    $participantesPorArea = $datosParaEstadisticas->groupBy('InformacionVoluntariados.area.descripcion')->map(function ($group) use ($totalVoluntariados) {
+        $count = $group->count();
+        return [
+            'count' => $count,
+            'percentage' => $totalVoluntariados > 0 ? ($count / $totalVoluntariados) * 100 : 0
+        ];
+    });
+
+    $centro = $datosParaEstadisticas->groupBy('InformacionVoluntariados.centro.descripcion')->map(function ($group) use ($totalVoluntariados) {
+        $count = $group->count();
+        return [
+            'count' => $count,
+            'percentage' => $totalVoluntariados > 0 ? ($count / $totalVoluntariados) * 100 : 0
+        ];
+    });
+
+    // Retornar los datos paginados y las estadísticas completas
+    return response()->json([
+        'datos' => $datosPaginados,
+        'estadisticas' => [
+            'totalVoluntariados' => $totalVoluntariados,
+            'porcentajesGenero' => [
+                'masculino' => $porcentajeMasculino,
+                'femenino' => $porcentajeFemenino,
+                'otros' => $porcentajeOtros,
+            ],
+            'nivelesInstruccion' => $nivelesInstruccion,
+            'centro' => $centro,
+            'participantesPorArea' => $participantesPorArea,
+        ],
+    ]);
+}
+
+
 }
 
 

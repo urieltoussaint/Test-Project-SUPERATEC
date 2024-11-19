@@ -62,6 +62,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('role', [RoleController::class, 'index'])->middleware('role:admin,superuser,invitado'); 
     Route::get('/validate-username/{username}', [AuthController::class, 'validateUsername'])->middleware('role:admin,superuser,invitado'); 
     Route::get('users-estadisticas', [AuthController::class, 'getUsersWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('users-paginate', [AuthController::class, 'getUsers'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('role-paginate', [RoleController::class, 'getRole'])->middleware('role:admin,superuser,invitado,pagos');
 
     
     // Datos Identificación
@@ -126,6 +128,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('voluntariados/{id}', [PersonalesVoluntariadosController::class, 'destroy'])->middleware('role:admin');
     Route::get('voluntariados/cedula/{cedula_identidad}', [PersonalesVoluntariadosController::class, 'searchByCedula1'])->middleware('role:admin,superuser,invitado');
+    Route::get('voluntariados-estadisticas', [PersonalesVoluntariadosController::class, 'getVoluntariadosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
 
 
     // Promoción

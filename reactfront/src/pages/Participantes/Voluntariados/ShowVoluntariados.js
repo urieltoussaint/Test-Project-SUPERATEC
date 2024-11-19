@@ -11,7 +11,7 @@ import PaginationTable from '../../../components/PaginationTable';
 import { Modal } from 'react-bootstrap';
 import { FaLocationDot } from "react-icons/fa6";
 import { FaPerson } from "react-icons/fa6";
-import { FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
 
@@ -41,10 +41,12 @@ const ShowVoluntariados = () => {
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FF4567'];
+    const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
+    const [statistics, setStatistics] = useState({});
 
     
 
-    const itemsPerPage = 4;
+    const itemsPerPage = 10;
 
     const navigate = useNavigate();
 
@@ -69,35 +71,29 @@ const ShowVoluntariados = () => {
         area_voluntariado_id: '',
         nivel_instruccion_id: '',
         genero_id: '',
+        cedula_identidad:'',
     });
 
 
-    const getAllVoluntariados = async () => {
+    const getAllVoluntariados = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            let allVoluntariados = [];
-            let currentPage = 1;
-            let totalPages = 1;
-    
-            // Loop para obtener todas las páginas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/voluntariados?with=informacionVoluntariados,nivelInstruccion,genero&page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-    
-                allVoluntariados = [...allVoluntariados, ...response.data.data];
-                totalPages = response.data.last_page; // Total de páginas
-                currentPage++;
-            }
-    
-            setVoluntariados(allVoluntariados);
-            setFilteredVoluntariados(allVoluntariados);
-            console.log('Voluntariados obtenidos:', allVoluntariados);
+            const response = await axios.get(`${endpoint}/voluntariados-estadisticas`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filters, page }, // Incluye `page` en los parámetros
+            });
+            
+            const estadisticas = response.data.estadisticas || {};
+            estadisticas.rangoEdades = estadisticas.rangoEdades || [];
+            
+            setVoluntariados(Array.isArray(response.data.datos.data) ? response.data.datos.data : []);
+            setStatistics(estadisticas);
+            setTotalPages(response.data.datos.last_page || 1); // Actualiza el total de páginas
         } catch (error) {
-            setError('Error fetching data');
             console.error('Error fetching data:', error);
+            toast.error('Error fetching data');
+            setVoluntariados([]);
+            setStatistics({ rangoEdades: [] });
         }
     };
 
@@ -140,74 +136,19 @@ const ShowVoluntariados = () => {
         
     };
 
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchCedula(value);  
-        applyFilters({ ...filters, searchCedula: value });
-    };
+    
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        const newFilters = { ...filters, [name]: value };
-        setFilters(newFilters);
-        applyFilters(newFilters);
+        setFilters(prev => ({ ...prev, [name]: value }));
     };
 
 
-    const applyFilters = (filters) => {
-        let filtered = voluntariados;
-
-        if (filters.searchCedula) {
-            filtered = filtered.filter(voluntario =>
-                voluntario.cedula_identidad.toLowerCase().includes(filters.searchCedula.toLowerCase())
-
-            );
-        }
-
-        if (filters.area_voluntariado_id) {
-            filtered = filtered.filter(voluntario =>
-                // voluntario.informacion_voluntariados.area_voluntariado_id === parseInt(areaValue)
-                voluntario.informacion_voluntariados.area_voluntariado_id === parseInt(filters.area_voluntariado_id)
-
-            );
-        }
-
-        if (filters.nivel_instruccion_id) {
-            filtered = filtered.filter(voluntario =>
-                // voluntario.nivel_instruccion_id === parseInt(nivelValue)
-                voluntario.nivel_instruccion_id === parseInt(filters.nivel_instruccion_id)
-
-            );
-        }
-
-        if (filters.genero_id) {
-            filtered = filtered.filter(voluntario =>
-                // voluntario.genero_id === parseInt(generoValue)
-                voluntario.genero_id === parseInt(filters.genero_id)
-
-            );
-        }
-        if (filters.centro_id) {
-            filtered = filtered.filter(voluntario =>
-                // voluntario.informacion_voluntariados.centro_id === parseInt(centroValue)
-                voluntario.informacion_voluntariados.centro_id === parseInt(filters.centro_id)
-
-            );
-        }
-
-        setFilteredVoluntariados(filtered);
-        setCurrentPage(1);
-        
-    };
-
-    if (error) {
-        return <div>{error}</div>;
-    }
 
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
         try {
-            await getAllVoluntariados(); // Espera a que getAllDatos haga la solicitud y actualice los datos
+            await (getAllVoluntariados(),fetchFilterOptions()); // Espera a que getAllDatos haga la solicitud y actualice los datos
         } catch (error) {
             console.error('Error recargando los datos:', error); // Maneja el error si ocurre
         } finally {
@@ -215,62 +156,36 @@ const ShowVoluntariados = () => {
         }
     };
 
+    const totalVoluntariados= statistics.totalVoluntariados;
+    const porcentajeMasculino = statistics?.porcentajesGenero?.masculino || 0;
+    const porcentajeFemenino = statistics?.porcentajesGenero?.femenino || 0;
+    const porcentajeOtros = statistics?.porcentajesGenero?.otros || 0;
 
-    const activeFilters = Object.values(filters).some(val => val); // Comprobar si hay filtros activos
-    const dataToUse = activeFilters ? filteredVoluntariados : voluntariados; // Usar filteredDatos si hay filtros activos, de lo contrario usar datos
+    const areaData = statistics?.participantesPorArea
+    ? Object.entries(statistics.participantesPorArea).map(([name, obj]) => ({
+        name,           // Nombre del área
+        value: obj.count, // El valor que deseas graficar (en este caso, `count`)
+    }))
+    : [];
 
-    // Total de participantes basado en filtros activos
-    const totalVoluntariados = dataToUse.length;
-    const totalMasculino = dataToUse.filter(d => d.genero_id === 1).length;
-    const totalFemenino = dataToUse.filter(d => d.genero_id === 3).length;
-    const totalOtros = dataToUse.filter(d => d.genero_id === 2).length;
-    const porcentajeMasculino = totalMasculino > 0 ? (totalMasculino / dataToUse.length) * 100 : 0;
-    const porcentajeFemenino = totalFemenino > 0 ? (totalFemenino / dataToUse.length) * 100 : 0;
-    const porcentajeOtros = totalOtros > 0 ? (totalOtros / dataToUse.length) * 100 : 0;
 
-    const getAreaVoluntariadoData = () => {
-        // Crear un diccionario para agrupar por áreas
-        const areaCounts = filteredVoluntariados.reduce((acc, voluntario) => {
-            const areaId = voluntario.informacion_voluntariados.area_voluntariado_id;
-            acc[areaId] = (acc[areaId] || 0) + 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un formato adecuado para la gráfica
-        return Object.keys(areaCounts).map(areaId => ({
-            name: areaOptions.find(option => option.id === parseInt(areaId))?.descripcion || "Desconocido",
-            value: areaCounts[areaId]
-        }));
-    };
+    const centroData = statistics?.centro
+    ? Object.entries(statistics.centro).map(([name, obj]) => ({
+        name,
+        value: obj.count,
+    }))
+    : [];
 
-    const getNivelInstruccionData = () => {
-        // Crear un diccionario para agrupar por nivel de instrucción
-        const nivelCounts = filteredVoluntariados.reduce((acc, voluntario) => {
-            const nivelId = voluntario.nivel_instruccion_id;
-            acc[nivelId] = (acc[nivelId] || 0) + 1;
-            return acc;
-        }, {});
-    
-        // Convertir los datos en un formato adecuado para la gráfica
-        return Object.keys(nivelCounts).map(nivelId => ({
-            name: nivelOptions.find(option => option.id === parseInt(nivelId))?.descripcion || "Desconocido",
-            value: nivelCounts[nivelId]
-        }));
-    };
+    const NivelData = statistics?.nivelesInstruccion
+    ? Object.entries(statistics.nivelesInstruccion).map(([name, obj]) => ({
+        name,
+        value: obj.count,
+    }))
+    : [];
 
-    const getDataByCentro = () => {
-        const groupedData = filteredVoluntariados.reduce((acc, voluntario) => {
-            const centroId = voluntario.informacion_voluntariados?.centro_id || 'Desconocido';
-            if (!acc[centroId]) {
-                acc[centroId] = { name: centroOptions.find(c => c.id === centroId)?.descripcion || 'Desconocido', count: 0 };
-            }
-            acc[centroId].count += 1;
-            return acc;
-        }, {});
-    
-        return Object.values(groupedData);
-    };
-    
+
+
+   
     
     
 
@@ -377,10 +292,11 @@ const ShowVoluntariados = () => {
                         <h1>Lista de Voluntarios</h1>
                         <div className="d-flex align-items-center">
                             <Form.Control
+                                name="cedula_identidad"
                                 type="text"
                                 placeholder="Buscar por cédula"
-                                value={searchCedula}
-                                onChange={handleSearchChange}
+                                value={filters.cedula_identidad}
+                                onChange={handleFilterChange}
                                 className="me-2"
                             />
                             <Button
@@ -397,6 +313,14 @@ const ShowVoluntariados = () => {
                                 <FaSync />
                                 )}
                             </Button>
+
+                            <Button 
+                                    variant="info me-2" 
+                                    onClick={getAllVoluntariados}
+                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                >
+                                    <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                                </Button>
                             {userRole === 'admin' || userRole === 'superuser' ? (
                                     
                             <Button variant="btn custom" onClick={() => navigate('create')} className="btn-custom">
@@ -460,13 +384,17 @@ const ShowVoluntariados = () => {
             </div>
             <div className="cards-container"></div>
             <PaginationTable
-                data={filteredVoluntariados}  // Datos filtrados
+                data={voluntariados}  // Datos filtrados
                 itemsPerPage={itemsPerPage}
                 columns={columns}
                 renderItem={renderItem}
                 currentPage={currentPage}  // Página actual
                 onPageChange={setCurrentPage}  // Función para cambiar de página
+                totalPages={totalPages}  // <--- Añade esta línea si aún no está
+
                 />
+
+
 
              {/* Modal  de eliminación */}
              <Modal show={showModal} onHide={handleCloseModal}>
@@ -492,7 +420,7 @@ const ShowVoluntariados = () => {
                 <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                         <Pie
-                            data={getAreaVoluntariadoData()}
+                            data={areaData}
                             dataKey="value"
                             nameKey="name"
                             cx="50%"
@@ -501,7 +429,7 @@ const ShowVoluntariados = () => {
                             fill="#82ca9d"
                             label={({ name, value }) => `${name}: ${value}`}
                         >
-                            {getAreaVoluntariadoData().map((entry, index) => (
+                            {areaData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
@@ -513,13 +441,13 @@ const ShowVoluntariados = () => {
 
             <div className="chart-box " style={{flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
             <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={getNivelInstruccionData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <BarChart data={NivelData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
                     <Bar dataKey="value" fill="#8884d8">
-                        {getNivelInstruccionData().map((entry, index) => (
+                        {NivelData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                     </Bar>
@@ -531,11 +459,11 @@ const ShowVoluntariados = () => {
             <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
             <h4 style={{ fontSize: '1.2rem' }}>Distribución por Centro</h4>
             <ResponsiveContainer width="100%" height={400}>
-                <RadarChart data={getDataByCentro()} cx="50%" cy="50%" outerRadius="80%">
+                <RadarChart data={centroData} cx="50%" cy="50%" outerRadius="80%">
                     <PolarGrid />
                     <PolarAngleAxis dataKey="name" />
-                    <PolarRadiusAxis angle={30} domain={[0, Math.max(...getDataByCentro().map(d => d.count))]} />
-                    <Radar name="Centros" dataKey="count" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                    <PolarRadiusAxis angle={30} domain={[0, Math.max(...centroData.map(d => d.count))]} />
+                    <Radar name="Centros" dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
                     <Legend />
                     <Tooltip />
                 </RadarChart>

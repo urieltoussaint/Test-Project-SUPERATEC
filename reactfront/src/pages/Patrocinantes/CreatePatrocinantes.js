@@ -7,6 +7,7 @@ import { useLoading } from '../../components/LoadingContext';
 import { ToastContainer, toast } from 'react-toastify';
 import { Card, Row, Col } from 'react-bootstrap'; 
 import estadosMunicipios from '../../components/estadosMunicipios.json';
+import { FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 
  
 
@@ -44,6 +45,7 @@ const CreatePatrocinantes = () => {
   const [allRoles, setAllRoles] = useState([]); // Todos los roles cargados
   const [paginatedRoles, setPaginatedRoles] = useState([]); // Roles en la página actual
   const [currentPageRoles, setCurrentPageRoles] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
   
   const itemsPerPage = 8; // Elementos por página
 
@@ -103,68 +105,76 @@ const [selectVisible, setSelectVisible] = useState(false);  // Control de la vis
       getAllRoles();
     }
   }, [showUserSearchModal, showRoleSearchModal]);
+
+
+  const [filters, setFilters] = useState({
+    username:'',
+    name:''
+  });
   
 
-  const getAllUsers = async () => {
+  const getAllUsers = async (page = 1) => {
     try {
-      const token = localStorage.getItem('token');
-      let allUsersData = [];
-      let currentPageAPI = 1;
-      let lastPageAPI = 1;
-  
-      do {
-        const response = await axios.get(`${endpoint}/users-with-roles?page=${currentPageAPI}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/users-paginate`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { ...filters, page }, // Incluye `page` en los parámetros
         });
-  
-        allUsersData = allUsersData.concat(response.data.data);
-        lastPageAPI = response.data.last_page;
-        currentPageAPI++;
-      } while (currentPageAPI <= lastPageAPI);
-  
-      setAllUsers(allUsersData);
-      setPaginatedUsers(allUsersData.slice(0, itemsPerPage));
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-  const getAllRoles = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      let allRolesData = [];
-      let currentPageAPI = 1;
-      let lastPageAPI = 1;
-  
-      do {
-        const response = await axios.get(`${endpoint}/role?page=${currentPageAPI}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-  
-        allRolesData = allRolesData.concat(response.data.data);
-        lastPageAPI = response.data.last_page;
-        currentPageAPI++;
-      } while (currentPageAPI <= lastPageAPI);
-  
-      setAllRoles(allRolesData);
-      setPaginatedRoles(allRolesData.slice(0, itemsPerPage));
-    } catch (error) {
-      console.error('Error fetching roles:', error);
-    }
-  };
 
-  const handleUserPageChange = (pageNumber) => {
-    const startIndex = (pageNumber - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    setPaginatedUsers(allUsers.slice(startIndex, endIndex));
-    setCurrentPageUsers(pageNumber);
-  };
-  
-  const handleRolePageChange = (pageNumber) => {
-    const startIndex = (pageNumber - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    setPaginatedRoles(allRoles.slice(startIndex, endIndex));
-    setCurrentPageRoles(pageNumber);
-  };
+        const { data, last_page, current_page } = response.data.users;
+
+        // Actualizar el estado
+        setPaginatedUsers(data); // Datos de la página actual
+        setCurrentPageUsers(current_page); // Página actual
+        setTotalPages(last_page); // Total de páginas
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        toast.error('Error fetching data');
+        setPaginatedUsers([]); // Limpia los datos en caso de error
+    }
+};
+
+
+const getAllRoles = async (page = 1) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/role-paginate`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { ...filters, page }, // Incluye `page` en los parámetros
+        });
+
+        const { data, last_page, current_page } = response.data.roles;
+
+        setPaginatedRoles(data); // Datos de la página actual
+        setCurrentPageRoles(current_page); // Página actual
+        setTotalPages(last_page); // Total de páginas
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        toast.error('Error fetching data');
+        setPaginatedRoles([]); // Limpia los datos en caso de error
+    }
+};
+
+
+
+
+const handleFilterChange = (e) => {
+  const { name, value } = e.target;
+  setFilters(prev => ({ ...prev, [name]: value }));
+};
+
+
+const handleUserPageChange = async (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages) {
+      await getAllUsers(newPage);
+  }
+};
+
+const handleRolePageChange = async (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages) {
+      await getAllRoles(newPage);
+  }
+};
   
   
   const handleEstadoChange = (e) => {
@@ -887,9 +897,8 @@ const handleSeleccionar = async () => {
         
       </div>
       
- 
-       {/* Modal de confirmación si hay campos vacíos */}
-       <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
+  {/* Modal de confirmación si hay campos vacíos */}
+  <Modal show={showConfirmModal && !selectedUserId && !selectedRoleId} onHide={() => setShowConfirmModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Campos Vacíos</Modal.Title>
         </Modal.Header>
@@ -936,18 +945,29 @@ const handleSeleccionar = async () => {
         </Modal.Footer>
       </Modal>
 
-     {/* Modal de búsqueda de usuarios */}
-     <Modal show={showUserSearchModal} onHide={() => setShowUserSearchModal(false)}>
+      {/* Modal de búsqueda de usuarios */}
+      <Modal show={showUserSearchModal} onHide={() => setShowUserSearchModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Buscar Usuario</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <div className="d-flex align-items-center">
           <Form.Control
+            name="username"
             type="text"
             placeholder="Buscar por nombre"
-            value={searchName}
-            onChange={handleUserSearch}
+            value={filters.username}
+            onChange={handleFilterChange}
+            className="me-2"
           />
+          <Button 
+              variant="info me-2" 
+              onClick={getAllUsers}
+              style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+          >
+              <FaSearch className="me-1" /> {/* Ícono de lupa */}
+          </Button>
+          </div>
           <Table striped bordered hover>
             <thead>
               <tr>
@@ -958,41 +978,44 @@ const handleSeleccionar = async () => {
             </thead>
             <tbody>
               {paginatedUsers.length > 0 ? (
-                paginatedUsers.map(user => (
-                  <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>{user.username}</td>
-                    <td>
-                    <div className="d-flex justify-content-around">
-                      <Button variant="info"  onClick={() => handleSelectUser(user)} className="me-2">
-                          <i className="bi bi-check2-square"></i>
-                      </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                  paginatedUsers.map(user => (
+                      <tr key={user.id}>
+                          <td>{user.id}</td>
+                          <td>{user.username}</td>
+                          <td>
+                          <div className="d-flex justify-content-center align-items-center">
+
+                                <Button variant="info" onClick={() => handleSelectUser(user)} className="me-2">
+                                    <i className="bi bi-check2-square"></i>
+                                </Button>
+                            </div>
+                          </td>
+                      </tr>
+                  ))
               ) : (
-                <tr>
-                  <td colSpan="3">No se encontraron usuarios.</td>
-                </tr>
+                  <tr>
+                      <td colSpan="3">No se encontraron usuarios.</td>
+                  </tr>
               )}
-            </tbody>
+          </tbody>
+
           </Table>
           <div className="d-flex justify-content-between mt-3">
-            <Button
-              variant="secondary"
+          <Button
+            variant="secondary"
               onClick={() => handleUserPageChange(currentPageUsers - 1)}
               disabled={currentPageUsers === 1}
-            >
+          >
               Anterior
-            </Button>
-            <Button
+          </Button>
+          <Button
               variant="secondary"
               onClick={() => handleUserPageChange(currentPageUsers + 1)}
-              disabled={currentPageUsers * itemsPerPage >= allUsers.length}
-            >
+              disabled={currentPageUsers === totalPages}
+          >
               Siguiente
-            </Button>
+          </Button>
+
           </div>
         </Modal.Body>
         <Modal.Footer>
@@ -1014,12 +1037,25 @@ const handleSeleccionar = async () => {
           <Modal.Title>Buscar Rol</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <div className="d-flex align-items-center">
           <Form.Control
+            name="name"
             type="text"
             placeholder="Buscar por nombre"
-            value={searchRoleName}
-            onChange={handleRoleSearch}
+            value={filters.name}
+            onChange={handleFilterChange}
+            className="me-2" // Margen derecho para separar del botón
+            style={{ flex: 1 }} // Ajusta el ancho para que ocupe el espacio disponible
           />
+          <Button
+            variant="info"
+            onClick={getAllRoles}
+            style={{ whiteSpace: 'nowrap' }} // Evita que el texto del botón se rompa en varias líneas
+          >
+            <FaSearch className="me-1" /> Buscar {/* Ícono de lupa */}
+          </Button>
+        </div>
+
           <Table striped bordered hover>
             <thead>
               <tr>
@@ -1029,42 +1065,46 @@ const handleSeleccionar = async () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedRoles.length > 0 ? (
+            {paginatedRoles.length > 0 ? (
                 paginatedRoles.map(role => (
-                  <tr key={role.id}>
-                    <td>{role.id}</td>
-                    <td>{role.name}</td>
-                    <td >
-                    <div className="d-flex justify-content-around">
-                      <Button variant="info"  onClick={() => handleSelectRole(role)} className="me-2">
-                          <i className="bi bi-check2-square"></i>
-                      </Button>
-                      </div>
-                    </td>
-                  </tr>
+                    <tr key={role.id}>
+                        <td>{role.id}</td>
+                        <td>{role.name}</td>
+                        <td>
+
+                            <div className="d-flex justify-content-center align-items-center">
+
+                              <Button variant="info" onClick={() => handleSelectRole(role)} className="me-2">
+                                  <i className="bi bi-check2-square"></i>
+                              </Button>
+                            </div>
+                        </td>
+                    </tr>
                 ))
-              ) : (
+            ) : (
                 <tr>
-                  <td colSpan="3">No se encontraron roles.</td>
+                    <td colSpan="3">No se encontraron roles.</td>
                 </tr>
-              )}
-            </tbody>
+            )}
+        </tbody>
+
           </Table>
           <div className="d-flex justify-content-between mt-3">
-            <Button
-              variant="secondary"
-              onClick={() => handleRolePageChange(currentPageRoles - 1)}
-              disabled={currentPageRoles === 1}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => handleRolePageChange(currentPageRoles + 1)}
-              disabled={currentPageRoles * itemsPerPage >= allRoles.length}
-            >
-              Siguiente
-            </Button>
+          <Button
+            variant="secondary"
+            onClick={() => handleRolePageChange(currentPageRoles - 1)}
+            disabled={currentPageRoles === 1}
+        >
+            Anterior
+        </Button>
+        <Button
+            variant="secondary"
+            onClick={() => handleRolePageChange(currentPageRoles + 1)}
+            disabled={currentPageRoles === totalPages}
+        >
+            Siguiente
+        </Button>
+
           </div>
         </Modal.Body>
         <Modal.Footer>
@@ -1079,6 +1119,7 @@ const handleSeleccionar = async () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
 
       {/* Modal de confirmación para enviar la solicitud al usuario */}
       <Modal show={selectedUserId !== null && showConfirmModal} onHide={() => setShowConfirmModal(false)}>

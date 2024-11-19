@@ -189,7 +189,26 @@ class AuthController extends Controller
     ]);
 }
 
-    
+
+public function getUsers(Request $request)
+{
+    // Consulta paginada para obtener los usuarios a mostrar en la tabla
+    $queryPaginated = User::query()
+        ->orderBy('id', 'desc');
+
+    // Aplicar filtros a la consulta paginada
+    if ($request->filled('username')) {
+        $queryPaginated->where('username', 'ILIKE', "%{$request->username}%");
+    }
+
+    // Obtener los datos paginados para mostrar en la tabla
+    $usersPaginated = $queryPaginated->paginate(10);
+
+    // Retornar los datos paginados
+    return response()->json([
+        'users' => $usersPaginated,
+    ]);
+}
 
 
     public function destroy($id)
