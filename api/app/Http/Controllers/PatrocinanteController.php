@@ -203,6 +203,32 @@ class PatrocinanteController extends Controller
     }
     
 
+    public function getPatrocinantes(Request $request)
+    {
+        // 1. Consulta para obtener los datos paginados que se mostrarán en la tabla
+        $queryPaginated = Patrocinante::query()
+            ->orderBy('id', 'desc'); // Ordena por id de forma descendente para mostrar los últimos primero
+    
+        // Aplicar filtros a la consulta paginada
+        
+        if ($request->filled('rif_cedula')) {
+            $queryPaginated->where('rif_cedula', 'LIKE', "%{$request->rif_cedula}%");
+        }
+        if ($request->filled('nombre_patrocinante')) {
+            $queryPaginated->where('nombre_patrocinante', 'ILIKE', "%{$request->nombre_patrocinante}%");
+        }
+      
+        
+        // Obtener los datos paginados para mostrar en la tabla
+        $datosPaginados = $queryPaginated->paginate(2);
+    
+        // Retornar los datos paginados y las estadísticas completas
+        return response()->json([
+            'patrocinantes' => $datosPaginados,
+           
+        ]);
+    }
+    
 
 
 

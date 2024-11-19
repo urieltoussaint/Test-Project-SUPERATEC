@@ -9,6 +9,8 @@ import PaginationTable from '../../components/PaginationTable'; // Importa el co
 import { Card, Row, Col } from 'react-bootstrap'; 
 import { Modal, Table } from 'react-bootstrap';
 import SelectComponent from '../../components/SelectComponent';
+import { FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
+
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
@@ -41,10 +43,9 @@ const EditInscripciones = () => {
     const [patrocinanteSeleccionado2, setPatrocinanteSeleccionado2] = useState(null);
     const [patrocinanteSeleccionado3, setPatrocinanteSeleccionado3] = useState(null);
     const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
+    const [paginatedPatrocinantes, setPaginatedPatrocinantes] = useState([]); // Patrocinantes en la página actual
+    const [currentPagePatrocinantes, setCurrentPagePatrocinantes] = useState(1);
 
-    const [showCursoModal, setShowCursoModal] = useState(false); // Mostrar/ocultar modal de cursos
-
-const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas para cursos
 
 // Cursos que se mostrarán en la página actual
 
@@ -101,15 +102,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         handleCloseModal();
     };
 
-    const handleOpenCursoModal = () => {
-        fetchCursos(currentPage);  // Obtener los cursos de la página actual
-        setShowCursoModal(true);   // Mostrar el modal de cursos
-    };
-
     
-    
-    
-
    
     const [filterOptions, setFilterOptions] = useState({
         cohorteOptions: [],
@@ -132,48 +125,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         
     });
 
-
-    const [filtrosCurso, setFiltrosCurso] = useState({
-        area_id: '',
-        modalidad_id: '',
-        nivel_id: '',
-        tipo_programa_id: '',
-        unidad_id:'',
-        cod:'',
-    });
-
-    useEffect(() => {
-        handleFiltersChange(); // Función que aplicará los filtros cada vez que un filtro cambie
-    }, [filtrosCurso]); // Observa los cambios en los filtros
     
-    const fetchCursos = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            let allCursos = [];
-            let currentPage = 1;
-            let totalPages = 1;
-            
-            // Fetch courses page by page
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/cursos`, {
-                    params: { page: currentPage },
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-    
-                allCursos = [...allCursos, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
-            
-            setCursos(allCursos);  // Guardar todos los cursos en el estado
-            setFilteredCursos(allCursos);  // Inicialmente mostrar todos
-        } catch (error) {
-            console.error('Error fetching courses:', error);
-            setCursos([]);
-        }
-    };
-
-
     
     const getInscripcion = async () => {
         if (!inscripcionId) {
@@ -210,35 +162,6 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         }
     };
     
-
-
-
-
-    const handleFiltersChange = () => {
-        let filtered = cursos;
-    
-        if (filtrosCurso.area_id) {
-            filtered = filtered.filter(curso => curso.area_id === parseInt(filtrosCurso.area_id));
-        }
-        if (filtrosCurso.modalidad_id) {
-            filtered = filtered.filter(curso => curso.modalidad_id === parseInt(filtrosCurso.modalidad_id));
-        }
-        if (filtrosCurso.nivel_id) {
-            filtered = filtered.filter(curso => curso.nivel_id === parseInt(filtrosCurso.nivel_id));
-        }
-        if (filtrosCurso.tipo_programa_id) {
-            filtered = filtered.filter(curso => curso.tipo_programa_id === parseInt(filtrosCurso.tipo_programa_id));
-        }
-        if (filtrosCurso.unidad_id) {
-            filtered = filtered.filter(curso => curso.unidad_id === parseInt(filtrosCurso.unidad_id));
-        }
-        if (filtrosCurso.cod) {
-            filtered = filtered.filter(curso => curso.cod.toLowerCase().includes(filtrosCurso.cod.toLowerCase()));
-        }
-        
-    
-        setFilteredCursos(filtered);  // Actualiza los cursos filtrados
-    };
     
     
 
@@ -271,35 +194,41 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     
     
 
-    const fetchPatrocinantes = async (page = 1) => {
+    const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
+        rif_cedula:'',
+        nombre_patrocinante: '',
+    });
+    const getAllPatrocinantes = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/patrocinantes?page=${page}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const response = await axios.get(`${endpoint}/patrocinantes-paginate`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filtrosPatrocinante, page }, // Incluye `page` en los parámetros
             });
-            const patrocinantesData = Array.isArray(response.data.data) ? response.data.data : []; // Asegurar que sea un array
-            setPatrocinantes(patrocinantesData);  // Guardar los patrocinantes en el estado
-            setTotalPages(response.data.last_page);  // Actualizar el total de páginas desde la respuesta
+    
+            const { data, last_page, current_page } = response.data.patrocinantes;
+    
+            // Actualizar el estado
+            setPaginatedPatrocinantes(data); // Datos de la página actual
+            setCurrentPagePatrocinantes(current_page); // Página actual
+            setTotalPages(last_page); // Total de páginas
+            setPatrocinantes(data);
         } catch (error) {
-            console.error('Error fetching patrocinantes:', error);
-            setPatrocinantes([]); // En caso de error, definir un array vacío
+            console.error('Error fetching users:', error);
+            toast.error('Error fetching data');
+            setPaginatedPatrocinantes([]); // Limpia los datos en caso de error
+            setPatrocinantes([]);
         }
     };
-    const handleNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(prevPage => prevPage + 1);
-            fetchPatrocinantes(currentPage + 1);
+    const handlePatrocinantesPageChange = async (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            await getAllPatrocinantes(newPage);
         }
-    };
-
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(prevPage => prevPage - 1);
-            fetchPatrocinantes(currentPage - 1);
-        }
-    }
+      };
+      const handleFilterPatrocinantesChange = (e) => {
+        const { name, value } = e.target;
+        setFiltrosPatrocinante(prev => ({ ...prev, [name]: value }));
+      };
 
     
 
@@ -312,7 +241,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     
     // Llama a `fetchPatrocinantes` al abrir el modal:
     const handleOpenModal = () => {
-        fetchPatrocinantes(currentPage);  // Obtener los patrocinantes de la página actual
+        getAllPatrocinantes(currentPage);  // Obtener los patrocinantes de la página actual
         setShowModal(true);               // Mostrar el modal
     };
 
@@ -630,61 +559,89 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
 
                     </div>
                     <Modal show={showModal} onHide={handleCloseModal} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>Seleccionar Patrocinante</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form.Control 
-                        type="text" 
-                        placeholder="Buscar por Rif/Cédula" 
-                        onChange={(e) => setSearchCedula(e.target.value)} 
-                        className="mb-3"
-                    />
-                    <Table striped bordered hover>
-                        <thead>
-                            <tr>
-                                <th>Rif/Cédula</th>
-                                <th>Nombre</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredPatrocinantes.map((patrocinante) => (
-                                <tr key={patrocinante.id}>
-                                    <td>{patrocinante.rif_cedula}</td>
-                                    <td>{patrocinante.nombre_patrocinante}</td>
-                                    <td>
-                                    <div className="d-flex justify-content-center align-items-center">
-                                        <Button variant="info"  onClick={() => handleSeleccionarPatrocinante(patrocinante)} className="me-2">
-                                             <i className="bi bi-check2-square"></i>
-                                        </Button>
-                                        </div>
-                                    </td>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Seleccionar Patrocinante</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                    <div className="d-flex align-items-center">
+
+                        <Form.Control 
+                            name="rif_cedula"
+                            type="text" 
+                            placeholder="Buscar por Rif/Cédula" 
+                            value={filtrosPatrocinante.rif_cedula}
+                            onChange={handleFilterPatrocinantesChange} 
+                            className="mb-3"
+                        />
+                        <Form.Control 
+                            name="nombre_patrocinante"
+                            type="text" 
+                            placeholder="Buscar por Nombre" 
+                            value={filtrosPatrocinante.nombre_patrocinante}
+                            onChange={handleFilterPatrocinantesChange} 
+                            className="mb-3"
+                        />
+                        <Button 
+                            variant="info me-2" 
+                            onClick={getAllPatrocinantes}
+                            style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                        >
+                            <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                        </Button>
+                    </div>
+
+                        <Table striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Rif/Cédula</th>
+                                    <th>Nombre</th>
+                                    <th>Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-        </Table>
-                </Modal.Body>
-                <Modal.Footer>
-                <Button 
-                    variant="secondary" 
-                    onClick={handlePreviousPage} 
-                    disabled={currentPage === 1}
-                >
-                    Anterior
-                </Button>
-                <Button 
-                    variant="secondary" 
-                    onClick={handleNextPage} 
-                    disabled={currentPage === totalPages}
-                >
-                    Siguiente
-                </Button>
-                <Button variant="secondary" onClick={handleCloseModal}>
-                    Cerrar
-                </Button>
-            </Modal.Footer>
-            </Modal>
+                            </thead>
+                            <tbody>
+                                
+                                {paginatedPatrocinantes.map((patrocinante) => (
+                                    <tr key={patrocinante.id}>
+                                        <td>{patrocinante.rif_cedula}</td>
+                                        <td>{patrocinante.nombre_patrocinante}</td>
+                                        <td>
+                                            <div className="d-flex justify-content-center align-items-center">
+                                                <Button variant="info" onClick={() => handleSeleccionarPatrocinante(patrocinante)} className="me-2">
+                                                    <i className="bi bi-check2-square"></i>
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                        <div className="d-flex justify-content-between mt-3">
+                            
+
+                            <Button
+                                variant="secondary"
+                                onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes - 1)}
+                                disabled={currentPagePatrocinantes === 1}
+                            >
+                                Anterior
+                            </Button>
+                            
+
+                            <Button
+                                variant="secondary"
+                                onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes + 1)}
+                                disabled={currentPagePatrocinantes === totalPages}
+                            >
+                                Siguiente
+                            </Button>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleCloseModal}>
+                            Cerrar
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
 
             
 

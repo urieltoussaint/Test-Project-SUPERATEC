@@ -37,10 +37,10 @@ class DatosIdentificacionController extends Controller
 public function searchByCedula2(Request $request)
 {
     $query = $request->input('query');
-
-    $datos = VistaDatosIdentificacion::where('cedula_identidad', 'LIKE', "%{$query}%")
-        ->select('id', 'cedula_identidad')
-        ->paginate(10);  // Paginación de 10 elementos por página
+    
+    $datos = DatosIdentificacion::where('cedula_identidad', 'LIKE', "%{$query}%")
+        ->select('id', 'cedula_identidad')  // Solo devuelve la cedula e ID en la búsqueda
+        ->get();
 
     if ($datos->isEmpty()) {
         return response()->json([], 404);

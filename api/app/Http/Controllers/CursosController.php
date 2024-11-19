@@ -39,6 +39,8 @@ class CursosController extends Controller
     }
 
 
+
+
     public function obtenerCursosPorCedula($cedula)
 {
     // Obtener inscripciones que coincidan con la cédula proporcionada, filtrar por status_pay 1 o 2 (pendiente o en proceso)
@@ -75,6 +77,8 @@ class CursosController extends Controller
         ]);
     }
 
+
+    
     public function getCursosWithStatistics(Request $request)
     {
         // Función para aplicar filtros
@@ -231,6 +235,48 @@ class CursosController extends Controller
         ]);
     }
     
+    
+    public function getCursos(Request $request)
+    {
+        // Función para aplicar filtros
+        $applyFilters = function ($query) use ($request) {
+            if ($request->filled('nivel_id')) {
+                $query->where('nivel_id', $request->nivel_id);
+            }
+            if ($request->filled('modalidad_id')) {
+                $query->where('modalidad_id', $request->modalidad_id);
+            }
+            if ($request->filled('tipo_programa_id')) {
+                $query->where('tipo_programa_id', $request->tipo_programa_id);
+            }
+            if ($request->filled('area_id')) {
+                $query->where('area_id', $request->area_id);
+            }
+            if ($request->filled('unidad_id')) {
+                $query->where('unidad_id', $request->unidad_id);
+            }
+            if ($request->filled('cod')) {
+                $query->where('cod', 'ILIKE', "%{$request->cod}%");
+            }
+            if ($request->filled('curso_descripcion')) {
+                $query->where('curso_descripcion', 'ILIKE', "%{$request->curso_descripcion}%");
+            }
+        };
+    
+        // Obtener los datos paginados para la tabla de cursos (sin duplicar por inscritos)
+        $queryPaginated = DB::table('vw_cursos_inscripciones')
+        ->select('curso_id', 'cod', 'curso_descripcion', 'cantidad_horas', 'area_id', 'costo', 'cuotas', 'fecha_inicio')
+        ->distinct();
+        
+        $applyFilters($queryPaginated);
+        $cursosPaginados = $queryPaginated->paginate(8);
+        // Retornar los datos
+        return response()->json([
+            'cursos' => $cursosPaginados,
+          
+            ]
+        );
+    }
     
     
     

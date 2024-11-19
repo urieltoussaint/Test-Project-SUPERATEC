@@ -9,6 +9,7 @@ import PaginationTable from '../../components/PaginationTable'; // Importa el co
 import { Card, Row, Col } from 'react-bootstrap'; 
 import { Modal, Table } from 'react-bootstrap';
 import SelectComponent from '../../components/SelectComponent';
+import { FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
@@ -32,7 +33,6 @@ const InscribirCedula = () => {
     const handleCloseModal = () => setShowModal(false); // Cierra el modal
     const [showModal, setShowModal] = useState(false);  // Estado para mostrar/ocultar modal
     const [patrocinantes, setPatrocinantes] = useState([]); // Estado para lista de patrocinantes
-    const [totalPages, setTotalPages] = useState(1);    // Total de páginas
     const [searchCedula, setSearchCedula] = useState('');    // Estado para controlar búsqueda por cédula
     const [datos, setDatos] = useState(null);
     const [curso, setCurso] = useState(null);
@@ -43,16 +43,54 @@ const InscribirCedula = () => {
     const [paginatedPatrocinantes, setPaginatedPatrocinantes] = useState([]); // Patrocinantes en la página actual
     const [currentPagePatrocinantes, setCurrentPagePatrocinantes] = useState(1);
     const itemsPerPage = 8; // Define el número de elementos por página
+    const [totalPages, setTotalPages] = useState(1) 
+    const [currentPageCursos, setCurrentPageCursos] = useState(1);
+    const [paginatedCursos, setPaginatedCursos] = useState([]); // Usuarios en la página actual
+
 
 
 
     const [showCursoModal, setShowCursoModal] = useState(false); // Mostrar/ocultar modal de cursos
 
-const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas para cursos
+    const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas para cursos
 
 
 
+const [filterOptions, setFilterOptions] = useState({
+    cohorteOptions: [],
+    centroOptions: [],
+    periodoOptions: [],
+    areaOptions: [],
+    modalidadOptions: [],
+    tipoProgramaOptions: [],
+    nivelOptions: [],
+    unidadOptions: [],
+});
 
+const [formData, setFormData] = useState({
+    cohorte_id: '',
+    centro_id: '',
+    periodo_id: '',
+    es_patrocinado: false,
+    grupo:'',
+    observaciones:'',
+    
+});
+
+
+const [filtrosCurso, setFiltrosCurso] = useState({
+    area_id: '',
+    modalidad_id: '',
+    nivel_id: '',
+    tipo_programa_id: '',
+    unidad_id:'',
+    cod:'',
+});
+
+const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
+    rif_cedula:'',
+    nombre_patrocinante: '',
+});
 
     useEffect(() => {
         if (cedula) {
@@ -67,13 +105,53 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     
  
 
-    
-    
 
-    const cursosPaginados = filteredCursos.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const getAllCursos = async (page = 1) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/cursos-paginate`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filtrosCurso, page }, // Incluye `page` en los parámetros
+            });
+    
+            const { data, last_page, current_page } = response.data.cursos;
+    
+            // Actualizar el estado
+            setPaginatedCursos(data); // Datos de la página actual
+            setCurrentPageCursos(current_page); // Página actual
+            setTotalPages(last_page); // Total de páginas
+            setCursos(data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            toast.error('Error fetching data');
+            setPaginatedCursos([]); // Limpia los datos en caso de error
+            setCursos([]);
+        }
+    };
+    
+    const handleFilterCursoChange = (e) => {
+        const { name, value } = e.target;
+        setFiltrosCurso(prev => ({ ...prev, [name]: value }));
+      };
+      const handleFilterPatrocinantesChange = (e) => {
+        const { name, value } = e.target;
+        setFiltrosPatrocinante(prev => ({ ...prev, [name]: value }));
+      };
+      
+      
+      const handleCursosPageChange = async (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            await getAllCursos(newPage);
+        }
+      };
+
+      const handlePatrocinantesPageChange = async (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            await getAllPatrocinantes(newPage);
+        }
+      };
+
+
     
 
     const handleChange = (e) => {
@@ -100,105 +178,9 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
     
 
     const handleOpenCursoModal = () => {
-        fetchCursos(currentPage);  // Obtener los cursos de la página actual
+        getAllCursos(currentPage);  // Obtener los cursos de la página actual
         setShowCursoModal(true);   // Mostrar el modal de cursos
     };
-    
-    
-
-   
-    const [filterOptions, setFilterOptions] = useState({
-        cohorteOptions: [],
-        centroOptions: [],
-        periodoOptions: [],
-        areaOptions: [],
-        modalidadOptions: [],
-        tipoProgramaOptions: [],
-        nivelOptions: [],
-        unidadOptions: [],
-    });
-    
-    const [formData, setFormData] = useState({
-        cohorte_id: '',
-        centro_id: '',
-        periodo_id: '',
-        es_patrocinado: false,
-        grupo:'',
-        observaciones:'',
-        
-    });
-
-
-    const [filtrosCurso, setFiltrosCurso] = useState({
-        area_id: '',
-        modalidad_id: '',
-        nivel_id: '',
-        tipo_programa_id: '',
-        unidad_id:'',
-        cod:'',
-    });
-
-    useEffect(() => {
-        handleFiltersChange(); // Función que aplicará los filtros cada vez que un filtro cambie
-    }, [filtrosCurso]); // Observa los cambios en los filtros
-    
-    const fetchCursos = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            let allCursos = [];
-            let currentPageAPI = 1;
-            let lastPageAPI = 1;
-    
-            do {
-                const response = await axios.get(`${endpoint}/cursos?page=${currentPageAPI}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-    
-                allCursos = allCursos.concat(response.data.data);
-                lastPageAPI = response.data.last_page;
-                currentPageAPI++;
-            } while (currentPageAPI <= lastPageAPI);
-    
-            setCursos(allCursos); // Guardar todos los cursos en el estado
-            setFilteredCursos(allCursos); // Inicializar los cursos filtrados con todos los cursos
-        } catch (error) {
-            console.error('Error fetching courses:', error);
-            setCursos([]);
-        }
-    };
-    
-    const handleFiltersChange = () => {
-        let filtered = cursos;
-    
-        if (filtrosCurso.area_id) {
-            filtered = filtered.filter(curso => curso.area_id === parseInt(filtrosCurso.area_id));
-        }
-        if (filtrosCurso.modalidad_id) {
-            filtered = filtered.filter(curso => curso.modalidad_id === parseInt(filtrosCurso.modalidad_id));
-        }
-        if (filtrosCurso.nivel_id) {
-            filtered = filtered.filter(curso => curso.nivel_id === parseInt(filtrosCurso.nivel_id));
-        }
-        if (filtrosCurso.tipo_programa_id) {
-            filtered = filtered.filter(curso => curso.tipo_programa_id === parseInt(filtrosCurso.tipo_programa_id));
-        }
-        if (filtrosCurso.unidad_id) {
-            filtered = filtered.filter(curso => curso.unidad_id === parseInt(filtrosCurso.unidad_id));
-        }
-        if (filtrosCurso.cod) {
-            filtered = filtered.filter(curso => curso.cod.toLowerCase().includes(filtrosCurso.cod.toLowerCase()));
-        }
-    
-        setFilteredCursos(filtered); // Actualiza los cursos filtrados
-        setCurrentPage(1); // Reinicia la paginación al aplicar un filtro
-    };
-    useEffect(() => {
-        handleFiltersChange();
-    }, [filtrosCurso]);
-    
- 
-    
-    
     
     
 
@@ -229,55 +211,32 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         }
     };
     
-    
-    const getAllPatrocinantes = async () => {
+
+
+    const getAllPatrocinantes = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            let allPatrocinantesData = [];
-            let currentPageAPI = 1;
-            let lastPageAPI = 1;
+            const response = await axios.get(`${endpoint}/patrocinantes-paginate`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filtrosPatrocinante, page }, // Incluye `page` en los parámetros
+            });
     
-            do {
-                const response = await axios.get(`${endpoint}/patrocinantes?page=${currentPageAPI}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+            const { data, last_page, current_page } = response.data.patrocinantes;
     
-                allPatrocinantesData = allPatrocinantesData.concat(response.data.data);
-                lastPageAPI = response.data.last_page;
-                currentPageAPI++;
-            } while (currentPageAPI <= lastPageAPI);
-    
-            setPatrocinantes(allPatrocinantesData); // Guardar todos los patrocinantes
-            setPaginatedPatrocinantes(allPatrocinantesData.slice(0, itemsPerPage)); // Inicializar la paginación
+            // Actualizar el estado
+            setPaginatedPatrocinantes(data); // Datos de la página actual
+            setCurrentPagePatrocinantes(current_page); // Página actual
+            setTotalPages(last_page); // Total de páginas
+            setPatrocinantes(data);
         } catch (error) {
-            console.error('Error fetching patrocinantes:', error);
+            console.error('Error fetching users:', error);
+            toast.error('Error fetching data');
+            setPaginatedPatrocinantes([]); // Limpia los datos en caso de error
+            setPatrocinantes([]);
         }
     };
     
 
-        const handlePatrocinantePageChange = (pageNumber) => {
-            const filteredPatrocinantes = patrocinantes.filter((patrocinante) =>
-                patrocinante.rif_cedula.toLowerCase().includes(searchCedula)
-            );
-        
-            const startIndex = (pageNumber - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            setPaginatedPatrocinantes(filteredPatrocinantes.slice(startIndex, endIndex));
-            setCurrentPagePatrocinantes(pageNumber);
-        };
-        
-        const handleSearchCedula = (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            setSearchCedula(searchTerm);
-        
-            const filteredPatrocinantes = patrocinantes.filter((patrocinante) =>
-                patrocinante.rif_cedula.toLowerCase().includes(searchTerm)
-            );
-            
-            setPaginatedPatrocinantes(filteredPatrocinantes.slice(0, itemsPerPage));
-            setCurrentPagePatrocinantes(1);
-        };
-        
     
     // Llama a `fetchPatrocinantes` al abrir el modal:
     const handleOpenModal = () => {
@@ -295,19 +254,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
         }));
         setShowCursoModal(false); // Cerrar el modal
     };
-    const handleNextCursoPage = () => {
-        if (currentPage * itemsPerPage < filteredCursos.length) {
-            setCurrentPage(currentPage + 1);
-        }
-    };
-    
-    const handlePreviousCursoPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
-    
-    
+
     
     const searchDatos = async () => {
         try {
@@ -657,13 +604,33 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                         <Modal.Title>Seleccionar Patrocinante</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
+                    <div className="d-flex align-items-center">
+
                         <Form.Control 
+                            name="rif_cedula"
                             type="text" 
                             placeholder="Buscar por Rif/Cédula" 
-                            value={searchCedula}
-                            onChange={handleSearchCedula} 
+                            value={filtrosPatrocinante.rif_cedula}
+                            onChange={handleFilterPatrocinantesChange} 
                             className="mb-3"
                         />
+                        <Form.Control 
+                            name="nombre_patrocinante"
+                            type="text" 
+                            placeholder="Buscar por Nombre" 
+                            value={filtrosPatrocinante.nombre_patrocinante}
+                            onChange={handleFilterPatrocinantesChange} 
+                            className="mb-3"
+                        />
+                        <Button 
+                            variant="info me-2" 
+                            onClick={getAllPatrocinantes}
+                            style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                        >
+                            <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                        </Button>
+                    </div>
+
                         <Table striped bordered hover>
                             <thead>
                                 <tr>
@@ -673,6 +640,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                                 </tr>
                             </thead>
                             <tbody>
+                                
                                 {paginatedPatrocinantes.map((patrocinante) => (
                                     <tr key={patrocinante.id}>
                                         <td>{patrocinante.rif_cedula}</td>
@@ -689,17 +657,21 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                             </tbody>
                         </Table>
                         <div className="d-flex justify-content-between mt-3">
+                            
+
                             <Button
                                 variant="secondary"
-                                onClick={() => handlePatrocinantePageChange(currentPagePatrocinantes - 1)}
+                                onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes - 1)}
                                 disabled={currentPagePatrocinantes === 1}
                             >
                                 Anterior
                             </Button>
+                            
+
                             <Button
                                 variant="secondary"
-                                onClick={() => handlePatrocinantePageChange(currentPagePatrocinantes + 1)}
-                                disabled={currentPagePatrocinantes * itemsPerPage >= patrocinantes.length}
+                                onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes + 1)}
+                                disabled={currentPagePatrocinantes === totalPages}
                             >
                                 Siguiente
                             </Button>
@@ -720,18 +692,31 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                 <Modal.Body>
                 <Row className="mb-3 mt-3">
                 <Col>
-                    <Form.Control 
-                        type="text" 
-                        placeholder="Buscar por Código (COD)" 
-                        value={filtrosCurso.cod} 
-                        onChange={(e) => setFiltrosCurso({ ...filtrosCurso, cod: e.target.value })} 
-                    />
+                <div className="d-flex align-items-center">
+                        <Form.Control 
+                            name= "cod"
+                            type="text" 
+                            placeholder="Buscar por Código (COD)" 
+                            value={filtrosCurso.cod} 
+                            onChange={handleFilterCursoChange} 
+                        />
+                        <Button 
+                            variant="info me-2" 
+                            onClick={getAllCursos}
+                            style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                        >
+                            <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                        </Button>
+                    </div>
                 </Col>
             </Row>
 
                     <Row>
                         <Col>
-                            <Form.Select onChange={(e) => setFiltrosCurso({ ...filtrosCurso, area_id: e.target.value })}>
+                            <Form.Select 
+                            name='area_id'
+                            value={filtrosCurso.area_id}
+                            onChange={(e) => setFiltrosCurso({ ...filtrosCurso, area_id: e.target.value })}>
                                 <option value="">Filtrar por Área</option>
                                 {filterOptions.areaOptions.map(area => (
                                     <option key={area.id} value={area.id}>{area.descripcion}</option>
@@ -739,7 +724,10 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                             </Form.Select>
                         </Col>
                         <Col>
-                            <Form.Select onChange={(e) => setFiltrosCurso({ ...filtrosCurso, unidad_id: e.target.value })}>
+                            <Form.Select
+                            name='unidad_id'
+                            value={filtrosCurso.unidad_id}
+                             onChange={(e) => setFiltrosCurso({ ...filtrosCurso, unidad_id: e.target.value })}>
                                 <option value="">Filtrar por Unidad</option>
                                 {filterOptions.unidadOptions.map(unidad => (
                                     <option key={unidad.id} value={unidad.id}>{unidad.descripcion}</option>
@@ -747,7 +735,10 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                             </Form.Select>
                         </Col>
                         <Col>
-                            <Form.Select onChange={(e) => setFiltrosCurso({ ...filtrosCurso, modalidad_id: e.target.value })}>
+                            <Form.Select
+                            name='modalidad_id'
+                            value={filtrosCurso.modalidad_id}
+                             onChange={(e) => setFiltrosCurso({ ...filtrosCurso, modalidad_id: e.target.value })}>
                                 <option value="">Filtrar por Modalidad</option>
                                 {filterOptions.modalidadOptions.map(mod => (
                                     <option key={mod.id} value={mod.id}>{mod.descripcion}</option>
@@ -757,7 +748,10 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                     </Row>
                     <Row>
                         <Col>
-                            <Form.Select onChange={(e) => setFiltrosCurso({ ...filtrosCurso, nivel_id: e.target.value })}>
+                            <Form.Select 
+                            name='nivel_id'
+                            value={filtrosCurso.nivel_id}
+                            onChange={(e) => setFiltrosCurso({ ...filtrosCurso, nivel_id: e.target.value })}>
                                 <option value="">Filtrar por Nivel</option>
                                 {filterOptions.nivelOptions.map(nivel => (
                                     <option key={nivel.id} value={nivel.id}>{nivel.descripcion}</option>
@@ -765,7 +759,10 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                             </Form.Select>
                         </Col>
                         <Col>
-                            <Form.Select onChange={(e) => setFiltrosCurso({ ...filtrosCurso, tipo_programa_id: e.target.value })}>
+                            <Form.Select 
+                            name='tipo_programa_id'
+                            value={filtrosCurso.tipo_programa_id}
+                            onChange={(e) => setFiltrosCurso({ ...filtrosCurso, tipo_programa_id: e.target.value })}>
                                 <option value="">Filtrar por Tipo de Programa</option>
                                 {filterOptions.tipoProgramaOptions.map(tipo => (
                                     <option key={tipo.id} value={tipo.id}>{tipo.descripcion}</option>
@@ -784,7 +781,7 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
                             </tr>
                         </thead>
                         <tbody>
-                            {cursosPaginados.map((curso) => (
+                            {paginatedCursos.map((curso) => (
                                 <tr key={curso.id}>
                                     <td>{curso.cod}</td>
                                     <td>{curso.descripcion}</td>
@@ -803,12 +800,22 @@ const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas 
 
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handlePreviousCursoPage} disabled={currentPage === 1}>
+                    
+                    <Button
+                        variant="secondary"
+                        onClick={() => handleCursosPageChange(currentPageCursos - 1)}
+                        disabled={currentPageCursos === 1}
+                    >
                         Anterior
                     </Button>
-                    <Button variant="secondary" onClick={handleNextCursoPage} disabled={currentPage * itemsPerPage >= filteredCursos.length}>
+                    <Button
+                        variant="secondary"
+                        onClick={() => handleCursosPageChange(currentPageCursos + 1)}
+                        disabled={currentPageCursos === totalPages}
+                    >
                         Siguiente
                     </Button>
+                    
                     <Button variant="secondary" onClick={() => setShowCursoModal(false)}>
                         Cerrar
                     </Button>

@@ -8,6 +8,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import SelectComponent from '../../components/SelectComponent';
 import { Card, Row, Col } from 'react-bootstrap'; 
 import { Modal, Table } from 'react-bootstrap';
+import { FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
@@ -36,19 +37,11 @@ const InscripcionCursos = () => {
     const [patrocinanteSeleccionado1, setPatrocinanteSeleccionado1] = useState(null);
     const [patrocinanteSeleccionado2, setPatrocinanteSeleccionado2] = useState(null);
     const [patrocinanteSeleccionado3, setPatrocinanteSeleccionado3] = useState(null);
+    const itemsPerPage = 8; // Define el número de elementos por página
     const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
     const [paginatedPatrocinantes, setPaginatedPatrocinantes] = useState([]); // Patrocinantes en la página actual
     const [currentPagePatrocinantes, setCurrentPagePatrocinantes] = useState(1);
-    const itemsPerPage = 8; // Define el número de elementos por página
-
-
-
-
-  
     
-
-
-
     const [filterOptions, setFilterOptions] = useState({
         cohorteOptions: [],
         centroOptions: [],
@@ -62,6 +55,10 @@ const InscripcionCursos = () => {
         grupo:'',
         observaciones:''
     });
+    const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
+        rif_cedula:'',
+        nombre_patrocinante: '',
+    });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -70,6 +67,17 @@ const InscripcionCursos = () => {
             [name]: value
         }));
     };
+
+    const handleFilterPatrocinantesChange = (e) => {
+        const { name, value } = e.target;
+        setFiltrosPatrocinante(prev => ({ ...prev, [name]: value }));
+      };
+      
+      const handlePatrocinantesPageChange = async (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            await getAllPatrocinantes(newPage);
+        }
+      };
 
     const handleSeleccionarPatrocinante = (patrocinante) => {
         if (currentPatrocinante === 1) {
@@ -86,8 +94,6 @@ const InscripcionCursos = () => {
     };
     
     
-    
-
 
     useEffect(() => {
         setLoading(true);
@@ -205,27 +211,26 @@ const InscripcionCursos = () => {
     
     
 
-    const getAllPatrocinantes = async () => {
+    const getAllPatrocinantes = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            let allPatrocinantesData = [];
-            let currentPageAPI = 1;
-            let lastPageAPI = 1;
+            const response = await axios.get(`${endpoint}/patrocinantes-paginate`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { ...filtrosPatrocinante, page }, // Incluye `page` en los parámetros
+            });
     
-            do {
-                const response = await axios.get(`${endpoint}/patrocinantes?page=${currentPageAPI}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+            const { data, last_page, current_page } = response.data.patrocinantes;
     
-                allPatrocinantesData = allPatrocinantesData.concat(response.data.data);
-                lastPageAPI = response.data.last_page;
-                currentPageAPI++;
-            } while (currentPageAPI <= lastPageAPI);
-    
-            setPatrocinantes(allPatrocinantesData); // Guardar todos los patrocinantes
-            setPaginatedPatrocinantes(allPatrocinantesData.slice(0, itemsPerPage)); // Inicializar la paginación
+            // Actualizar el estado
+            setPaginatedPatrocinantes(data); // Datos de la página actual
+            setCurrentPagePatrocinantes(current_page); // Página actual
+            setTotalPages(last_page); // Total de páginas
+            setPatrocinantes(data);
         } catch (error) {
-            console.error('Error fetching patrocinantes:', error);
+            console.error('Error fetching users:', error);
+            toast.error('Error fetching data');
+            setPaginatedPatrocinantes([]); // Limpia los datos en caso de error
+            setPatrocinantes([]);
         }
     };
 
@@ -590,64 +595,89 @@ const handleInscripcion = async (action) => {
 
                     </div>
                     <Modal show={showModal} onHide={handleCloseModal} size="lg">
-                        <Modal.Header closeButton>
-                            <Modal.Title>Seleccionar Patrocinante</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <Form.Control 
-                                type="text" 
-                                placeholder="Buscar por Rif/Cédula" 
-                                value={searchCedula}
-                                onChange={handleSearchCedula} 
-                                className="mb-3"
-                            />
-                            <Table striped bordered hover>
-                                <thead>
-                                    <tr>
-                                        <th>Rif/Cédula</th>
-                                        <th>Nombre</th>
-                                        <th>Acciones</th>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Seleccionar Patrocinante</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                    <div className="d-flex align-items-center">
+
+                        <Form.Control 
+                            name="rif_cedula"
+                            type="text" 
+                            placeholder="Buscar por Rif/Cédula" 
+                            value={filtrosPatrocinante.rif_cedula}
+                            onChange={handleFilterPatrocinantesChange} 
+                            className="mb-3"
+                        />
+                        <Form.Control 
+                            name="nombre_patrocinante"
+                            type="text" 
+                            placeholder="Buscar por Nombre" 
+                            value={filtrosPatrocinante.nombre_patrocinante}
+                            onChange={handleFilterPatrocinantesChange} 
+                            className="mb-3"
+                        />
+                        <Button 
+                            variant="info me-2" 
+                            onClick={getAllPatrocinantes}
+                            style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                        >
+                            <FaSearch className="me-1" /> {/* Ícono de lupa */}
+                        </Button>
+                    </div>
+
+                        <Table striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Rif/Cédula</th>
+                                    <th>Nombre</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                {paginatedPatrocinantes.map((patrocinante) => (
+                                    <tr key={patrocinante.id}>
+                                        <td>{patrocinante.rif_cedula}</td>
+                                        <td>{patrocinante.nombre_patrocinante}</td>
+                                        <td>
+                                            <div className="d-flex justify-content-center align-items-center">
+                                                <Button variant="info" onClick={() => handleSeleccionarPatrocinante(patrocinante)} className="me-2">
+                                                    <i className="bi bi-check2-square"></i>
+                                                </Button>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedPatrocinantes.map((patrocinante) => (
-                                        <tr key={patrocinante.id}>
-                                            <td>{patrocinante.rif_cedula}</td>
-                                            <td>{patrocinante.nombre_patrocinante}</td>
-                                            <td>
-                                                <div className="d-flex justify-content-center align-items-center">
-                                                    <Button variant="info" onClick={() => handleSeleccionarPatrocinante(patrocinante)} className="me-2">
-                                                        <i className="bi bi-check2-square"></i>
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                            <div className="d-flex justify-content-between mt-3">
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => handlePatrocinantePageChange(currentPagePatrocinantes - 1)}
-                                    disabled={currentPagePatrocinantes === 1}
-                                >
-                                    Anterior
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => handlePatrocinantePageChange(currentPagePatrocinantes + 1)}
-                                    disabled={currentPagePatrocinantes * itemsPerPage >= patrocinantes.length}
-                                >
-                                    Siguiente
-                                </Button>
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={handleCloseModal}>
-                                Cerrar
+                                ))}
+                            </tbody>
+                        </Table>
+                        <div className="d-flex justify-content-between mt-3">
+                            
+
+                            <Button
+                                variant="secondary"
+                                onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes - 1)}
+                                disabled={currentPagePatrocinantes === 1}
+                            >
+                                Anterior
                             </Button>
-                        </Modal.Footer>
-                    </Modal>
+                            
+
+                            <Button
+                                variant="secondary"
+                                onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes + 1)}
+                                disabled={currentPagePatrocinantes === totalPages}
+                            >
+                                Siguiente
+                            </Button>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleCloseModal}>
+                            Cerrar
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
 
 
 

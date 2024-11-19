@@ -86,6 +86,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('cursos/{id}', [CursosController::class, 'update'])->middleware('role:admin,superuser ,pagos');
     Route::delete('cursos/{id}', [CursosController::class, 'destroy'])->middleware('role:admin');
     Route::get('cursos-estadisticas', [CursosController::class, 'getCursosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('cursos-paginate', [CursosController::class, 'getCursos'])->middleware('role:admin,superuser,invitado,pagos');
 
     
 
@@ -155,6 +156,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
      Route::get('patrocinantes/rif-cedula/{rif_cedula}', [PatrocinanteController::class, 'searchByRifCedula'])->middleware('role:admin,superuser,invitado');
      Route::get('patrocinantes/{id}', [PatrocinanteController::class, 'show'])->middleware('role:admin,superuser,invitado'); // Todos pueden ver
      Route::get('patrocinantes-estadisticas', [PatrocinanteController::class, 'getPatrocinantesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('patrocinantes-paginate', [PatrocinanteController::class, 'getPatrocinantes'])->middleware('role:admin,superuser,invitado,pagos');
+
 
     // Procedencia
     Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado');

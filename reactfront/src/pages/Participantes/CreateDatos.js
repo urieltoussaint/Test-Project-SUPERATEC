@@ -280,7 +280,7 @@ const handleRolePageChange = async (newPage) => {
         },
       });
   
-      if (redirectToCursos===true) {
+      if (redirectToCursos!=false) {
         navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
       } else {
         navigate('/datos');
@@ -402,7 +402,7 @@ const emptyFields = Object.keys(formData).filter(key => {
 
     toast.success('Nuevo Participante agregado con Éxito');
 
-    if (redirectToCursos===true) {
+    if (redirectToCursos!=false) {
       navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
     } else {
       navigate('/datos');
