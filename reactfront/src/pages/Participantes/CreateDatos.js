@@ -22,29 +22,23 @@ const CreateDatos = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);  
   const [showUserRoleModal, setShowUserRoleModal] = useState(false); 
   const [showUserSearchModal, setShowUserSearchModal] = useState(false);  // Modal de búsqueda de usuarios
-  const [users, setUsers] = useState([]);  // Lista de usuarios
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [searchName, setSearchName] = useState('');
+
   const [selectedUserId, setSelectedUserId] = useState(null);
   const navigate = useNavigate();
   const { setLoading } = useLoading();
   const [selectedUserName, setSelectedUserName] = useState(''); // Nombre del usuario seleccionado
   const [showRoleSearchModal, setShowRoleSearchModal] = useState(false);  // Modal de búsqueda de roles
-  const [roles, setRoles] = useState([]);  // Lista de roles
   const [selectedRoleId, setSelectedRoleId] = useState(null);  // ID del rol seleccionado
   const [selectedRoleName, setSelectedRoleName] = useState('');  // Nombre del rol seleccionado
-  const [filteredRoles, setFilteredRoles] = useState([]);
-  const [searchRoleName, setSearchRoleName] = useState(''); // Estado específico para la búsqueda de roles
-  const [previousModal, setPreviousModal] = useState(null);
   const [comentario, setComentario] = useState('');
+  const [redirectToCursos, setRedirectToCursos] = useState('');
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState([]);  // Municipios que se mostrarán según el estado seleccionado
   const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
 
-  const [allUsers, setAllUsers] = useState([]); // Todos los usuarios cargados
   const [paginatedUsers, setPaginatedUsers] = useState([]); // Usuarios en la página actual
   const [currentPageUsers, setCurrentPageUsers] = useState(1);
   
-  const [allRoles, setAllRoles] = useState([]); // Todos los roles cargados
+
   const [paginatedRoles, setPaginatedRoles] = useState([]); // Roles en la página actual
   const [currentPageRoles, setCurrentPageRoles] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
@@ -52,10 +46,6 @@ const CreateDatos = () => {
   
   const itemsPerPage = 8; // Elementos por página
   
-
-
-  
-
 
   const [formData, setFormData] = useState({
     cedula_identidad: '',
@@ -198,30 +188,6 @@ const handleRolePageChange = async (newPage) => {
     });
   };
   
-  
-  
-
-  const handleUserSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchName(value);
-    const filtered = users.filter(user => user.username.toLowerCase().includes(value));
-    setFilteredUsers(filtered);
-  };
-
-  const handleRoleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchRoleName(value); // Actualiza el estado de búsqueda para roles
-    
-    // Filtrar los roles basados en el valor ingresado en el campo de búsqueda
-    const filtered = roles.filter(role => role.name.toLowerCase().includes(value)
-    );
-    
-    // Actualizar el estado de filteredRoles con los resultados filtrados
-    setFilteredRoles(filtered);
-  };
-  
-  
-  
 
   const handleSelectUser = (user) => {
     setSelectedUserId(user.id); // Guardar ID del usuario seleccionado
@@ -238,7 +204,7 @@ const handleRolePageChange = async (newPage) => {
     setShowConfirmModal(true);  // Mostrar modal de confirmación
   };
   
-  const handleConfirmSendRequest = async (redirectToCursos) => {
+  const handleConfirmSendRequest = async () => {
     try {
       let dataToSend = { ...formData }; // Inicia dataToSend con los datos del formulario
       
@@ -249,7 +215,7 @@ const handleRolePageChange = async (newPage) => {
           edad: edadCalculada // Agrega la edad calculada solo si fecha_nacimiento no es nulo
         };
       }
-    
+  
       const token = localStorage.getItem('token');
     
       // 1. Crear el nuevo participante primero
@@ -258,9 +224,9 @@ const handleRolePageChange = async (newPage) => {
           Authorization: `Bearer ${token}`,
         },
       });
- 
+    
       const newParticipantId = response.data.id;  // Obtener el ID del nuevo participante
-  
+    
       // 2. Usar el ID del nuevo participante como clave en la petición
       const requestData = {
         user_id: userId,  // Usuario logueado que envía la solicitud
@@ -272,7 +238,7 @@ const handleRolePageChange = async (newPage) => {
         key: newParticipantId,  // Usar el ID del nuevo participante como clave
         comentario: comentario
       };
-  
+    
       // 3. Enviar la petición
       await axios.post(`${endpoint}/peticiones`, requestData, {
         headers: {
@@ -280,18 +246,20 @@ const handleRolePageChange = async (newPage) => {
         },
       });
   
-      if (redirectToCursos!=false) {
-        navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
+      // Redirigir dependiendo de 'redirectToCursos'
+      if (redirectToCursos===true) {
+        navigate(`/inscribir-cursos/${formData.cedula_identidad}`); // Redirige a inscripción de cursos
       } else {
-        navigate('/datos');
+        navigate('/datos'); // Redirige a la página de datos
       }
-  
-  
     } catch (error) {
       toast.error('Error al enviar la solicitud o los datos');
       console.error('Error al enviar la solicitud o los datos:', error);
     }
   };
+  
+  
+  
   
  
   
@@ -359,63 +327,67 @@ const handleRolePageChange = async (newPage) => {
   };
 
   const handleSubmit = async (e, redirectToCursos) => {
-  e.preventDefault();
+    e.preventDefault(); // Previene el comportamiento por defecto del formulario
+  
     // Define los campos que deben ser ignorados al verificar si están vacíos
-const fieldsToIgnore = ['direccion_email', 'telefono_casa'];
+    const fieldsToIgnore = ['direccion_email', 'telefono_casa'];
+  
+    setLoading(true); // Inicia el proceso de carga
+    // Calcular la edad y agregarla a los datos del formulario
+    const edadCalculada = calcularEdad(formData.fecha_nacimiento);
+    const dataToSend = {
+      ...formData,
+      edad: edadCalculada // Agregar la edad calculada
+    };
+  
+    // Filtra los campos vacíos, excepto los de la lista fieldsToIgnore
+    const emptyFields = Object.keys(formData).filter(key => {
+      if (fieldsToIgnore.includes(key)) return false;
+      return !formData[key];
+    });
+  
+    if (emptyFields.length > 0) {
+      // Si existen campos vacíos, muestra el modal y detiene el proceso
+      setRedirectToCursos(redirectToCursos); // Guardamos el valor de redirección
 
-  setLoading(true);
-  // Calcular la edad y agregarla a los datos del formulario
-  const edadCalculada = calcularEdad(formData.fecha_nacimiento);
-  const dataToSend = {
-    ...formData,
-    edad: edadCalculada // Agregar la edad calculada
-  };
-
- // Filtra los campos vacíos, excepto los de la lista fieldsToIgnore
-const emptyFields = Object.keys(formData).filter(key => {
-  if (fieldsToIgnore.includes(key)) return false;
-  return !formData[key];
-});
-
-
-
-  if (emptyFields.length > 0) {
-    setShowConfirmModal(true);
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem('token'); 
-
-    if (!token) {
-      toast.error('Error: Token no encontrado');
+      setShowConfirmModal(true);
       setLoading(false);
       return;
     }
-
-    await axios.post(`${endpoint}/datos`, dataToSend, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    toast.success('Nuevo Participante agregado con Éxito');
-
-    if (redirectToCursos!=false) {
-      navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
-    } else {
-      navigate('/datos');
+  
+    try {
+      const token = localStorage.getItem('token'); // Obtiene el token del localStorage
+  
+      if (!token) {
+        toast.error('Error: Token no encontrado');
+        setLoading(false);
+        return;
+      }
+  
+      // Envía los datos del formulario al backend
+      await axios.post(`${endpoint}/datos`, dataToSend, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      toast.success('Nuevo Participante agregado con Éxito');
+  
+      // Redirige según el valor de redirectToCursos
+      if (redirectToCursos !== false) {
+        navigate(`/inscribir-cursos/${formData.cedula_identidad}`);
+      } else {
+        navigate('/datos');
+      }
+  
+    } catch (error) {
+      toast.error('Error al crear Participante');
+      console.error('Error creating data:', error);
+    } finally {
+      setLoading(false); // Detiene el proceso de carga
     }
-
-  } catch (error) {
-    toast.error('Error al crear Participante');
-    console.error('Error creating data:', error);
-
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+  
 
 
   const handleBlur = async () => {
@@ -689,34 +661,44 @@ const emptyFields = Object.keys(formData).filter(key => {
 
 
             
-        <div className="button-container mt-3"  >
-            <Button 
-                variant="info"
-                type="submit"
-                className="ms-2"
-                onClick={(e) => handleSubmit(e, false)} // Pasa false para redirigir a "/datos"
+      <div className="button-container mt-3">
+        <Button
+          variant="info"
+          type="submit"
+          className="ms-2"
+          
+          onClick={(e) => { 
 
-            >
-                Guardar
-            </Button>
+            e.preventDefault();  // Prevenir comportamiento por defecto
+            setRedirectToCursos(false);
+            handleSubmit(e, false); // Guardar y redirigir a /datos
+          }}
+        >
+          Guardar
+        </Button>
 
-            <Button 
-                variant="secondary" 
-                onClick={() => navigate('/datos')}
-                className="ms-2"
-            >
-                Volver
-            </Button>
+        <Button
+          variant="secondary"
+          onClick={() => navigate('/datos')}  // Volver simplemente redirige a /datos sin lógica adicional
+          className="ms-2"
+        >
+          Volver
+        </Button>
 
-            <Button 
-                variant="success" 
-                onClick={(e) => handleSubmit(e, true)}
-                className="ms-2"
-            >
-                Siguiente
-            </Button>
-        </div>
-    
+        <Button
+          variant="success"
+          onClick={(e) => { 
+            e.preventDefault();  // Prevenir comportamiento por defecto
+            setRedirectToCursos(true);
+            handleSubmit(e, true); // Siguiente redirige a /inscribir-cursos
+          }}
+          className="ms-2"
+        >
+          Siguiente
+        </Button>
+      </div>
+
+
       </Form>
 
       </div>

@@ -23,17 +23,12 @@ const CreateCursos = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);  
   const [showUserRoleModal, setShowUserRoleModal] = useState(false); 
   const [showUserSearchModal, setShowUserSearchModal] = useState(false);  // Modal de búsqueda de usuarios
-  const [users, setUsers] = useState([]);  // Lista de usuarios
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [searchName, setSearchName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [comentario, setComentario] = useState('');  // Nuevo estado para el comentario
 
-  const [allUsers, setAllUsers] = useState([]); // Todos los usuarios cargados
   const [paginatedUsers, setPaginatedUsers] = useState([]); // Usuarios en la página actual
   const [currentPageUsers, setCurrentPageUsers] = useState(1);
   
-  const [allRoles, setAllRoles] = useState([]); // Todos los roles cargados
   const [paginatedRoles, setPaginatedRoles] = useState([]); // Roles en la página actual
   const [currentPageRoles, setCurrentPageRoles] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
@@ -58,7 +53,6 @@ const CreateCursos = () => {
     tipoProgramaOptions: [],
     modalidadOptions: [],
 });
-  const [selectDataLoaded, setSelectDataLoaded] = useState(false); // Estado para seguimiento de la carga
   const navigate = useNavigate();
   const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
 
@@ -137,10 +131,6 @@ const handleRolePageChange = async (newPage) => {
       await getAllRoles(newPage);
   }
 };
-
-
-
-
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -293,20 +283,6 @@ const handleSeleccionar = async () => {
       toast.error('Error al enviar la solicitud o los datos del curso');
       console.error('Error al enviar la solicitud o los datos del curso:', error);
     }
-  };
-
-  const handleUserSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchName(value);
-    const filtered = users.filter(user => user.username.toLowerCase().includes(value));
-    setFilteredUsers(filtered);
-  };
-
-  const handleRoleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchRoleName(value);
-    const filtered = roles.filter(role => role.name.toLowerCase().includes(value));
-    setFilteredRoles(filtered);
   };
 
   return (
