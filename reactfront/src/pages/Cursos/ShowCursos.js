@@ -189,11 +189,6 @@ useEffect(() => {
   };
   
 
-
-   
-    
-    
-  
     
     const fetchFilterOptions = async () => {
   try {
@@ -235,9 +230,6 @@ const handleFilterChange = (e) => {
 
 
 
-
-
-
     const handleShowModal = (id) => {
         setSelectedId(id);  // Almacena el ID del participante que se va a eliminar
         setShowModal(true); // Muestra el modal
@@ -262,7 +254,7 @@ const handleFilterChange = (e) => {
         } catch (error) {
             setError('Error deleting data');
             console.error('Error deleting data:', error);
-            toast.error('Error al eliminar Participante');
+            toast.error('Error al eliminar Curso');
             setShowModal(false); // Cierra el modal tras el error
         }
     };
@@ -374,7 +366,7 @@ const participantsByAportePatrocinado = [
                     ) :null}
                     
                     {userRole === 'admin' && (
-                        <Button variant="btn btn-danger" onClick={() => handleShowModal(curso.id)} className="me-2">
+                        <Button variant="btn btn-danger" onClick={() => handleShowModal(curso.curso_id)} className="me-2">
                             <i className="bi bi-trash3-fill"></i>
                         </Button>
                     )}
@@ -754,7 +746,7 @@ const participantsByAportePatrocinado = [
                 <Modal.Header closeButton>
                     <Modal.Title>Confirmar eliminación</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>¿Estás seguro de que deseas eliminar este Participante y todos los datos relacionados a él?</Modal.Body>
+                <Modal.Body>¿Estás seguro de que deseas eliminar este Curso y todos los datos relacionados a él?</Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseModal}>
                         Cancelar

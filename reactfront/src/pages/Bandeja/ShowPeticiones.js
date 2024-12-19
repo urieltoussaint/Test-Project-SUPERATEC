@@ -470,7 +470,7 @@ const handleNavigate = (peticiones) => {
                 <Modal.Body>
                     {selectedPeticion && (
                     <>
-                        <p>¿Estás seguro de que deseas rechazar la petición de {selectedPeticion.user?.username}?</p>
+                        <p>¿Estás seguro de que deseas rechazar la petición de {selectedPeticion.user_username}?</p>
                         <Form.Group controlId="rejectComment">
                         <Form.Label>Comentario (opcional)</Form.Label>
                         <Form.Control

@@ -194,7 +194,7 @@ const EditPromocion = () => {
     <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
       <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <h1>Agregar Nueva Promoción</h1>
+      <h1>Actualizar Promoción</h1>
       <Form onSubmit={handleSubmit} className="custom-gutter">
         <script src="{{ mix('js/app.js') }}"></script>
         <div className="row">

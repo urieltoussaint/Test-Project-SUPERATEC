@@ -103,7 +103,7 @@ const ShowPagosCursos = () => {
     
             if (inscripcion) {
                 console.log("Inscripción encontrada:", inscripcion);
-                return { cedula_identidad: inscripcion.cedula_identidad, curso_id: inscripcion.curso_id };
+                return { cedula_identidad: inscripcion.datos_identificacion.cedula_identidad, curso_id: inscripcion.curso_id };
             } else {
                 console.error("No se encontró ninguna inscripción para el curso con ID:", id);
                 throw new Error('No se encontró la inscripción para el curso');
@@ -323,7 +323,7 @@ const ShowPagosCursos = () => {
                    
                     <div className="d-flex justify-content-between align-items-center" style={{ marginBottom: '5px' }}>
                         <h3 style={{ marginBottom: '2px' }}>Participante V{cedulaInscripcion}</h3>  
-                        {(userRole === 'admin' || userRole === 'pagos') && cedulaInscripcion && (
+                        {(userRole === 'admin' || userRole === 'pagos')  && (
                             <div className="d-flex" style={{ gap: '10px' }}>  
                             <Button
                                 variant="info me-2"

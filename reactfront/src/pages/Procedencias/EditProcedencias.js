@@ -196,7 +196,7 @@ const EditProcedencias = () => {
     <div className="row" style={{ marginTop: '50px' }}>
     <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
       <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
-        <h2 className="mb-2">Agregar Nueva Procedencia</h2>
+        <h2 className="mb-2">Actualizar Procedencia</h2>
         <Form onSubmit={handleSubmit} className="custom-gutter">
               <Form.Group controlId="descripcion">
                 <Form.Label>Nombre de Procedencia</Form.Label>

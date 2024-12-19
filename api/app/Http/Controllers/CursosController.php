@@ -42,21 +42,31 @@ class CursosController extends Controller
 
 
     public function obtenerCursosPorCedula($cedula)
-{
-    // Obtener inscripciones que coincidan con la cédula proporcionada, filtrar por status_pay 1 o 2 (pendiente o en proceso)
-    $inscripciones = InformacionInscripcion::where('cedula_identidad', $cedula)
-                    ->whereIn('status_pay', [1, 2])  // Filtrar solo status_pay 1 y 2 (pendiente o en proceso)
-                    ->join('cursos', 'informacion_inscripcion.curso_id', '=', 'cursos.id')
-                    ->select('informacion_inscripcion.*', 'cursos.descripcion', 'cursos.costo')
-                    ->get();
-
-    // Verificar si no se encontraron inscripciones con pagos pendientes
-    if ($inscripciones->isEmpty()) {
-        return response()->json(['error' => 'No hay cursos con pagos pendientes para la cédula proporcionada'], 404);
+    {
+        // Obtener inscripciones que coincidan con la cédula proporcionada en datos_identificacion
+        $inscripciones = InformacionInscripcion::query()
+            ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id') // Relación con datos_identificacion
+            ->join('cursos', 'informacion_inscripcion.curso_id', '=', 'cursos.id') // Relación con cursos
+            ->where('datos_identificacion.cedula_identidad', $cedula) // Filtrar por cédula
+            ->whereIn('informacion_inscripcion.status_pay', [1, 2]) // Filtrar status_pay (pendiente o en proceso)
+            ->select(
+                'informacion_inscripcion.*',
+                'cursos.descripcion as curso_descripcion',
+                'cursos.costo as curso_costo',
+                'cursos.cod as curso_cod',
+                'cursos.cuotas as curso_cuotas',
+                'datos_identificacion.cedula_identidad'
+            )
+            ->get();
+    
+        // Verificar si no se encontraron inscripciones con pagos pendientes
+        if ($inscripciones->isEmpty()) {
+            return response()->json(['error' => 'No hay cursos con pagos pendientes para la cédula proporcionada'], 404);
+        }
+    
+        return response()->json($inscripciones);
     }
-
-    return response()->json($inscripciones);
-}
+    
 
 
     public function getFiltrosCursos()

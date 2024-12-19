@@ -111,6 +111,7 @@ const CreatePago = () => {
           conversion_exonerado: '',
           conversion_restante: ''
         });
+        console.log("alo?",cursos);
         setError(''); // Clear any previous errors
       } catch (error) {
         console.error('Error fetching cursos:', error);
@@ -123,130 +124,79 @@ const CreatePago = () => {
   };
 
 
-  const getAllCursos = async () => {
-    try {
-        const token = localStorage.getItem('token');
-        let allCursos = [];
-        let currentPage = 1;
-        let totalPages = 1;
-
-        // Loop para obtener todas las páginas
-        while (currentPage <= totalPages) {
-            const response = await axios.get(`${endpoint}/cursos?with=area&page=${currentPage}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            });
-
-            allCursos = [...allCursos, ...response.data.data];
-            totalPages = response.data.last_page;
-            currentPage++;
-        }
-
-        console.log('Cursos obtenidos:', allCursos);
-        return allCursos; // Devolver los cursos obtenidos
-    } catch (error) {
-        console.error('Error fetching cursos:', error);
-        return [];
-    }
-
-   
-};
-
-
   const handleCursoChange = async (event) => {
-    const selectedCursoId = event.target.value;
-    const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId, 10));
-    
-    if (!selectedCurso) {
-      console.error('Curso no encontrado');
-      return;
+    const selectedCursoId = event.target.value; // Obtén el ID del curso seleccionado
+    const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId)); // Busca el objeto completo
+  
+    if (selectedCurso) {
+      console.log("Curso seleccionado:", selectedCurso);
+      setCursoSeleccionado(selectedCurso); // Guarda el objeto completo en el estado
+      setCursoId(selectedCurso.id); // Guarda el ID del curso en el estado
+      setFormData(prevData => ({
+        ...prevData,
+        informacion_inscripcion_id: selectedCursoId // Guarda el ID en el formulario
+      }));
     }
-    console.log('Curso seleccionado:', selectedCurso.curso_id);
-    
-    setCursoSeleccionado(selectedCurso);
-    setCursoId(selectedCurso.curso_id);
+ 
+
+    console.log("coñooooooo",selectedCurso);
    
-    
-  
     try {
-      const allCursos = await getAllCursos();
-    
-      // Filtrar el curso exacto por curso_id después de obtener todos los cursos
-      const cursoFromApi = allCursos.find(curso => curso.id === selectedCurso.curso_id);
-  
-      if (!cursoFromApi) {
-        console.error('Curso no encontrado en la API');
-        return;
-      }
-  
-  
-
-
       // Obtener la cantidad de pagos ya realizados
-      const pagosRealizados = await getPagosByCurso(selectedCursoId);
-      setCuotas(pagosRealizados);
-      console.log (cursoFromApi.cuotas);
-      setCuotasCursos(cursoFromApi.cuotas);
+      const { cantidadPagos, ultimoPago } = await getPagosByCurso(selectedCursoId);
+      setCuotas(cantidadPagos);
+      setCuotasCursos(selectedCurso.curso_cuotas);
   
-      // Verificar si estamos en la última cuota
-      const esUltimaCuota = pagosRealizados + 1 === cursoFromApi.cuotas;
-  
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${endpoint}/ultimo_pago/${selectedCursoId}/${cedula}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      const ultimoPago = response.data;
-      const montoTotal = ultimoPago ? parseFloat(ultimoPago.monto_restante) : parseFloat(selectedCurso.costo);
-      
+      let montoTotal = parseFloat(selectedCurso.curso_costo); // Valor original por defecto
+
+      if (cantidadPagos > 0) {
+        // Si hay pagos previos, utilizamos el monto restante del último pago
+        montoTotal = parseFloat(ultimoPago.monto_restante);
+      }
+    
+      // Determinamos si es la última cuota
+      const esUltimaCuota = cantidadPagos + 1 === selectedCurso.curso_cuotas;
+    
+      // Actualizamos el estado del formulario
       setFormData((prevState) => ({
         ...prevState,
-        informacion_inscripcion_id: selectedCursoId,
-        monto_total: montoTotal,
-        monto_restante: montoTotal,
-        conversion_total: calcularConversion(montoTotal),
-        esUltimaCuota,  // Almacenar si es la última cuota
+        monto_total: montoTotal,  // Actualizamos monto total
+        monto_restante: montoTotal, // Aseguramos que el monto restante también se actualice
+        conversion_total: calcularConversion(montoTotal),  // Calculamos la conversión
+        esUltimaCuota,  // Indicamos si es la última cuota
       }));
+    
+      // Logs para depuración
+      console.log('Curso seleccionado:', selectedCurso.curso_cod);
+      console.log('Cuotas del curso:', selectedCurso.curso_cuotas);
+      console.log('Pagos realizados:', cantidadPagos);
+      console.log('Último pago:', ultimoPago);
     } catch (error) {
-      console.error('Error fetching ultimo pago:', error);
-      setFormData((prevState) => ({
-        ...prevState,
-        informacion_inscripcion_id: selectedCursoId,
-        monto_total: parseFloat(selectedCurso.costo),
-        monto_restante: parseFloat(selectedCurso.costo),
-        conversion_total: calcularConversion(selectedCurso.costo),
-        esUltimaCuota: false,  // Asumir que no es la última cuota en caso de error
-      }));
+      console.error('Error fetching curso info:', error);
+      setError('Error al obtener la información del curso');
     }
   };
   
   
 
+ 
+
   const getPagosByCurso = async (informacion_inscripcion_id) => {
     try {
       const token = localStorage.getItem('token');
-      let allPagos = [];
-      let currentPage = 1;
-      let totalPages = 1;
   
-      while (currentPage <= totalPages) {
-        const response = await axios.get(`${endpoint}/pagos`, {
-          params: { curso_id: informacion_inscripcion_id, page: currentPage },
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      // Realizamos la solicitud para obtener pagos
+      const response = await axios.get(`${endpoint}/pagos-inscripcion/${informacion_inscripcion_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
   
-        allPagos = [...allPagos, ...response.data.data];
-        totalPages = response.data.last_page;
-        currentPage++;
-      }
+      const { cantidadPagos, ultimoPago } = response.data; // Ajustamos según la estructura del backend
   
-      // Filtrar por informacion_inscripcion_id
-      const pagosFiltrados = allPagos.filter((reporte) => reporte.informacion_inscripcion_id === parseInt(informacion_inscripcion_id));
-      return pagosFiltrados.length; // Devolver la cantidad de pagos realizados
+      // Retornamos los datos directamente
+      return { cantidadPagos, ultimoPago };
     } catch (error) {
       console.error('Error fetching pagos:', error);
-      return 0;
+      return { cantidadPagos: 0, ultimoPago: null }; // Devolvemos valores por defecto
     }
   };
   
@@ -432,9 +382,6 @@ const CreatePago = () => {
   };
   
 
-
-
-
   const calcularConversion = (monto) => {
     return tasaBcv ? (monto * tasaBcv).toFixed(2) : 'N/A';
   };
@@ -469,7 +416,7 @@ const CreatePago = () => {
               <option value="">Seleccione</option>
               {cursos.map(curso => (
                 <option key={curso.id} value={curso.id}>
-                  {curso.descripcion} - Costo: {curso.costo}
+                  {curso.curso_descripcion} - Costo: {curso.curso_costo}
                 </option>
               ))}
             </Form.Control>
@@ -584,7 +531,7 @@ const CreatePago = () => {
       )}
       {cursoSeleccionado && (
       <div className="mt-2">
-        <p><strong>Cuotas:</strong> {cuotas}/{cuotasCursos}</p>
+        <p><strong>Cuotas:</strong> {cuotas+1 }/{cuotasCursos}</p>
       </div>
     )}
 

@@ -7,7 +7,7 @@ import { useLoading } from '../../components/LoadingContext';
 import { toast, ToastContainer } from 'react-toastify';
 import PaginationTable from '../../components/PaginationTable';
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-import { FaUserFriends, FaClock, FaBook,FaSync } from 'react-icons/fa';  // Importamos íconos de react-icons
+import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';
 
 
@@ -33,15 +33,28 @@ const ShowInscritos = () => {
   const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
   const [selectedCursoStatus, setSelectedCursoStatus] = useState(''); // Estado para el filtro de estado de curso
   const [showExoneradoModal, setShowExoneradoModal] = useState(false); // Controla el modal de exonerado
-const [selectedExoneradoId, setSelectedExoneradoId] = useState(null); // Guarda el ID de la inscripción a exonerar
-const [showRetiradoModal, setShowRetiradoModal] = useState(false); // Estado para el modal de Retirado
-const [selectedRetiradoId, setSelectedRetiradoId] = useState(null); // Estado para el ID de inscripción
+  const [selectedExoneradoId, setSelectedExoneradoId] = useState(null); // Guarda el ID de la inscripción a exonerar
+  const [showRetiradoModal, setShowRetiradoModal] = useState(false); // Estado para el modal de Retirado
+  const [selectedRetiradoId, setSelectedRetiradoId] = useState(null); // Estado para el ID de inscripción
+  const [centroOptions, setCentroOptions] = useState([]);
+  const [cohorteOptions, setCohorteOptions] = useState([]);
+  const [periodoOptions, setPeriodoOptions] = useState([]);
+    const [statistics, setStatistics] = useState({});
+      const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
 
+
+    const [filters, setFilters] = useState({
+            cedula_identidad: '',
+            status_pay: '',
+            status_curso: '',
+            cohorte_id: '',
+            centro_id: '',
+        });
 
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([getInscritos(), getCursoCod()]).finally(() => {
+    Promise.all([fetchFilterOptions(),getInscritos(), getCursoCod()]).finally(() => {
       setLoading(false);
     });
   }, [cursoId]);
@@ -49,9 +62,8 @@ const [selectedRetiradoId, setSelectedRetiradoId] = useState(null); // Estado pa
   // Obtener los detalles del curso por ID
   const getCursoCod = async () => {
     try {
-      
-      const token = localStorage.getItem('token');
 
+      const token = localStorage.getItem('token');
       // Hacer una solicitud solo para el curso específico
       const response = await axios.get(`${endpoint}/cursos/${cursoId}`, {
         headers: {
@@ -71,37 +83,38 @@ const [selectedRetiradoId, setSelectedRetiradoId] = useState(null); // Estado pa
       setError('Error al obtener el código del curso');
     }
   };
-
-  const getInscritos = async () => {
+  const fetchFilterOptions = async () => {
     try {
-        let relationsArray = [
-            'datos_identificacion', // Añadir más relaciones si las necesitas
-        ];
-        const relations = relationsArray.join(','); // Relaciones concatenadas
         const token = localStorage.getItem('token');
-        let allInscripciones = [];
-        let currentPage = 1;
-        let totalPages = 1;
+        const response = await axios.get(`${endpoint}/filter-inscripciones`, { headers: { Authorization: `Bearer ${token}` } });
 
-        // Loop para obtener todas las páginas de inscripciones relacionadas con el curso
-        while (currentPage <= totalPages) {
-            const response = await axios.get(`${endpoint}/cursos_inscripcion?curso_id=${cursoId}&with=${relations}&page=${currentPage}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+        setCentroOptions(response.data.centro);
+        setCohorteOptions(response.data.cohorte);
+        setPeriodoOptions(response.data.periodo);
 
-            allInscripciones = [...allInscripciones, ...response.data.data];
-            totalPages = response.data.last_page;
-            currentPage++;
-        }
-
-        setInscripciones(allInscripciones);
-        setFilteredInscripciones(allInscripciones);
     } catch (error) {
-        setError('Error fetching data');
-        console.error('Error fetching data:', error);
+        setError('Error fetching filter options');
+        console.error('Error fetching filter options:', error);
     }
+};
+
+const getInscritos = async (page = 1) => {
+  try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${endpoint}/cursos_inscripcion-filtros/${cursoId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { ...filters, page }, // Incluye `page` y otros filtros en los parámetros
+      });
+      const estadisticas = response.data.estadisticas || {};
+      setInscripciones(Array.isArray(response.data.datos.data) ? response.data.datos.data : []);
+      setStatistics(estadisticas);
+      setTotalPages(response.data.datos.last_page || 1); // Actualiza el total de páginas
+  } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Error fetching data');
+      setInscripciones([]);
+      setStatistics({});
+  }
 };
 
 
@@ -155,8 +168,8 @@ const handleCloseCompleteModal = () => {
   setShowCompleteModal(false);
 };
 
-  
-  // 
+
+  //
 const handleMarkAsComplete = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -169,7 +182,7 @@ const handleMarkAsComplete = async () => {
     });
     toast.success('El participante ha sido marcado como "Egresado/Certificado"');
     setFilteredInscripciones(
-      filteredInscripciones.map(inscripcion => 
+      filteredInscripciones.map(inscripcion =>
         inscripcion.id === selectedCompleteId ? { ...inscripcion, status_curso:2 } : inscripcion
       )
     );
@@ -194,7 +207,7 @@ const handleMarkAsExonerado = async () => {
     });
     toast.success('El participante ha sido marcado como "Exonerado"');
     setFilteredInscripciones(
-      filteredInscripciones.map(inscripcion => 
+      filteredInscripciones.map(inscripcion =>
         inscripcion.id === selectedExoneradoId ? { ...inscripcion, status_pay: 5 } : inscripcion
       )
     );
@@ -247,41 +260,6 @@ const handleMarkAsRetirado = async () => {
     );
   };
 
-  const [selectedPayStatus, setSelectedPayStatus] = useState(''); // Estado para el filtro de estado de pago
-
-  const handlePayStatusChange = (e) => {
-    const value = e.target.value;
-    setSelectedPayStatus(value);
-    applyPayStatusFilter(value);
-  };
-
-  const applyPayStatusFilter = (statusValue) => {
-    let filtered = [...inscripciones];  // Inicializar `filtered` primero
-  
-    if (statusValue) {
-      filtered = filtered.filter(inscripcion => inscripcion.status_pay === statusValue);
-    }
-  
-    if (filtered.length === 0) {
-      setFilteredInscripciones([]);  // Asegura que se actualice con un array vacío si no hay resultados
-    } else {
-      setFilteredInscripciones(filtered);  // Actualiza con los datos filtrados
-    }
-  
-    setCurrentPage(1);
-  };
-  const applyCursoStatusFilter = (statusValue) => {
-    let filtered = [...inscripciones];  // Inicializar con todas las inscripciones
-    
-    if (statusValue) {
-      filtered = filtered.filter(inscripcion => inscripcion.status_curso === statusValue);
-    }
-    
-    setFilteredInscripciones(filtered.length ? filtered : []);  // Actualiza con los datos filtrados
-    setCurrentPage(1);  // Reinicia la paginación
-  };
-  
-  
 
   // Mostrar el modal para confirmar la eliminación
   const handleShowModal = (id) => {
@@ -321,11 +299,21 @@ const handleCloseRetiradoModal = () => {
       setShowModal(false); // Cierra el modal tras el error
     }
   };
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+};
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    getInscritos(page);
+
+};
 
   const loadData = async () => {
     setLoadingData(true); // Inicia el estado de carga
     try {
-        await getInscritos(); // Espera a que getAllDatos haga la solicitud y actualice los datos
+        await (getInscritos(),fetchFilterOptions()); // Espera a que getAllDatos haga la solicitud y actualice los datos
     } catch (error) {
         console.error('Error recargando los datos:', error); // Maneja el error si ocurre
     } finally {
@@ -333,120 +321,54 @@ const handleCloseRetiradoModal = () => {
     }
 };
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchCedula(value);
-    const filtered = inscripciones.filter(inscripcion =>
-      inscripcion.cedula_identidad.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredInscripciones(filtered);
+const estadoPago = statistics?.estadoPagos?.map(({ nombre, cantidad }) => {
+  let color;
+
+  if (nombre === "No pagado (Rojo)") color = "red"; // Naranja
+  if (nombre === "En proceso (Naranja)") color = "#FFA500"; // Verde
+  if (nombre === "Pagado (Verde)") color = "green"; // Rojo
+  if (nombre === "Patrocinado (Azul)") color = "blue"; // Rojo
+  if (nombre === "Exonerado (Rosado)") color = "#fc53c4"; // Rojo
+  
+ 
+  return{
+  name: nombre,
+  value: cantidad, // Clave que PieChart espera para los valores numéricos
+  color
   };
+});
 
-  // Filtrar todos los inscritos menos los que han culminado (status_pay = 4)
-const applyNonCulminadosFilter = () => {
-  const filtered = inscripciones.filter(inscripcion => inscripcion.status_pay !== '4');
-  setFilteredInscripciones(filtered);
-};
+const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
+  let color;
+  if (nombre === "No finalizado") color = "#FFA500"; // Naranja
+  if (nombre === "Egresado/Certificado") color = "green"; // Verde
+  if (nombre === "Retirado") color = "#FF0000"; // Rojo
 
-
-// Si hay filtros activos, usa los datos filtrados; de lo contrario, usa todos los datos
-const dataToUse = filteredInscripciones.length > 0 ? filteredInscripciones : [];
-const totalIns = dataToUse.length;
-const mayorEdad = dataToUse.length > 0 ? Math.max(...dataToUse.map(d => d?.datos_identificacion?.edad || 0)) : 0;
-const menorEdad = dataToUse.length > 0 ? Math.min(...dataToUse.map(d => d?.datos_identificacion?.edad || 0)) : 0;
-const promedioEdad = dataToUse.length > 0 ? dataToUse.reduce((acc, curr) => acc + (curr?.datos_identificacion?.edad || 0), 0) / dataToUse.length : 0;
-
-const statusPayCounts = {
-  noPagado: dataToUse.filter(d => d.status_pay === '1').length,
-  enProceso: dataToUse.filter(d => d.status_pay === '2').length,
-  pagado: dataToUse.filter(d => d.status_pay === '3').length,
-  patrocinado: dataToUse.filter(d => d.status_pay === '4').length,
-  exonerado: dataToUse.filter(d => d.status_pay === '5').length,
-};
+  return {
+    name: nombre,
+    value: cantidad,
+    color,
+  };
+});
 
 
-const pieData = [
-  { name: 'No Pagado', value: statusPayCounts.noPagado, color: '#FF4A4A' },    // Rojo
-  { name: 'En Proceso', value: statusPayCounts.enProceso, color: '#FFA500' },  // Naranja
-  { name: 'Pagado', value: statusPayCounts.pagado, color: '#28A745' },         // Verde
-  { name: 'Patrocinado', value: statusPayCounts.patrocinado, color: '#007BFF' }, // Azul
-  { name: 'Exonerado', value: statusPayCounts.exonerado, color: '#FF69B4' },   // Rosado
-];
+ 
 
-
-const genderCounts = {
-  masculino: dataToUse.filter(d => d?.datos_identificacion?.genero_id === 1).length,
-  otros: dataToUse.filter(d => d?.datos_identificacion?.genero_id === 2).length,
-  femenino: dataToUse.filter(d => d?.datos_identificacion?.genero_id === 3).length,
-};
-
-const barData = [
-  { name: 'Masculino', value: genderCounts.masculino, color: '#007BFF' },
-  { name: 'Otros', value: genderCounts.otros, color: '#FFA500' },
-  { name: 'Femenino', value: genderCounts.femenino, color: '#FF69B4' },
-];
-
-
-const cursoStatusCounts = {
-  noFinalizado: dataToUse.filter(d => d.status_curso === '1').length,
-  egresado: dataToUse.filter(d => d.status_curso === '2').length,
-  retirado: dataToUse.filter(d => d.status_curso === '3').length,
-};
-
-const cursoPieData = [
-  { name: 'No Finalizado', value: cursoStatusCounts.noFinalizado, color: '#FFA500' },
-  { name: 'Egresado/Certificado', value: cursoStatusCounts.egresado, color: '#28A745' },
-  { name: 'Retirado', value: cursoStatusCounts.retirado, color: '#FF4A4A' },
-];
-
-
-const getFilteredDataByInscripcionDate = () => {
-  const today = moment();
-  const filteredData = filteredInscripciones.filter(inscripcion => {
-    const inscripcionDate = moment(inscripcion.fecha_inscripcion);
-    return inscripcionDate.isAfter(today.clone().subtract(range, 'days'));
-  });
-
-  // Agrupar por fecha
-  const dateCounts = filteredData.reduce((acc, inscripcion) => {
-    const fecha = moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD');
-    acc[fecha] = (acc[fecha] || 0) + 1;
-    return acc;
-  }, {});
-
-  return Object.keys(dateCounts).map(date => ({
-    fecha: date,
-    count: dateCounts[date]
-  }));
-};
-const handleCursoStatusChange = (e) => {
-  const value = e.target.value;
-  setSelectedCursoStatus(value);
-  applyCursoStatusFilter(value);
-};
-
-
-
-
-
-
-
-  const columns = ["Estado de Pago","Estado de Curso", "Cédula", "Fecha de Inscripción", "Nombres", "Apellidos", "Acciones Nómina","Acciones"];
+  const columns = ["Estado de Pago","Estado de Curso", "Cédula", "Fecha de Inscripción", "Nombres", "Apellidos", "Acciones Pago","Acciones Curso","Acciones"];
 
   const renderItem = (inscripcion) => (
     <tr key={inscripcion.id}>
-      
-      <td className="text-center">{renderStatusPayDot(inscripcion.status_pay)}</td>
-      <td className="text-center">{renderStatusCursoTriangle(inscripcion.status_curso)}</td> 
 
-      <td>{inscripcion.cedula_identidad}</td>
+      <td className="text-center">{renderStatusPayDot(inscripcion.status_pay)}</td>
+      <td className="text-center">{renderStatusCursoTriangle(inscripcion.status_curso)}</td>
+      <td>{inscripcion?.datos_identificacion?.cedula_identidad}</td>
       <td>{moment(inscripcion.fecha_inscripcion).format('YYYY-MM-DD')}</td>
       <td>{inscripcion?.datos_identificacion?.nombres}</td>
       <td>{inscripcion?.datos_identificacion?.apellidos}</td>
       <td>
       <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
-     
-   
+
+
         {/* Botón Exonerado */}
         {(userRole === 'admin' || userRole === 'superuser') && inscripcion.status_pay !== '5' && (
          <Button
@@ -468,19 +390,23 @@ const handleCursoStatusChange = (e) => {
        >
          <i className="bi bi-coin"></i>
        </Button>
-       
-        )}
 
+        )}
+        </div>
+        </td>
+        <td>
+        <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
         {/* Botón para marcar como culminado si el rol es 'admin' o 'superuser' y status_pay es 3 */}
-        {(userRole === 'admin' || userRole === 'superuser') && (inscripcion.status_curso!=='2') && (
+        {(userRole === 'admin' || userRole === 'superuser') && (inscripcion.status_curso!=='2'  )  && (
           <Button variant="btn btn-success" onClick={() => handleShowCompleteModal(inscripcion.id)} className="me-1">
             <i className="bi bi-check-circle"></i>
           </Button>
         )}
 
 
-        {/* 
+        {/*
         Botón Retirado */}
+         {(userRole === 'admin' || userRole === 'superuser') && (inscripcion.status_curso!=='2'  )  && (
         <Button
           onClick={() => handleShowRetiradoModal(inscripcion.id)}
           className="me-1"
@@ -500,13 +426,14 @@ const handleCursoStatusChange = (e) => {
         >
           <i className="bi bi-x-lg"></i> {/* Icono de "X" */}
         </Button>
+        )}
 
         </div>
 
       </td>
       <td>
       <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
-     
+
       <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/show/${inscripcion.id}`)} className="me-1">
           <i className="bi bi-eye"></i>
         </Button>
@@ -514,14 +441,14 @@ const handleCursoStatusChange = (e) => {
         <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${inscripcion.id}`)} className="me-1">
           <i className="bi bi-currency-exchange"></i>
         </Button>
-        
+
         {/* Botón para editar si el rol es 'admin' */}
         {(userRole === 'admin' || userRole === 'superuser') && (
           <Button variant="btn btn-warning" onClick={() => navigate(`/inscritos/edit/${inscripcion.id}/${inscripcion.cedula_identidad}`)} className="me-1">
             <i className="bi bi-pencil-fill"></i>
           </Button>
         )}
-       
+
         {/* Botón para eliminar si el rol es 'admin' */}
         {userRole === 'admin' && (
           <Button variant="btn btn-danger" onClick={() => handleShowModal(inscripcion.id)} className="me-1">
@@ -533,22 +460,22 @@ const handleCursoStatusChange = (e) => {
 
       </td>
 
-      
+
     </tr>
   );
 
   return (
     <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
-    <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
-        {/* Total de Uduarios */}
+    <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}>
+        {/* Total de Inscritos */}
         <div className="stat-card" style={{  }}>
             <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><FaUserFriends /></div>
-            <div className="stat-number" style={{ color: 'rgba(255, 74, 74, 0.9) ', fontSize: '1.8rem' }}>{totalIns}</div>
+            <div className="stat-number" style={{ color: 'rgba(255, 74, 74, 0.9) ', fontSize: '1.8rem' }}>{statistics?.totalInscritos}</div>
             <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total de Inscritos</h4>
-            
+
         </div>
 
-        {/* Promedio de Antigüedad */} 
+        {/* Promedio de Antigüedad */}
         <div className="stat-card" style={{
                     padding: '8px',
                     margin: '0 10px',
@@ -568,27 +495,27 @@ const handleCursoStatusChange = (e) => {
                         padding: '0 8px',  // Reducimos el padding para que esté más junto
                     }}>
                         <div style={{ color: '#5cb85c', fontWeight: 'bold' }}> {/* Color verde para menor */}
-                            <span>↓ Menor:</span> {menorEdad} años
+                            <span>↓ Menor:</span> {statistics.menorEdad} años
                         </div>
                         <div style={{ color: '#d9534f', fontWeight: 'bold' }}> {/* Color rojo para mayor */}
-                            <span>↑ Mayor:</span> {mayorEdad} años
+                            <span>↑ Mayor:</span> {statistics.mayorEdad} años
                         </div>
                     </div>
 
                     {/* Promedio de Edad */}
                     <div className="stat-number" style={{
-                        color: '#ffda1f',  
+                        color: '#ffda1f',
                         fontSize: '1.7rem',  // Reducimos el tamaño de la fuente
                         fontWeight: 'bold',
                         textAlign: 'center',
                         marginBottom: '3px',  // Reducimos el margen
                     }}>
-                        {promedioEdad.toFixed(0)} Años
+                        {statistics.promedioEdad.toFixed(0)} Años
                     </div>
 
                     <h4 style={{
                         fontSize: '0.9rem',  // Reducimos el tamaño del texto
-                        color: '#6c757d',  
+                        color: '#6c757d',
                         textAlign: 'center',
                         marginBottom: '6px',  // Reducimos el margen inferior
                     }}>
@@ -598,7 +525,7 @@ const handleCursoStatusChange = (e) => {
                     {/* Barra de Progreso */}
                     <div style={{ width: '75%', margin: '0 auto' }}>
                         <ProgressBar
-                            now={(promedioEdad * 100) /mayorEdad} 
+                            now={(statistics.promedioEdad * 100) /statistics.mayorEdad}
                             variant="warning"
                             style={{
                                 height: '8px',  // Reducimos la altura de la barra
@@ -615,24 +542,42 @@ const handleCursoStatusChange = (e) => {
     <div className="row" style={{ marginTop: '10px' }}>
       {/* Columna para la tabla */}
       <div className="col-lg-11 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
-          <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}> 
+          <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
           <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
           <h1>Inscritos del Curso {cursoCod}</h1>
         <div className="d-flex align-items-center justify-content-between"> {/* Alineación horizontal */}
-        <Button
-              variant="info me-2"
-              onClick={loadData}
-              disabled={loadingData} // Deshabilita el botón si está cargando
-              style={{ padding: '5px 10px', width: '90px' }} // Ajusta padding y ancho
 
-            >
-              {/* Icono de recarga */}
-              {loadingData ? (
-                <FaSync className="spin" /> // Ícono girando si está cargando
-              ) : (
-                <FaSync />
-              )}
-          </Button>
+          <Form.Control
+              type="text"
+              placeholder="Buscar por Cédula"
+              value={filters.cedula_identidad} // Conecta el campo de cédula al estado de filtros
+              name="cedula_identidad"
+              onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
+              className="me-2"
+          />
+                  <Button
+                  variant="info me-2"
+                  onClick={loadData}
+                  disabled={loadingData} // Deshabilita el botón si está cargando
+                  style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+
+              >
+
+
+                  {/* Icono de recarga */}
+                  {loadingData ? (
+                  <FaSync className="spin" /> // Ícono girando si está cargando
+                  ) : (
+                  <FaSync />
+                  )}
+              </Button>
+              <Button
+                  variant="info me-2"
+                  onClick={getInscritos}
+                  style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+              >
+                  <FaSearch className="me-1" /> {/* Ícono de lupa */}
+              </Button>
           {(userRole === 'admin' || userRole === 'superuser' ) && (
             <Button variant="btn custom" onClick={() => navigate(`/inscribir/${cursoId}`)} className="btn-custom me-2" style={{ fontSize: '0.9rem' }}>
               <i className="bi bi-person-plus-fill"></i> Nuevo
@@ -648,41 +593,73 @@ const handleCursoStatusChange = (e) => {
         {/* Alinear el buscador y el filtro en la misma fila con el nuevo botón a la derecha */}
     <div className="d-flex justify-content-between align-items-center mb-3">
       <div className="d-flex align-items-center" style={{ gap: '10px' }}> {/* Ajusta el espacio entre el buscador y el filtro */}
-        <Form.Control
-          type="text"
-          placeholder="Buscar por cédula"
-          value={searchCedula}
-          onChange={handleSearchChange}
-          style={{ width: '250px' }}
-        />
+
         <Form.Select
-          value={selectedPayStatus}
-          onChange={handlePayStatusChange}
+            name="centro_id"
+            value={filters.centro_id}
+            onChange={handleFilterChange}
+            className="me-2"
+        >
+            <option value="">Centro</option>
+            {centroOptions?.map(option => (
+                <option key={option.id} value={option.id}>{option.descripcion}</option>
+            ))}
+
+        </Form.Select>
+        <Form.Select
+            name="cohorte_id"
+            value={filters.cohorte_id}
+            onChange={handleFilterChange}
+            className="me-2"
+        >
+            <option value="">Cohorte</option>
+            {cohorteOptions?.map(option => (
+                <option key={option.id} value={option.id}>{option.descripcion}</option>
+            ))}
+
+        </Form.Select>
+        <Form.Select
+            name="periodo_id"
+            value={filters.periodo_id}
+            onChange={handleFilterChange}
+            className="me-2"
+        >
+            <option value="">Periodo</option>
+            {periodoOptions?.map(option => (
+                <option key={option.id} value={option.id}>{option.descripcion}</option>
+            ))}
+
+        </Form.Select>
+        <Form.Select
+          name="status_pay"
+          value={filters.status_pay}
+          onChange={handleFilterChange}
           className="me-2"
           style={{ width: 'auto' }}
         >
-          <option value="">Filtrar por estado de pago</option>
+          <option value="">Estado de pago</option>
           <option value="1">No pagado (Rojo)</option>
           <option value="2">En proceso (Naranja)</option>
           <option value="3">Pagado (Verde)</option>
-          <option value="4">Patrocinado (Azul)</option> 
-          <option value="5">Exonerado (Rosado)</option> 
+          <option value="4">Patrocinado (Azul)</option>
+          <option value="5">Exonerado (Rosado)</option>
         </Form.Select>
         <Form.Select
-          value={selectedCursoStatus}
-          onChange={handleCursoStatusChange}
+          name="status_curso"
+          value={filters.status_curso}
+          onChange={handleFilterChange}
           className="me-2"
           style={{ width: 'auto' }}
         >
-          <option value="">Filtrar por estado de curso</option>
+          <option value="">Estado de curso</option>
           <option value="1">No Finalizado (Naranja)</option>
           <option value="2">Egresado/Certificado (Verde)</option>
           <option value="3">Retirado (Rojo)</option>
         </Form.Select>
 
       </div>
- 
-      
+
+
     </div>
 
 
@@ -700,19 +677,22 @@ const handleCursoStatusChange = (e) => {
         <span className="status-triangle withdrawn ms-3"></span> Retirado (Rojo)
       </div>
 
-      
+
 
       {error && <Alert variant="danger">{error}</Alert>}
 
       {/* Tabla paginada */}
+
+
       <PaginationTable
-        data={filteredInscripciones}  // Datos filtrados
-        itemsPerPage={itemsPerPage}
-        columns={columns}
-        renderItem={renderItem}
-        currentPage={currentPage}  // Página actual
-        onPageChange={setCurrentPage}  // Función para cambiar de página
-        />
+          data={inscripciones}
+          itemsPerPage={itemsPerPage}
+          columns={columns}
+          renderItem={renderItem}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          totalPages={totalPages}  // <--- Añade esta línea si aún no está
+      />
 
       {/* Modal de eliminación */}
       <Modal show={showModal} onHide={handleCloseModal}>
@@ -797,7 +777,7 @@ const handleCursoStatusChange = (e) => {
                     <ResponsiveContainer width="100%" height={400}>
                       <PieChart>
                         <Pie
-                          data={pieData}
+                          data={estadoPago}
                           dataKey="value"
                           nameKey="name"
                           cx="50%"
@@ -806,7 +786,7 @@ const handleCursoStatusChange = (e) => {
                           fill="#8884d8"
                           label
                         >
-                          {pieData.map((entry, index) => (
+                          {estadoPago.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
@@ -820,7 +800,7 @@ const handleCursoStatusChange = (e) => {
               <ResponsiveContainer width="100%" height={400}>
                 <PieChart>
                   <Pie
-                    data={cursoPieData}
+                    data={estadoCurso}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
@@ -830,7 +810,7 @@ const handleCursoStatusChange = (e) => {
                     fill="#8884d8"
                     label
                   >
-                    {cursoPieData.map((entry, index) => (
+                    {estadoCurso.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -839,39 +819,11 @@ const handleCursoStatusChange = (e) => {
               </ResponsiveContainer>
             </div>
         </div>
-        <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
-            <div className="chart-box" style={{ flex: '1 1 100%', maxWidth: '100%', marginRight: '10px' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <h4 style={{ fontSize: '1.2rem' }}>Registro de Participantes</h4>
-              {/* Selector de rango de fechas */}
-              <Form.Select 
-                value={range} 
-                onChange={(e) => setRange(parseInt(e.target.value))} 
-                style={{ width: '150px', fontSize: '0.85rem' }}
-              >
-                <option value={7}>Últimos 7 días</option>
-                <option value={30}>Últimos 30 días</option>
-                <option value={60}>Últimos 60 días</option>
-              </Form.Select>
-            </div>
-            
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={getFilteredDataByInscripcionDate()} margin={{ right: 30, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="fecha" />
-                <YAxis />
-                <Tooltip />
-                <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-              </AreaChart>
-            </ResponsiveContainer>  
-            </div>
-
-            
-        </div>
+        
     </div>
 
         </div>
-        
+
 
     </div>
   );

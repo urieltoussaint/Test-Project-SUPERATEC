@@ -12,15 +12,9 @@ class InformacionInscripcion extends Model
         'centro_id',
         'periodo_id',
         'fecha_inscripcion',
-        'area_id',
-        'unidad_id',
-        'modalidad_id',
-        'nivel_id',
-        'tipo_programa_id',
         'es_patrocinado',
         'grupo',
         'observaciones',
-        'cedula_identidad',
         'status_pay',
         'datos_identificacion_id',
         'patrocinante_id',
@@ -37,15 +31,9 @@ class InformacionInscripcion extends Model
         'centro_id',
         'periodo_id',
         'fecha_inscripcion',
-        'area_id',
-        'unidad_id',
-        'modalidad_id',
-        'nivel_id',
-        'tipo_programa_id',
         'es_patrocinado',
         'grupo',
         'observaciones',
-        'cedula_identidad',
         'status_pay',
         'datos_identificacion_id',
         'patrocinante_id',
@@ -83,30 +71,30 @@ class InformacionInscripcion extends Model
         return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
-    public function area()
-    {
-        return $this->belongsTo(Area::class, 'area_id');
-    }
+    // public function area()
+    // {
+    //     return $this->belongsTo(Area::class, 'area_id');
+    // }
 
-    public function unidad()
-    {
-        return $this->belongsTo(Unidad::class, 'unidad_id');
-    }
+    // public function unidad()
+    // {
+    //     return $this->belongsTo(Unidad::class, 'unidad_id');
+    // }
 
-    public function modalidad()
-    {
-        return $this->belongsTo(Modalidad::class, 'modalidad_id');
-    }
+    // public function modalidad()
+    // {
+    //     return $this->belongsTo(Modalidad::class, 'modalidad_id');
+    // }
 
-    public function nivel()
-    {
-        return $this->belongsTo(Nivel::class, 'nivel_id');
-    }
+    // public function nivel()
+    // {
+    //     return $this->belongsTo(Nivel::class, 'nivel_id');
+    // }
 
-    public function tipoPrograma()
-    {
-        return $this->belongsTo(TipoPrograma::class, 'tipo_programa_id');
-    }
+    // public function tipoPrograma()
+    // {
+    //     return $this->belongsTo(TipoPrograma::class, 'tipo_programa_id');
+    // }
     public function Patrocinante1()
     {
         return $this->belongsTo(Patrocinante::class, 'patrocinante_id');

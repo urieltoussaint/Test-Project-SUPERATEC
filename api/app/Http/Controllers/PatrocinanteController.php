@@ -220,7 +220,7 @@ class PatrocinanteController extends Controller
       
         
         // Obtener los datos paginados para mostrar en la tabla
-        $datosPaginados = $queryPaginated->paginate(2);
+        $datosPaginados = $queryPaginated->paginate(9);
     
         // Retornar los datos paginados y las estadísticas completas
         return response()->json([

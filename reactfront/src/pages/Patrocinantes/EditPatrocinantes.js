@@ -306,7 +306,7 @@ const handleBlur = async () => {
     <div className="row justify-content-center" >
     
     <div className="col-lg-6 " > {/* Centrado del contenido */}
-          <h2 className="mb-2">Agregar Nuevo Patrocinante</h2>
+          <h2 className="mb-2">Actualizar informacion de Patrocinante</h2>
           <div className="card-box" style={{ padding: '20px',  }}>
           <meta name="csrf-token" content="{{ csrf_token() }}" />
               <h4 className="mb-4">Datos de la Empresa o Individuo</h4>
@@ -590,7 +590,7 @@ const handleBlur = async () => {
                       />
                     </Form.Group>
                     <Form.Group controlId="otra_info">
-                      <Form.Label>Referido por</Form.Label>
+                      <Form.Label>Información Adicional</Form.Label>
                       <Form.Control
                         type="text"
                         name="otra_info"

@@ -22,7 +22,7 @@ const ShowDatosCursos = () => {
 
     const [inscripciones, setInscripciones] = useState([]);  // Cambiar a inscripciones
     const [filteredInscripciones, setFilteredInscripciones] = useState([]);  // Cambiar a inscripciones filtradas
-    const [searchName, setSearchName] = useState('');
+    const [participante, setParticipante] = useState('');
     const [error, setError] = useState(null);
     const { setLoading } = useLoading();
     const navigate = useNavigate();
@@ -47,6 +47,7 @@ const ShowDatosCursos = () => {
 
     const [filters, setFilters] = useState({
         periodo_id:'',
+        
         nivel_id: '',
         area_id: '',
         modalidad_id: '',
@@ -61,18 +62,36 @@ const ShowDatosCursos = () => {
 
     useEffect(() => {
         setLoading(true);
+        getParticipante();
         fetchFilterOptions();
         getAllDatosCursos().finally(() => {
           setLoading(false);
         });
       }, [cedula_identidad]);
 
-    
+      const getParticipante = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          
+          // Suponiendo que el endpoint unificado sea `/filtros-cursos`
+          const response = await axios.get(`${endpoint}/datos/${cedula_identidad}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          // Desestructuramos los datos que vienen en la respuesta
+          
+            setParticipante(response.data);
+          
+           
+        } catch (error) {
+          console.error('Error fetching Participante:', error);
+        }
+      };
     
 
       const getAllDatosCursos = async () => {
         try {
-            let relationsArray = ['area', 'curso', 'nivel', 'modalidad', 'periodo','cohorte'];
+            let relationsArray = [ 'curso', 'periodo','cohorte'];
             const relations = relationsArray.join(',');
     
             // Asegurarse de que cedula_identidad tiene valor
@@ -89,7 +108,7 @@ const ShowDatosCursos = () => {
     
             // Mientras haya más páginas, sigue obteniendo datos
             while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/datos/cursos/${cedula_identidad}?with=${relations}&page=${currentPage}`, {
+                const response = await axios.get(`${endpoint}/datos/cursos/${cedula_identidad}?&page=${currentPage}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -151,6 +170,7 @@ const getStatusPayColor = (status_pay) => {
     if (status_pay === '2') return 'orange'; // En proceso
     if (status_pay === '3') return 'green'; // Pagado
     if (status_pay === '4') return 'blue'; // Culminado
+    if (status_pay === '5') return '#fc53c4'; // Culminado
     return 'gray'; // Desconocido
 };
 const getStatusCursoColor = (status_curso) => {
@@ -202,28 +222,28 @@ const applyFilters = (filters) => {
     }
 
     // Filtrar por nivel de instrucción
-    if (filters.nivel_id) {
-        filtered = filtered.filter(inscripcion => inscripcion.nivel_id === parseInt(filters.nivel_id));
+    if (filters.curso.nivel_id) {
+        filtered = filtered.filter(inscripcion => inscripcion.nivel_id === parseInt(filters.curso.nivel_id));
     }
 
     // Filtrar por área
-    if (filters.area_id) {
-        filtered = filtered.filter(inscripcion => inscripcion.area_id === parseInt(filters.area_id));
+    if (filters.curso.area_id) {
+        filtered = filtered.filter(inscripcion => inscripcion.area_id === parseInt(filters.curso.area_id));
     }
 
     // Filtrar por modalidad
-    if (filters.modalidad_id) {
-        filtered = filtered.filter(inscripcion => inscripcion.modalidad_id === parseInt(filters.modalidad_id));
+    if (filters.curso.modalidad_id) {
+        filtered = filtered.filter(inscripcion => inscripcion.modalidad_id === parseInt(filters.curso.modalidad_id));
     }
 
     // Filtrar por tipo de programa
-    if (filters.tipo_programa_id) {
-        filtered = filtered.filter(inscripcion => inscripcion.tipo_programa_id === parseInt(filters.tipo_programa_id));
+    if (filters.curso.tipo_programa_id) {
+        filtered = filtered.filter(inscripcion => inscripcion.tipo_programa_id === parseInt(filters.curso.tipo_programa_id));
     }
 
     // Filtrar por unidad
-    if (filters.unidad_id) {
-        filtered = filtered.filter(inscripcion => inscripcion.unidad_id === parseInt(filters.unidad_id));
+    if (filters.curso.unidad_id) {
+        filtered = filtered.filter(inscripcion => inscripcion.unidad_id === parseInt(filters.curso.unidad_id));
     }
     // Filtrar por cohorte
     if (filters.cohorte_id) {
@@ -290,33 +310,33 @@ const dataPieCursos = [
 
 
 // Datos para el gráfico de barras según modalidad
-const dataBar = modalidadOptions.map(modalidad => ({
-    name: modalidad.descripcion,
-    value: filteredInscripciones.filter(inscripcion => inscripcion.modalidad_id === modalidad.id).length
-}));
+// const dataBar = modalidadOptions.map(modalidad => ({
+//     name: modalidad.descripcion,
+//     value: filteredInscripciones.filter(inscripcion => inscripcion?.curso?.modalidad_id === modalidad.id).length
+// }));
 
-// Datos para el gráfico de radar según nivel
-const dataRadar = nivelOptions.map(nivel => ({
-    subject: nivel.descripcion,
-    value: filteredInscripciones.filter(inscripcion => inscripcion.nivel_id === nivel.id).length
-}));
+// // Datos para el gráfico de radar según nivel
+// const dataRadar = nivelOptions.map(nivel => ({
+//     subject: nivel.descripcion,
+//     value: filteredInscripciones.filter(inscripcion => inscripcion?.curso?.nivel_id === nivel.id).length
+// }));
 
-// Datos para el gráfico de ComposedChart por periodo
-const dataCohorte = cohortedOptions.map(cohorte => ({
-    name: cohorte.descripcion,
-    cantidad: filteredInscripciones.filter(inscripcion => inscripcion.cohorte_id === cohorte.id).length,
-}));
+// // Datos para el gráfico de ComposedChart por periodo
+// const dataCohorte = cohortedOptions.map(cohorte => ({
+//     name: cohorte.descripcion,
+//     cantidad: filteredInscripciones.filter(inscripcion => inscripcion?.cohorte_id === cohorte.id).length,
+// }));
 
 
-const dataBarTipoPrograma = tipoProgramaOptions.map(option => ({
-    name: option.descripcion,
-    value: filteredInscripciones.filter(inscripcion => inscripcion.tipo_programa_id === option.id).length,
-}));
+// const dataBarTipoPrograma = tipoProgramaOptions.map(option => ({
+//     name: option.descripcion,
+//     value: filteredInscripciones.filter(inscripcion => inscripcion?.curso?.tipo_programa_id === option.id).length,
+// }));
 
-const dataPieUnidad = unidadOptions.map(option => ({
-    name: option.descripcion,
-    value: filteredInscripciones.filter(inscripcion => inscripcion.unidad_id === option.id).length,
-}));
+// const dataPieUnidad = unidadOptions.map(option => ({
+//     name: option.descripcion,
+//     value: filteredInscripciones.filter(inscripcion => inscripcion?.curso?.unidad_id === option.id).length,
+// }));
 
 
 
@@ -327,13 +347,12 @@ const dataPieUnidad = unidadOptions.map(option => ({
         
 
 
-    const columns = [ "cod", "Nombre del Curso","Area","Horas","Estado de Pago","Estado de Curso","Acciones"];
+    const columns = [ "cod", "Nombre del Curso","Horas","Estado de Pago","Estado de Curso","Acciones"];
 
     const renderItem = (informacion_inscripcion) => (
         <tr key={informacion_inscripcion.id}>
-        <td >{informacion_inscripcion?.curso.cod}</td>
-        <td >{informacion_inscripcion?.curso.descripcion}</td>
-        <td >{informacion_inscripcion?.area?.descripcion}</td>
+        <td >{informacion_inscripcion?.curso?.cod}</td>
+        <td >{informacion_inscripcion?.curso?.descripcion}</td>
         <td >{informacion_inscripcion?.curso?.cantidad_horas}</td>
         <td className="text-center">{renderStatusPayDot(informacion_inscripcion.status_pay)}</td> 
         <td className="text-center">{renderStatusCursoTriangle(informacion_inscripcion.status_curso)}</td> 
@@ -434,7 +453,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
                 <div className="col-lg-11 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
                     <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}> 
                     <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
-                        <h1 style={{ marginRight: '10px' }}>Lista de Cursos de V-{cedula_identidad}</h1>
+                        <h1 style={{ marginRight: '10px' }}>Lista de Cursos de {participante.nombres} {participante.apellidos}</h1>
 
                         <div className="d-flex" style={{ gap: '5px' }}> 
                             <Button
@@ -508,7 +527,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
                             ))}
                         </Form.Select>
 
-                        <Form.Select
+                        {/* <Form.Select
                             name="nivel_id"
                             value={filters.nivel_id}
                             onChange={handleFilterChange}
@@ -566,7 +585,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
                             {unidadOptions.map(option => (
                                 <option key={option.id} value={option.id}>{option.descripcion}</option>
                             ))}
-                        </Form.Select>
+                        </Form.Select> */}
 
 
 
@@ -602,7 +621,7 @@ const dataPieUnidad = unidadOptions.map(option => ({
         </div>
 
         
-        <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
+        {/* <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
             <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
             <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Estado de Pagos</h4>
                 <ResponsiveContainer width="100%" height={300}>
@@ -627,9 +646,9 @@ const dataPieUnidad = unidadOptions.map(option => ({
                 </PieChart>
                 </ResponsiveContainer>
 
-            </div>
+            </div> */}
 
-            <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
+            {/* <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px' }}>
             <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cursos por Modalidad</h4>
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={dataBar}>
@@ -749,11 +768,11 @@ const dataPieUnidad = unidadOptions.map(option => ({
                             <Line type="monotone" dataKey="cantidad" stroke="#ff7300" />
                         </ComposedChart>
                     </ResponsiveContainer>
-                </div>
+                </div> */}
 
-            </div>
+            {/* </div> */}
 
-        </div>
+        {/* </div> */}
 
         </div>
        

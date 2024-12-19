@@ -24,20 +24,15 @@ const InscripcionCursos = () => {
     const navigate = useNavigate();
     const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
     const [showModal, setShowModal] = useState(false);  // Estado para mostrar/ocultar modal
-    const [patrocinanteSeleccionado, setPatrocinanteSeleccionado] = useState(null);  // Estado para almacenar patrocinante seleccionado
     const handleCloseModal = () => setShowModal(false); // Cierra el modal
     const [patrocinantes, setPatrocinantes] = useState([]); // Estado para lista de patrocinantes
-    const [searchCedula, setSearchCedula] = useState('');    // Estado para controlar búsqueda por cédula
-    const [currentPage, setCurrentPage] = useState(1);  // Página actual
     const [totalPages, setTotalPages] = useState(1);    // Total de páginas
-    const [inscripciones, setInscripciones] = useState([]); // Para almacenar inscripciones existentes del curso
     const [cedulaError, setCedulaError] = useState('');  // Estado para el mensaje de error si ya está inscrito
     const [isCedulaValid, setIsCedulaValid] = useState(true); // Estado para manejar si la cédula es válida
     const [formErrors, setFormErrors] = useState({}); // Estado para almacenar los mensajes de error
     const [patrocinanteSeleccionado1, setPatrocinanteSeleccionado1] = useState(null);
     const [patrocinanteSeleccionado2, setPatrocinanteSeleccionado2] = useState(null);
     const [patrocinanteSeleccionado3, setPatrocinanteSeleccionado3] = useState(null);
-    const itemsPerPage = 8; // Define el número de elementos por página
     const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
     const [paginatedPatrocinantes, setPaginatedPatrocinantes] = useState([]); // Patrocinantes en la página actual
     const [currentPagePatrocinantes, setCurrentPagePatrocinantes] = useState(1);
@@ -234,17 +229,7 @@ const InscripcionCursos = () => {
         }
     };
 
-    const handleSearchCedula = (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        setSearchCedula(searchTerm);
     
-        const filteredPatrocinantes = patrocinantes.filter((patrocinante) =>
-            patrocinante.rif_cedula.toLowerCase().includes(searchTerm)
-        );
-        
-        setPaginatedPatrocinantes(filteredPatrocinantes.slice(0, itemsPerPage));
-        setCurrentPagePatrocinantes(1);
-    };
 
     
     
@@ -253,16 +238,7 @@ const InscripcionCursos = () => {
             setShowModal(true); // Mostrar el modal
         };
 
-        const handlePatrocinantePageChange = (pageNumber) => {
-            const filteredPatrocinantes = patrocinantes.filter((patrocinante) =>
-                patrocinante.rif_cedula.toLowerCase().includes(searchCedula)
-            );
-        
-            const startIndex = (pageNumber - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            setPaginatedPatrocinantes(filteredPatrocinantes.slice(startIndex, endIndex));
-            setCurrentPagePatrocinantes(pageNumber);
-        };
+     
         
         
 
@@ -297,11 +273,11 @@ const handleInscripcion = async (action) => {
             cedula_identidad: cedula,
             datos_identificacion_id: formData.datos_identificacion_id, // Usar el ID de la identificación seleccionada
             curso_id: cursoId,
-            area_id: curso.area_id,
-            modalidad_id: curso.modalidad_id,
-            nivel_id: curso.nivel_id,
-            unidad_id: curso.unidad_id,
-            tipo_programa_id: curso.tipo_programa_id,
+            // area_id: curso.area_id,
+            // modalidad_id: curso.modalidad_id,
+            // nivel_id: curso.nivel_id,
+            // unidad_id: curso.unidad_id,
+            // tipo_programa_id: curso.tipo_programa_id,
         };
 
         

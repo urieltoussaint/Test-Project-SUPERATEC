@@ -18,11 +18,8 @@ const InscribirCedula = () => {
     const { cursoId } = useParams();
     const { cedula } = useParams();
     const [cursos, setCursos] = useState([]);
-    const [searchCod, setSearchCod] = useState(''); // Nuevo estado para el buscador por COD
-    const [filteredCursos, setFilteredCursos] = useState([]);
-    const [searchCurso, setSearchCurso] = useState('');
-    const [areaOptions, setAreaOptions] = useState([]);
-    const [selectedArea, setSelectedArea] = useState('');
+
+
     const [error, setError] = useState(null);
     const { setLoading } = useLoading();
     const navigate = useNavigate();
@@ -52,7 +49,6 @@ const InscribirCedula = () => {
 
     const [showCursoModal, setShowCursoModal] = useState(false); // Mostrar/ocultar modal de cursos
 
-    const [totalCursoPages, setTotalCursoPages] = useState(1); // Total de páginas para cursos
 
 
 
@@ -247,6 +243,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
 
 
     const handleSeleccionarCurso = (cursoSeleccionado) => {
+        console.log("Curso seleccionado: ", cursoSeleccionado);  // Verifica si se selecciona correctamente
         setCurso(cursoSeleccionado); // Guardar el curso seleccionado en el estado
         setFormData(prevData => ({
             ...prevData,
@@ -254,6 +251,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
         }));
         setShowCursoModal(false); // Cerrar el modal
     };
+    
 
     
     const searchDatos = async () => {
@@ -281,7 +279,6 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
     const handleInscribir = async (action) => {
         let errors = {};
         
-        if (!cedula) errors.cedula = 'La cédula es requerida';
         if (!formData.cohorte_id) errors.cohorte_id = 'El cohorte es requerido';
         if (!formData.centro_id) errors.centro_id = 'El centro es requerido';
         if (!formData.periodo_id) errors.periodo_id = 'El periodo es requerido';
@@ -302,13 +299,14 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                 patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado1?.id : null,
                 patrocinante_id2: formData.es_patrocinado === "true" ? patrocinanteSeleccionado2?.id || null :null,
                 patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
-                cedula_identidad: cedula,
-                curso_id: curso.id,
-                area_id: curso?.area_id,
-                modalidad_id: curso?.modalidad_id,
-                nivel_id: curso?.nivel_id,
-                unidad_id: curso?.unidad_id,
-                tipo_programa_id: curso?.tipo_programa_id,
+                datos_identificacion_id:datos.id ,
+                curso_id:curso.curso_id,
+
+                // area_id: curso?.area_id,
+                // modalidad_id: curso?.modalidad_id,
+                // nivel_id: curso?.nivel_id,
+                // unidad_id: curso?.unidad_id,
+                // tipo_programa_id: curso?.tipo_programa_id,
             };
             
             const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataComplete, {
@@ -548,7 +546,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                                     <>
                                         <Form.Control 
                                             type="text" 
-                                            value={curso.descripcion} 
+                                            value={curso.curso_descripcion} 
                                             readOnly 
                                         />
                                         <Button variant="secondary" onClick={handleOpenCursoModal} className="ms-2">
@@ -561,6 +559,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                                     </Button>
                                 )}
                             </div>
+                            
                         </Form.Group>
 
                             

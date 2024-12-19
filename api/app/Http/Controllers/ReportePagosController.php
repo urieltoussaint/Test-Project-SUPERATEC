@@ -24,7 +24,6 @@ class ReportePagosController extends Controller
 
         // Verificar si ya existe un pago para esta inscripción
         $pagoExistente = ReportePagos::where('informacion_inscripcion_id', $request->informacion_inscripcion_id)
-                             ->where('cedula_identidad', $cedulaIdentidad)
                              ->orderBy('id', 'desc')
                              ->first();
 
@@ -52,7 +51,6 @@ class ReportePagosController extends Controller
 
         $pago = new ReportePagos([
             'informacion_inscripcion_id' => $request->informacion_inscripcion_id,
-            'cedula_identidad' => $cedulaIdentidad,
             'monto_total' => $montoTotal,
             'monto_cancelado' => $montoCancelado,
             'monto_exonerado' => $montoExonerado,
@@ -71,10 +69,9 @@ class ReportePagosController extends Controller
         return response()->json($pago, 201);
     }
 
-    public function obtenerUltimoPago($inscripcionCursoId, $cedula)
+    public function obtenerUltimoPago($inscripcionCursoId, )
 {
     $ultimoPago = ReportePagos::where('informacion_inscripcion_id', $inscripcionCursoId)
-                    ->where('cedula_identidad', $cedula)
                     ->orderBy('id', 'desc')
                     ->first();
 
@@ -134,6 +131,32 @@ class ReportePagosController extends Controller
 
         return response()->json($data);
     }
+
+    public function getPagosByCurso(Request $request, $cursoId)
+    {
+        try {
+            // Obtener todos los pagos filtrados por curso_id
+            $pagos = ReportePagos::where('informacion_inscripcion_id', $cursoId)->get();
+    
+            // Calcular la cantidad de pagos
+            $cantidadPagos = $pagos->count();
+    
+            // Obtener el último pago realizado (ordenado por la fecha de creación)
+            $ultimoPago = $pagos->sortByDesc('created_at')->first();
+    
+            // Retornar la cantidad de pagos y el último pago
+            return response()->json([
+                'cantidadPagos' => $cantidadPagos,
+                'ultimoPago' => $ultimoPago,
+            ]);
+        } catch (\Exception $e) {
+            // Manejo de errores
+            return response()->json([
+                'error' => 'Error al obtener los pagos: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
 
     public function getPagosWithStatistics(Request $request)

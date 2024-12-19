@@ -245,6 +245,8 @@ const handleRolePageChange = async (newPage) => {
           Authorization: `Bearer ${token}`,
         },
       });
+      // toast.success("Nuevo Participante agregado y petición creada con Éxito");
+      toast.error('Error al enviar la solicitud o los datos');
   
       // Redirigir dependiendo de 'redirectToCursos'
       if (redirectToCursos===true) {
@@ -258,10 +260,7 @@ const handleRolePageChange = async (newPage) => {
     }
   };
   
-  
-  
-  
- 
+
   
   const handleSeleccionar = async () => {
     try {

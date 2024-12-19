@@ -53,7 +53,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     // Rutas protegidas por rol - Admin tiene todos los permisos, superuser puede crear/editar/ver, invitado solo puede ver.
 
     //Usuarios
-    Route::get('users', [AuthController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos'); // 
+    Route::get('users', [AuthController::class, 'index'])->middleware('role:admin'); // 
     Route::post('users', [AuthController::class, 'store'])->middleware('role:admin'); // 
     Route::get('users/{id}', [AuthController::class, 'show'])->middleware('role:admin'); // 
     Route::put('users/{id}', [AuthController::class, 'update'])->middleware('role:admin'); // 
@@ -101,6 +101,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('/cursos/{id}', [CursosController::class, 'show']);
     Route::get('datos/cursos/{cedula_identidad?}', [InformacionInscripcionController::class, 'index']);
     Route::put('informacion_inscripcion/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
+    Route::get('cursos_inscripcion-filtros/{cursoId}/', [InformacionInscripcionController::class, 'getInscripcionesWithStatistics'])->middleware('role:admin,superuser,pagos');
+
 
 
 
@@ -111,6 +113,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('pagos/{id}', [ReportePagosController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('pagos/{id}', [ReportePagosController::class, 'destroy'])->middleware('role:admin');
     Route::get('pagos-estadisticas', [ReportePagosController::class, 'getPagosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('pagos-inscripcion/{cursoId}', [ReportePagosController::class, 'getPagosByCurso'])->middleware('role:admin,superuser,invitado,pagos');
 
 
     // Tasa BCV
@@ -189,7 +192,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('cedulas', [DatosIdentificacionController::class, 'searchByCedula2']);
     Route::get('identificacion/{cedula}', [DatosIdentificacionController::class, 'getDatosByCedula']);
     Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula'])->middleware('role:admin,superuser,invitado,pagos');
-    Route::get('/ultimo_pago/{inscripcionCursoId}/{cedula}', [ReportePagosController::class, 'obtenerUltimoPago'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('/ultimo_pago/{inscripcionCursoId}', [ReportePagosController::class, 'obtenerUltimoPago'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('reporte_pagos_detalle/{id}', [ReportePagosController::class, 'obtenerDetallePago'])->middleware('role:admin,superuser,invitado,pagos');
@@ -211,7 +214,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('filter-patrocinantes', [PatrocinanteController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-promocion', [PromocionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-voluntariados', [PersonalesVoluntariadosController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
-
+    Route::get('filter-inscripciones', [InformacionInscripcionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
 
 
     //slect

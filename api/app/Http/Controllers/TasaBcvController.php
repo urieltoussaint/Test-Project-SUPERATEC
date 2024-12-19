@@ -18,7 +18,7 @@ class TasaBcvController extends Controller
             $client = new HttpBrowser(HttpClient::create());
             $crawler = $client->request('GET', 'http://www.bcv.org.ve/');
 
-            // Asegúrate de que el selector CSS sea correcto
+            // Seleccionar componente de ccss
             $price_dolar = $crawler->filter('div#dolar div.field-content div.recuadrotsmc div.centrado')->first();
             $dolarBcv = $price_dolar->text();
 
@@ -47,7 +47,7 @@ class TasaBcvController extends Controller
             $client = new HttpBrowser(HttpClient::create());
             $crawler = $client->request('GET', 'http://www.bcv.org.ve/');
 
-            // Asegúrate de que el selector CSS sea correcto
+            // Seleccionar componente de ccss
             $price_dolar = $crawler->filter('div#dolar div.field-content div.recuadrotsmc div.centrado')->first();
             $dolarBcv = $price_dolar->text();
 

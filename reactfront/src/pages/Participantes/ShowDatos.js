@@ -16,7 +16,6 @@ import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, Cartes
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch  } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';
-import moment from 'moment';  // Asegúrate de tener moment.js instalado para manejar fechas
 
 
 const endpoint = 'http://localhost:8000/api';
@@ -29,12 +28,10 @@ const ShowDatos = () => {
     const itemsPerPage = 8;
 
 
-    const [searchCedula, setSearchCedula] = useState('');
 
     const [showModal, setShowModal] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
-    const [range, setRange] = useState(30); // Estado por defecto a 30 días
     const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
     const [statistics, setStatistics] = useState({});
     
@@ -59,10 +56,6 @@ const ShowDatos = () => {
     const porcentajeMasculino = statistics?.porcentajesGenero?.masculino || 0;
     const porcentajeFemenino = statistics?.porcentajesGenero?.femenino || 0;
     const porcentajeOtros = statistics?.porcentajesGenero?.otros || 0;
-
-
-   
-    
 
     const [filters, setFilters] = useState({
         nivel_instruccion_id: '',
@@ -262,13 +255,11 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                 </Button>
                 <Button
                     variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
-                    onClick={() => navigate(`/datos/cursos/${dato.cedula_identidad}`)}
+                    onClick={() => navigate(`/datos/cursos/${dato.id}`)}
                     className="me-2"
                 >
                     <i className="bi bi-book-fill"></i>
                 </Button>
-
-    
                     {userRole === 'admin' || userRole === 'superuser' ? (
                         <>
                             <Button
@@ -278,12 +269,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                             >
                                 <i className="bi bi-pencil-fill"></i>
                             </Button>
-
-                           
-    
                             {userRole === 'admin' && (
-                         
-
                                 <Button
                                 variant="btn btn-danger"
                                 onClick={() => handleShowModal(dato.id)}
@@ -291,7 +277,6 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 >
                                 <i className="bi bi-trash3-fill"></i>
                                 </Button>
-
                             )}
                         </>
                     ) : null}
@@ -717,7 +702,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 verticalAlign="bottom" 
                                 align="center" 
                                 wrapperStyle={{ 
-                                    position: "relative",  // Hace que "top" funcione
+                                    position: "relative",  
                                     top: "20px",  // Ajusta el valor para empujar la leyenda hacia abajo
                                     width: "90%", 
                                     textAlign: "center", 
