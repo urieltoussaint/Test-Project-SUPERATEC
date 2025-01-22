@@ -47,7 +47,6 @@ const InscripcionCursos = () => {
         centro_id: '',
         periodo_id: '',
         es_patrocinado: false,
-        grupo:'',
         observaciones:''
     });
     const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
@@ -273,11 +272,7 @@ const handleInscripcion = async (action) => {
             cedula_identidad: cedula,
             datos_identificacion_id: formData.datos_identificacion_id, // Usar el ID de la identificación seleccionada
             curso_id: cursoId,
-            // area_id: curso.area_id,
-            // modalidad_id: curso.modalidad_id,
-            // nivel_id: curso.nivel_id,
-            // unidad_id: curso.unidad_id,
-            // tipo_programa_id: curso.tipo_programa_id,
+      
         };
 
         
@@ -327,11 +322,6 @@ const handleInscripcion = async (action) => {
     }
 };
 
-    
-    
-    
-
-    
 
     return (
         <div className="row" style={{ marginTop: '50px' }}>
@@ -416,7 +406,6 @@ const handleInscripcion = async (action) => {
                     />
                     </Col>
 
-                    <Col md={6}>
                     {/* Periodo Selector */}
                     {formErrors.periodo_id && (
                     <div className="text-danger">{formErrors.periodo_id}</div>
@@ -433,23 +422,6 @@ const handleInscripcion = async (action) => {
 
                     />
 
-
-                    {/* Es grupo */}
-                    {formErrors.grupo && (
-                        <div className="text-danger">{formErrors.grupo}</div>
-                    )}
-                    <Form.Group controlId="grupo">
-                        <Form.Label>Grupo</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="grupo"
-                            value={formData.grupo}
-                            onChange={handleChange}
-                            required
-                        />
-                        </Form.Group>
-
-                        </Col>
                         </Row>
                         <Form.Group controlId="realiza_aporte">
                         <Form.Label>¿Realiza Aporte?</Form.Label>

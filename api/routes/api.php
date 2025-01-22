@@ -74,6 +74,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::delete('datos/{id}', [DatosIdentificacionController::class, 'destroy'])->middleware('role:admin'); // Solo admin puede eliminar
     Route::get('datos/cedula/{cedula_identidad}', [DatosIdentificacionController::class, 'searchByCedula1'])->middleware('role:admin,superuser,invitado');
     Route::get('datos-filtrados', [DatosIdentificacionController::class, 'getDataWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('datos-filtrados-print', [DatosIdentificacionController::class, 'getDataWithStatisticsPrint'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('datos-estadisticas', [DatosIdentificacionController::class, 'getStatistics'])->middleware('role:admin,superuser,invitado,pagos');
 
 
@@ -86,6 +87,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('cursos/{id}', [CursosController::class, 'update'])->middleware('role:admin,superuser ,pagos');
     Route::delete('cursos/{id}', [CursosController::class, 'destroy'])->middleware('role:admin');
     Route::get('cursos-estadisticas', [CursosController::class, 'getCursosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('cursos-estadisticas-print', [CursosController::class, 'getCursosWithStatisticsPrint'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('cursos-paginate', [CursosController::class, 'getCursos'])->middleware('role:admin,superuser,invitado,pagos');
 
     
@@ -99,10 +101,9 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('inscripcion_cursos/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
     Route::put('inscripcion_cursos/{cedula}/status', [InformacionInscripcionController::class, 'updateStatus'])->middleware('role:admin,superuser,pagos');
     Route::get('/cursos/{id}', [CursosController::class, 'show']);
-    Route::get('datos/cursos/{cedula_identidad?}', [InformacionInscripcionController::class, 'index']);
+    Route::get('datos/cursos/{cedula_identidad?}', [InformacionInscripcionController::class, 'getDatosCursos']);
     Route::put('informacion_inscripcion/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
     Route::get('cursos_inscripcion-filtros/{cursoId}/', [InformacionInscripcionController::class, 'getInscripcionesWithStatistics'])->middleware('role:admin,superuser,pagos');
-
 
 
 
@@ -113,6 +114,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::put('pagos/{id}', [ReportePagosController::class, 'update'])->middleware('role:admin,superuser');
     Route::delete('pagos/{id}', [ReportePagosController::class, 'destroy'])->middleware('role:admin');
     Route::get('pagos-estadisticas', [ReportePagosController::class, 'getPagosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('pagos-estadisticas-print', [ReportePagosController::class, 'getPagosWithStatisticsPrint'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('pagos-inscripcion/{cursoId}', [ReportePagosController::class, 'getPagosByCurso'])->middleware('role:admin,superuser,invitado,pagos');
 
 

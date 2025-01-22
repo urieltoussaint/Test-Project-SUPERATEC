@@ -13,7 +13,6 @@ class InformacionInscripcion extends Model
         'periodo_id',
         'fecha_inscripcion',
         'es_patrocinado',
-        'grupo',
         'observaciones',
         'status_pay',
         'datos_identificacion_id',
@@ -32,7 +31,6 @@ class InformacionInscripcion extends Model
         'periodo_id',
         'fecha_inscripcion',
         'es_patrocinado',
-        'grupo',
         'observaciones',
         'status_pay',
         'datos_identificacion_id',
@@ -71,30 +69,6 @@ class InformacionInscripcion extends Model
         return $this->belongsTo(Periodo::class, 'periodo_id');
     }
 
-    // public function area()
-    // {
-    //     return $this->belongsTo(Area::class, 'area_id');
-    // }
-
-    // public function unidad()
-    // {
-    //     return $this->belongsTo(Unidad::class, 'unidad_id');
-    // }
-
-    // public function modalidad()
-    // {
-    //     return $this->belongsTo(Modalidad::class, 'modalidad_id');
-    // }
-
-    // public function nivel()
-    // {
-    //     return $this->belongsTo(Nivel::class, 'nivel_id');
-    // }
-
-    // public function tipoPrograma()
-    // {
-    //     return $this->belongsTo(TipoPrograma::class, 'tipo_programa_id');
-    // }
     public function Patrocinante1()
     {
         return $this->belongsTo(Patrocinante::class, 'patrocinante_id');

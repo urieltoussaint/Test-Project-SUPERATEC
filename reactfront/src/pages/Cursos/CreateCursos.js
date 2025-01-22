@@ -44,6 +44,10 @@ const CreateCursos = () => {
     nivel_id:'',
     modalidad_id:'',
     tipo_programa_id:'',
+    sesiones:0,
+    grupo_id:'',
+    externo:false,
+    
   });
 
   const [filterOptions, setFilterOptions] = useState({
@@ -52,6 +56,7 @@ const CreateCursos = () => {
     nivelOptions: [],
     tipoProgramaOptions: [],
     modalidadOptions: [],
+    grupoOptions: [],
 });
   const navigate = useNavigate();
   const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
@@ -165,6 +170,7 @@ const handleRolePageChange = async (newPage) => {
 
         const formDataWithStatus = {
             ...formData,
+
             status: true,
         };
 
@@ -211,7 +217,7 @@ const handleSeleccionar = async () => {
     });
     
     // Desestructuramos los datos que vienen en la respuesta
-    const { area, unidad, nivel, tipo_programa, modalidad } = response.data;
+    const { area, unidad, nivel, tipo_programa, modalidad,grupo } = response.data;
 
     // Retornamos las opciones en un solo objeto
     setFilterOptions( {
@@ -220,6 +226,7 @@ const handleSeleccionar = async () => {
       nivelOptions: nivel,
       tipoProgramaOptions: tipo_programa,
       modalidadOptions: modalidad,
+      grupoOptions:grupo,
     });
     setSelectVisible(true);  // Mostrar los selectores
 
@@ -285,14 +292,53 @@ const handleSeleccionar = async () => {
     }
   };
 
+  useEffect(() => {
+    if (formData.tipo_programa_id === "1") {
+      setFormData((prevState) => ({
+        ...prevState,
+        cantidad_horas: 2,
+        sesiones: 1,
+      }));
+    } else if (formData.tipo_programa_id === "2") {
+      setFormData((prevState) => ({
+        ...prevState,
+        cantidad_horas: 4,
+        sesiones: 1,
+      }));
+    } else if (formData.tipo_programa_id === "3") {
+      setFormData((prevState) => ({
+        ...prevState,
+        sesiones: prevState.cantidad_horas
+          ? Math.floor(prevState.cantidad_horas / 4)
+          : "",
+      }));
+    }
+  }, [formData.tipo_programa_id, formData.cantidad_horas]);
+  
+
   return (
     <div className="row" style={{ marginTop: '50px' }}>
   <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
     <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
-      <h2 className="mb-2">Agregar Nuevo Curso</h2>
+      <h2 className="mb-2">Agregar Nuevo Programa</h2>
       <Form onSubmit={handleSubmit} className="custom-gutter">
-            <Form.Group controlId="descripcion">
-              <Form.Label>Nombre del Curso</Form.Label>
+      <Form.Group controlId="externo">
+        <Form.Label>¿Programa externo a Superatec?</Form.Label>
+        <Form.Control
+            as="select"
+            name="externo"
+            value={formData.externo} // Asume que formData tiene la clave curso_externo
+            onChange={handleChange}
+            required
+        >
+            <option value="">Seleccione</option>
+            <option value="1">Sí</option>
+            <option value="0">No</option>
+        </Form.Control>
+    </Form.Group>
+
+      <Form.Group controlId="descripcion">
+              <Form.Label>Nombre del Programa</Form.Label>
               <Form.Control
                 type="text"
                 name="descripcion"
@@ -302,6 +348,25 @@ const handleSeleccionar = async () => {
                 required
               />
             </Form.Group>
+            <SelectComponent
+              options={filterOptions.tipoProgramaOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.tipo_programa_id}
+              handleChange={handleChange}
+              controlId="tipo_programa_id"
+              label="Tipo de Programa"
+            />
+
+            <SelectComponent
+                options={filterOptions.grupoOptions}  // Usar el estado filterOptions
+                nameField="descripcion"
+                valueField="id"
+                selectedValue={formData.grupo_id}
+                handleChange={handleChange}
+                controlId="grupo_id"
+                label="Grupo"
+              />
 
           <Row className="g-2">
           <Col md={6}>
@@ -313,21 +378,25 @@ const handleSeleccionar = async () => {
                 value={formData.cantidad_horas}
                 onChange={handleChange}
                 maxLength={4}
+                disabled={formData.tipo_programa_id === "1" || formData.tipo_programa_id === "2"} // Bloquear si tipo_programa_id es 1 o 2
               />
             </Form.Group>
           </Col>
 
           <Col md={6}>
-          <SelectComponent
-              options={filterOptions.nivelOptions}  // Usar el estado filterOptions
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.nivel_id}
-              handleChange={handleChange}
-              controlId="nivel_id"
-              label="Nivel"
-            />
+            <Form.Group controlId="sesiones">
+              <Form.Label>Cantidad de Sesiones</Form.Label>
+              <Form.Control
+                type="number"
+                name="sesiones"
+                value={formData.sesiones}
+                onChange={handleChange}
+                maxLength={4}
+                disabled={formData.tipo_programa_id !== "3"} // Bloquear si tipo_programa_id no es 3
+              />
+            </Form.Group>
           </Col>
+
           </Row>
           <Row className="g-2">
           <Col md={6}>
@@ -341,6 +410,7 @@ const handleSeleccionar = async () => {
               controlId="area_id"
               label="Área"
             />
+            
             </Col>
 
           <Col md={6}>
@@ -370,13 +440,13 @@ const handleSeleccionar = async () => {
           </Col>
           <Col md={6}>
           <SelectComponent
-              options={filterOptions.tipoProgramaOptions}  // Usar el estado filterOptions
+              options={filterOptions.nivelOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
-              selectedValue={formData.tipo_programa_id}
+              selectedValue={formData.nivel_id}
               handleChange={handleChange}
-              controlId="tipo_programa_id"
-              label="Tipo de Programa"
+              controlId="nivel_id"
+              label="Nivel"
             />
           </Col>
         </Row>

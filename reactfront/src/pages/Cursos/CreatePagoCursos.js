@@ -15,6 +15,7 @@ const endpoint = 'http://localhost:8000/api';
 
 const CreatePagoCursos = () => {
   const [formData, setFormData] = useState({
+    costo_inscripcion:'',
     costo:'',
     cuotas:''
   });
@@ -164,8 +165,18 @@ const CreatePagoCursos = () => {
       <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
         <h2 className="mb-2">Actualizar Costo de Curso {curso.cod}</h2>
         <Form onSubmit={handleSubmit} className="custom-gutter">
+        <Form.Group controlId="costo_inscripcion">
+                <Form.Label>Costo de Inscripcion en $</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="costo_inscripcion"
+                  value={formData.costo_inscripcion}
+                  onChange={handleChange}
+                  maxLength={40}
+                />
+              </Form.Group>
               <Form.Group controlId="costo">
-                <Form.Label>Costo en $</Form.Label>
+                <Form.Label>Costo de Cuotas en $</Form.Label>
                 <Form.Control
                   type="number"
                   name="costo"

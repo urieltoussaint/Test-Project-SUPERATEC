@@ -61,6 +61,7 @@ const [filterOptions, setFilterOptions] = useState({
     tipoProgramaOptions: [],
     nivelOptions: [],
     unidadOptions: [],
+    grupoOptions:[],
 });
 
 const [formData, setFormData] = useState({
@@ -68,7 +69,6 @@ const [formData, setFormData] = useState({
     centro_id: '',
     periodo_id: '',
     es_patrocinado: false,
-    grupo:'',
     observaciones:'',
     
 });
@@ -81,6 +81,7 @@ const [filtrosCurso, setFiltrosCurso] = useState({
     tipo_programa_id: '',
     unidad_id:'',
     cod:'',
+    grupo_id:'',
 });
 
 const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
@@ -187,7 +188,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                 headers: { Authorization: `Bearer ${token}` }
             });
     
-            const { cohorte, centro, periodo, area, tipo_programa, unidad, modalidad, nivel } = response.data;
+            const { cohorte, centro, periodo, area, tipo_programa, unidad, modalidad, nivel,grupo } = response.data;
     
             // Guardar las opciones en el estado de filterOptions
             setFilterOptions({
@@ -199,6 +200,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                 unidadOptions: unidad || [],
                 modalidadOptions: modalidad || [],
                 nivelOptions: nivel || [],
+                grupoOptions:grupo || [],
             });
     
             setSelectVisible(true);  // Mostrar los selectores
@@ -282,7 +284,6 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
         if (!formData.cohorte_id) errors.cohorte_id = 'El cohorte es requerido';
         if (!formData.centro_id) errors.centro_id = 'El centro es requerido';
         if (!formData.periodo_id) errors.periodo_id = 'El periodo es requerido';
-        if (!formData.grupo) errors.grupo = 'El grupo es requerido';
         
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
@@ -302,11 +303,6 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                 datos_identificacion_id:datos.id ,
                 curso_id:curso.curso_id,
 
-                // area_id: curso?.area_id,
-                // modalidad_id: curso?.modalidad_id,
-                // nivel_id: curso?.nivel_id,
-                // unidad_id: curso?.unidad_id,
-                // tipo_programa_id: curso?.tipo_programa_id,
             };
             
             const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataComplete, {
@@ -764,6 +760,17 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                             onChange={(e) => setFiltrosCurso({ ...filtrosCurso, tipo_programa_id: e.target.value })}>
                                 <option value="">Filtrar por Tipo de Programa</option>
                                 {filterOptions.tipoProgramaOptions.map(tipo => (
+                                    <option key={tipo.id} value={tipo.id}>{tipo.descripcion}</option>
+                                ))}
+                            </Form.Select>
+                        </Col>
+                        <Col>
+                            <Form.Select 
+                            name='grupo_id'
+                            value={filtrosCurso.grupo_id}
+                            onChange={(e) => setFiltrosCurso({ ...filtrosCurso, grupo_id: e.target.value })}>
+                                <option value="">Filtrar por Grupo</option>
+                                {filterOptions.grupoOptions.map(tipo => (
                                     <option key={tipo.id} value={tipo.id}>{tipo.descripcion}</option>
                                 ))}
                             </Form.Select>

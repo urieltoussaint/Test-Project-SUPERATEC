@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Area;
+use App\Models\Grupo;
 use App\Models\Cursos as Model;
 use App\Models\Cursos;
 use App\Models\InformacionInscripcion;
@@ -76,6 +77,7 @@ class CursosController extends Controller
         $modalidad = Modalidad::all(); 
         $area = Area::all(); 
         $unidad = Unidad::all(); 
+        $grupo=Grupo::all();
 
         return response()->json([
             'nivel' => $nivel,
@@ -83,6 +85,7 @@ class CursosController extends Controller
             'modalidad' => $modalidad,
             'area' => $area,
             'unidad' => $unidad,
+            'grupo'=>$grupo,
 
         ]);
     }
@@ -105,11 +108,14 @@ class CursosController extends Controller
             if ($request->filled('area_id')) {
                 $query->where('area_id', $request->area_id);
             }
+            if ($request->filled('grupo_id')) {
+                $query->where('grupo_id', $request->grupo_id);
+            }
             if ($request->filled('unidad_id')) {
                 $query->where('unidad_id', $request->unidad_id);
             }
             if ($request->filled('cod')) {
-                $query->where('cod', 'LIKE', "%{$request->cod}%");
+                $query->where('cod', 'ILIKE', "%{$request->cod}%");
             }
             if ($request->filled('curso_descripcion')) {
                 $query->where('curso_descripcion', 'ILIKE', "%{$request->curso_descripcion}%");
@@ -244,6 +250,160 @@ class CursosController extends Controller
             ]
         ]);
     }
+
+    public function getCursosWithStatisticsPrint(Request $request)
+    {
+        // Función para aplicar filtros
+        $applyFilters = function ($query) use ($request) {
+            if ($request->filled('nivel_id')) {
+                $query->where('nivel_id', $request->nivel_id);
+            }
+            if ($request->filled('modalidad_id')) {
+                $query->where('modalidad_id', $request->modalidad_id);
+            }
+            if ($request->filled('tipo_programa_id')) {
+                $query->where('tipo_programa_id', $request->tipo_programa_id);
+            }
+            if ($request->filled('area_id')) {
+                $query->where('area_id', $request->area_id);
+            }
+            if ($request->filled('grupo_id')) {
+                $query->where('grupo_id', $request->grupo_id);
+            }
+            if ($request->filled('unidad_id')) {
+                $query->where('unidad_id', $request->unidad_id);
+            }
+            if ($request->filled('cod')) {
+                $query->where('cod', 'ILIKE', "%{$request->cod}%");
+            }
+            if ($request->filled('curso_descripcion')) {
+                $query->where('curso_descripcion', 'ILIKE', "%{$request->curso_descripcion}%");
+            }
+        };
+        $query = DB::table('vw_cursos_inscripciones')
+        ->select('curso_id', 'cod', 'curso_descripcion','tipo_programa', 'cantidad_horas', 'sesiones','costo_inscripcion', 'costo', 'cuotas', 'fecha_inicio','area','nivel','modalidad','grupo')
+        ->distinct();
+        
+        $applyFilters($query);
+       
+        // Obtener el número de inscritos por curso y añadirlo a cada curso en la paginación
+        $numInscritosPorCurso = DB::table('vw_cursos_inscripciones')
+            ->select('curso_id', DB::raw('COUNT(inscripcion_id) as num_inscritos'));
+        
+        $applyFilters($numInscritosPorCurso);
+        $numInscritosPorCurso = $numInscritosPorCurso->groupBy('curso_id')->pluck('num_inscritos', 'curso_id');
+        
+    
+        // Aplicar filtros en las métricas globales usando una consulta duplicada con filtros
+        $filteredStatistics = DB::table('vw_cursos_inscripciones');
+        $applyFilters($filteredStatistics);
+    
+        // Contar cursos únicos y calcular total de horas sin duplicados
+        $totalCursos = $filteredStatistics->distinct('curso_id')->count('curso_id');
+  
+// Calcular el total de horas sumando las horas de cursos únicos (distintos curso_id)
+        $totalHoras = $filteredStatistics
+            ->select('curso_id', 'cantidad_horas')
+            ->distinct('curso_id')  // Asegura seleccionar cada curso_id solo una vez
+            ->pluck('cantidad_horas') // Obtiene las horas de cada curso único
+            ->sum();  // Suma las horas de los cursos únicos
+
+        $totalCostos = $filteredStatistics->sum(DB::raw('CASE WHEN costo IS NOT NULL THEN costo ELSE 0 END'));
+    
+        // Calcular el total de inscritos únicos (por cada inscripción) aplicando filtros
+        $totalInscritos = $filteredStatistics->distinct('inscripcion_id')->count('inscripcion_id');
+    
+        $inscritosAporte = (clone $filteredStatistics)->where('realiza_aporte', true)->distinct('inscripcion_id')->count('inscripcion_id');
+        $inscritosPatrocinados = (clone $filteredStatistics)->where('es_patrocinado', true)->distinct('inscripcion_id')->count('inscripcion_id');
+    
+        // Cálculo para los cursos con mayor ingreso usando filtros
+        $cursosMayorIngreso = DB::table('vw_cursos_inscripciones')
+            ->select('curso_id', 'curso_descripcion', 'costo', DB::raw('SUM(costo) * COUNT(inscripcion_id) as ingresos'))
+            ->where('status_pay', 3);
+        
+        $applyFilters($cursosMayorIngreso);
+        $cursosMayorIngreso = $cursosMayorIngreso
+            ->groupBy('curso_id', 'curso_descripcion', 'costo')
+            ->orderByDesc('ingresos')
+            ->limit(5)
+            ->get();
+    
+        // Cursos por área considerando cursos únicos por curso_id
+        $cursosPorArea = DB::table('vw_cursos_inscripciones')
+            ->join('area', 'vw_cursos_inscripciones.area_id', '=', 'area.id')
+            ->select('area.descripcion as area_name', DB::raw('COUNT(DISTINCT vw_cursos_inscripciones.curso_id) as total_cursos'));
+        
+        $applyFilters($cursosPorArea);
+        $cursosPorArea = $cursosPorArea->groupBy('area.descripcion')->pluck('total_cursos', 'area_name');
+    
+        // Cursos por nivel considerando cursos únicos por curso_id
+        $cursosPorNivel = DB::table('vw_cursos_inscripciones')
+            ->join('nivel', 'vw_cursos_inscripciones.nivel_id', '=', 'nivel.id')
+            ->select('nivel.descripcion as nivel_name', DB::raw('COUNT(DISTINCT vw_cursos_inscripciones.curso_id) as total_cursos'));
+        
+        $applyFilters($cursosPorNivel);
+        $cursosPorNivel = $cursosPorNivel->groupBy('nivel.descripcion')->pluck('total_cursos', 'nivel_name');
+    
+        // Cursos por unidad considerando cursos únicos por curso_id
+        $totalCursosPorUnidad = DB::table('vw_cursos_inscripciones')
+            ->join('unidad', 'vw_cursos_inscripciones.unidad_id', '=', 'unidad.id')
+            ->select('unidad.descripcion as unidad_name', DB::raw('COUNT(DISTINCT vw_cursos_inscripciones.curso_id) as total_cursos'));
+        
+        $applyFilters($totalCursosPorUnidad);
+        $totalCursosPorUnidad = $totalCursosPorUnidad->groupBy('unidad.descripcion')->pluck('total_cursos', 'unidad_name');
+    
+        // Cursos por tipo de programa considerando cursos únicos por curso_id
+        $cursosPorTipoPrograma = DB::table('vw_cursos_inscripciones')
+            ->join('tipo_programa', 'vw_cursos_inscripciones.tipo_programa_id', '=', 'tipo_programa.id')
+            ->select('tipo_programa.descripcion as tipo_programa_name', DB::raw('COUNT(DISTINCT vw_cursos_inscripciones.curso_id) as total_cursos'));
+        
+        $applyFilters($cursosPorTipoPrograma);
+        $cursosPorTipoPrograma = $cursosPorTipoPrograma->groupBy('tipo_programa.descripcion')->pluck('total_cursos', 'tipo_programa_name');
+    
+        // Cursos por modalidad considerando cursos únicos por curso_id
+        $cursosPorModalidad = DB::table('vw_cursos_inscripciones')
+            ->join('modalidad', 'vw_cursos_inscripciones.modalidad_id', '=', 'modalidad.id')
+            ->select('modalidad.descripcion as modalidad_name', DB::raw('COUNT(DISTINCT vw_cursos_inscripciones.curso_id) as total_cursos'));
+        
+        $applyFilters($cursosPorModalidad);
+        $cursosPorModalidad = $cursosPorModalidad->groupBy('modalidad.descripcion')->pluck('total_cursos', 'modalidad_name');
+    
+        // Cantidad de inscritos por status_pay aplicando filtros
+        $inscritosPorStatusPay = DB::table('vw_cursos_inscripciones')
+            ->select('status_pay', DB::raw('COUNT(inscripcion_id) as count'));
+        
+        $applyFilters($inscritosPorStatusPay);
+        $inscritosPorStatusPay = $inscritosPorStatusPay->groupBy('status_pay')->pluck('count', 'status_pay');
+    
+        // Cantidad de inscritos por status_curso aplicando filtros
+        $inscritosPorStatusCurso = DB::table('vw_cursos_inscripciones')
+            ->select('status_curso', DB::raw('COUNT(inscripcion_id) as count'));
+        
+        $applyFilters($inscritosPorStatusCurso);
+        $inscritosPorStatusCurso = $inscritosPorStatusCurso->groupBy('status_curso')->pluck('count', 'status_curso');
+        $datos = $query->get();
+    
+        // Retornar los datos
+        return response()->json([
+            'cursos' => $datos,
+            'metrics' => [
+                'totalCursos' => $totalCursos,
+                'totalHoras' => $totalHoras,
+                'totalCostos' => $totalCostos,
+                'inscritosAporte' => $inscritosAporte,
+                'inscritosPatrocinados' => $inscritosPatrocinados,
+                'totalInscritos' => $totalInscritos,
+                'cursosPorArea' => $cursosPorArea,
+                'cursosPorNivel' => $cursosPorNivel,
+                'porcentajeCursosPorUnidad' => $totalCursosPorUnidad,
+                'cursosPorTipoPrograma' => $cursosPorTipoPrograma,
+                'cursosPorModalidad' => $cursosPorModalidad,
+                'inscritosPorStatusPay' => $inscritosPorStatusPay,
+                'inscritosPorStatusCurso' => $inscritosPorStatusCurso,
+                'cursosMayorIngreso' => $cursosMayorIngreso,
+            ]
+        ]);
+    }
     
     
     public function getCursos(Request $request)
@@ -264,6 +424,9 @@ class CursosController extends Controller
             }
             if ($request->filled('unidad_id')) {
                 $query->where('unidad_id', $request->unidad_id);
+            }
+            if ($request->filled('grupo_id')) {
+                $query->where('grupo_id', $request->grupo_id);
             }
             if ($request->filled('cod')) {
                 $query->where('cod', 'ILIKE', "%{$request->cod}%");

@@ -6,8 +6,8 @@ use Illuminate\Support\Str;
 class Cursos extends Model
 {
     protected $table = 'cursos';
-    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id'];
-    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id'];
+    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion'];
+    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion'];
 
     // Relación con InscripcionCursos (un curso puede tener muchas inscripciones)
     public function InformacionInscripcion()
@@ -39,6 +39,10 @@ class Cursos extends Model
     {
         return $this->belongsTo(Area::class, 'area_id');
     }
+    public function Grupo()
+    {
+        return $this->belongsTo(Grupo::class, 'grupo_id');
+    }
     
 
 
@@ -61,28 +65,48 @@ class Cursos extends Model
 protected static function booted()
 {
     static::creating(function ($curso) {
-        $curso->cod = self::generateCourseCode($curso->descripcion);
+        $curso->cod = self::generateCourseCode($curso);
+    });
+
+    static::updating(function ($curso) {
+        // Solo regenerar el código si 'descripcion' o campos relacionados cambian
+        if ($curso->isDirty(['descripcion', 'area_id', 'unidad_id', 'modalidad_id', 'tipo_programa_id', 'nivel_id', 'grupo_id'])) {
+            $curso->cod = self::generateCourseCode($curso);
+        }
     });
 }
 
-// Método para generar un código basado en el nombre
-public static function generateCourseCode($nombre)
+
+// Método para generar un código basado en las descripciones relacionadas y el nombre del curso
+public static function generateCourseCode($curso)
 {
-    // Tomamos las primeras 3 letras del nombre
-    $prefix = strtoupper(substr($nombre, 0, 4));
+    // 1. Inicial de Modalidad
+    $modalidad = $curso->modalidad->descripcion ?? '';
+    $modalidadInicial = strtoupper(substr($modalidad, 0, 1));
 
-    // Generamos un número aleatorio único de 3 dígitos
-    $randomNumber = rand(100, 999);
+    // 2. Inicial de Tipo de Programa
+    $tipoPrograma = $curso->tipoPrograma->descripcion ?? '';
+    $tipoProgramaInicial = strtoupper(substr($tipoPrograma, 0, 1));
 
-    // Generamos una cadena aleatoria de 2 caracteres
-    $suffix = Str::upper(Str::random(2));
+    // 3. Inicial de Área
+    $area = $curso->area->descripcion ?? '';
+    $areaInicial = strtoupper(substr($area, 0, 1));
 
-    // Combinamos todos para crear el código
-    return $prefix . $randomNumber . $suffix;
+    // 4. Inicial de Nivel
+    $nivel = $curso->nivel->descripcion ?? '';
+    $nivelInicial = strtoupper(substr($nivel, 0, 1));
+
+    // 5. Inicial de Grupo
+    $grupo = $curso->grupo->descripcion ?? '';
+    $grupoInicial = strtoupper(substr($grupo, 0, 1));
+
+    // 6. Las primeras 4 letras del nombre del curso
+    $nombreCurso = $curso->descripcion;
+    $nombreCursoPrefix = strtoupper(substr($nombreCurso, 0, 4));
+
+    // Concatenar todo para formar el código
+    return $modalidadInicial . $tipoProgramaInicial . $areaInicial . $nivelInicial . $grupoInicial . $nombreCursoPrefix;
 }
 
 
-
-
-    
 }

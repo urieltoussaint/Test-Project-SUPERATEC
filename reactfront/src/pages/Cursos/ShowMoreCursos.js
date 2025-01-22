@@ -45,14 +45,19 @@ const ShowMoreCursos = ({ onReload }) => {
             <h1 className="mb-4 text-center">Detalles de Curso {data.cod}</h1> {/* Centrado el título */}
             <ListGroup variant="flush">
               <ListGroup.Item>COD: {data.cod}</ListGroup.Item>
+              <ListGroup.Item>
+                ¿Curso Externo?: {data.externo ? "Sí" : "No"}</ListGroup.Item>
               <ListGroup.Item>Nombre del Curso: {data.descripcion}</ListGroup.Item>
               <ListGroup.Item>Cantidad de Horas: {data.cantidad_horas}</ListGroup.Item>
+              <ListGroup.Item>Cantidad de Sesiones: {data.sesiones}</ListGroup.Item>
+              
               <ListGroup.Item>Área: {data.area?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Nivel: {data.nivel?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Modalidad: {data.modalidad?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Unidad: {data.unidad?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Tipo de Programa: {data.tipo_programa?.descripcion}</ListGroup.Item>
-              <ListGroup.Item>Costo: {data.costo}</ListGroup.Item>
+              <ListGroup.Item>Costo de Inscripcion: {data.costo_inscripcion}</ListGroup.Item>
+              <ListGroup.Item>Costo de Cuota: {data.costo}</ListGroup.Item>
               <ListGroup.Item>Cuotas: {data.cuotas}</ListGroup.Item>
               <ListGroup.Item>Fecha de Inicio: {data.fecha_inicio}</ListGroup.Item>
             </ListGroup>

@@ -15,12 +15,6 @@ import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, Cartes
 import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { RiCoinsFill} from "react-icons/ri";
 import { TbCoins } from "react-icons/tb";
-import { saveAs } from "file-saver";
-import * as XLSX from "xlsx";
-
-
-
-
 
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F', '#FFBB28'];
@@ -28,7 +22,7 @@ const endpoint = 'http://localhost:8000/api';
 
 
 
-const ShowPagos = () => {
+const ShowPagosProgramas = () => {
     const [reportes, setReportes] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
@@ -50,7 +44,8 @@ const ShowPagos = () => {
     const [centroOptions, setCentroOptions] = useState([]);
     const [cohorteOptions, setCohorteOptions] = useState([]);
     const [periodoOptions, setPeriodoOptions] = useState([]);
-    const [showModalInfo, setShowModalInfo] = useState(false);
+    const {curso_id } = useParams();  // Obtener cedula y cursoId de la URL
+
 
      const [filters, setFilters] = useState({
                 cedula_identidad: '',
@@ -86,7 +81,7 @@ const getAllReportes = async (page = 1) => {
         // Realiza la solicitud a la nueva ruta con estadísticas
         const response = await axios.get(`${endpoint}/pagos-estadisticas`, {
             headers: { Authorization: `Bearer ${token}` },
-            params: { ...filters, page }, // Incluye `page` y otros filtros en los parámetros}
+            params: { ...filters, page, curso_id }, // Incluye `page` y otros filtros en los parámetros}
         });
 
         // Actualiza los datos de la tabla paginada
@@ -97,6 +92,8 @@ const getAllReportes = async (page = 1) => {
         setTotalPagos(response.data.estadisticas.totalPagos); // Total de pagos de las estadísticas
         setTotalMontoCancelado(response.data.estadisticas.totalMontoCancelado); // Promedio del monto cancelado
         setTotalPages(response.data.datos.last_page || 1); // Total de páginas para la paginación
+
+
 
     } catch (error) {
         setError('Error fetching data');
@@ -177,68 +174,6 @@ const handlePageChange = (newPage) => {
     };
 
 
-    const printInfo = async (filters) => {
-        try {
-          const token = localStorage.getItem("token");
-          if (!token) {
-            alert("Token no encontrado.");
-            return;
-          }
-      
-          // Realizar la solicitud GET a la ruta que genera los datos en JSON
-          const response = await axios.get(`${endpoint}/pagos-estadisticas-print`, {
-            headers: { Authorization: `Bearer ${token}` },
-            params: filters, // Pasamos los filtros a la ruta
-          });
-      
-          // Extraer los datos principales y las estadísticas
-          const jsonData = response.data.datos; // Clave 'datos'
-          const estadisticasData = response.data.estadisticas; // Clave 'estadisticas'
-      
-          if (!jsonData || jsonData.length === 0) {
-            alert("No hay datos para exportar.");
-            return;
-          }
-      
-          // Convertir los datos principales a una hoja
-          const worksheet1 = XLSX.utils.json_to_sheet(jsonData); // Hoja de datos
-          const workbook = XLSX.utils.book_new(); // Crea un libro nuevo
-          XLSX.utils.book_append_sheet(workbook, worksheet1, "Datos"); // Añade la hoja al libro
-      
-          // Preparar las estadísticas para convertirlas
-          const estadisticasArray = Object.entries(estadisticasData).map(([key, value]) => ({
-            Estadística: key,
-            Valor: value,
-          }));
-      
-          // Convertir las estadísticas a una hoja
-          const worksheet2 = XLSX.utils.json_to_sheet(estadisticasArray);
-          XLSX.utils.book_append_sheet(workbook, worksheet2, "Estadísticas"); // Añade la segunda hoja
-      
-          // Generar el archivo Excel
-          const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-      
-          // Crear un Blob y guardarlo como archivo
-          const blob = new Blob([excelBuffer], {
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          });
-          saveAs(blob, "pagos_estadisticas.xlsx");
-        } catch (error) {
-          console.error("Error al generar el archivo Excel", error);
-          alert("Hubo un error al generar el archivo Excel");
-        }
-      };
-      
-      
-
-      
-      
-
-      const handlePrint = async () => {
-        setShowModalInfo(false); // Cerrar el modal
-        await printInfo(filters); // Llamar a la función de impresión con los filtros
-      };
-
     const columns = ["id", "Cédula", "Fecha de Pago", "Monto Cancelado", "Monto Restante", "Comentario","Acciones"];
 
     const renderItem = (reporte) => (
@@ -259,8 +194,6 @@ const handlePageChange = (newPage) => {
                 >
                     <i className="bi bi-eye"></i>
                 </Button>
-
-               
                 {userRole === 'admin' && (
                 
 
@@ -342,7 +275,6 @@ const handlePageChange = (newPage) => {
                                     <FaSync />
                                 )}
                             </Button>
-
                             <Button 
                                     variant="info me-2" 
                                     onClick={getAllReportes}
@@ -350,15 +282,6 @@ const handlePageChange = (newPage) => {
                                 >
                                     <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
-
-                                  {/* Botón con el icono de impresora */}
-                            <Button
-                                variant="btn btn-info"
-                                onClick={() => setShowModalInfo(true)} // Abrir el modal
-                                className="me-2"
-                            >
-                                <i className="bi bi-printer-fill"></i> {/* Icono de impresora */}
-                            </Button>
 
                             {userRole === 'admin' ||userRole === 'pagos' ? (
 
@@ -439,26 +362,6 @@ const handlePageChange = (newPage) => {
                     </Button>
                 </Modal.Footer>
             </Modal>
-             {/* Modal de confirmación */}
-                <Modal show={showModalInfo} onHide={() => setShowModalInfo(false)} centered>
-                    <Modal.Header closeButton>
-                    <Modal.Title>Confirmar impresión</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                    ¿Está seguro que desea imprimir la información? Esto generará un archivo descargable en formato Excel.
-                    </Modal.Body>
-                    <Modal.Footer>
-                    <div className="d-flex justify-content-end gap-2">
-                        <Button variant="secondary" onClick={() => setShowModalInfo(false)}>
-                            Cancelar
-                        </Button>
-                        <Button variant="primary" onClick={handlePrint}>
-                            Imprimir
-                        </Button>
-                        </div>
-
-                    </Modal.Footer>
-                </Modal>
             <ToastContainer />
         </div>
        
@@ -468,4 +371,4 @@ const handlePageChange = (newPage) => {
     );
 };
 
-export default ShowPagos;
+export default ShowPagosProgramas;

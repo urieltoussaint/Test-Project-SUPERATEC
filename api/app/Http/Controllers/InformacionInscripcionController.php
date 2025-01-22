@@ -12,6 +12,7 @@ use App\Models\Nivel;
 use App\Models\Periodo;
 use App\Models\TipoPrograma;
 use App\Models\Unidad;
+use App\Models\Grupo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -79,6 +80,7 @@ public function SelectInsc()
         $modalidad=Modalidad::all();
         $nivel=Nivel::all();
         $tipoPrograma=TipoPrograma::all();
+        $grupo=Grupo::all();
 
   
 
@@ -90,7 +92,8 @@ public function SelectInsc()
             'unidad'=>$unidad,
             'modalidad'=>$modalidad,
             'nivel'=>$nivel,
-            'tipoPrograma'=>$tipoPrograma
+            'tipoPrograma'=>$tipoPrograma,
+            'grupo'=>$grupo
      
             
         ]);
@@ -154,7 +157,7 @@ public function getInscripcionesWithStatistics(Request $request, $cursoId)
         ->where('curso_id', $cursoId) // Filtrar por curso_id
         ->orderBy('id', 'desc'); // Ordenar por ID descendente
 
-    // Aplicar filtros adicionales como en tu código
+    // Aplicar filtros adicionales 
     if ($request->filled('cohorte_id')) {
         $queryPaginated->where('cohorte_id', $request->cohorte_id);
     }
@@ -170,11 +173,7 @@ public function getInscripcionesWithStatistics(Request $request, $cursoId)
     if ($request->filled('status_curso')) {
         $queryPaginated->where('status_curso', $request->status_curso);
     }
-    if ($request->filled('cedula_identidad')) {
-        $queryPaginated->whereHas('datosIdentificacion', function ($query) use ($request) {
-            $query->where('cedula_identidad', 'LIKE', "%{$request->cedula_identidad}%");
-        });
-    }
+
 
     // Obtener los datos paginados para mostrar en la tabla
     $datosPaginados = $queryPaginated->paginate(9);
@@ -265,6 +264,246 @@ public function getInscripcionesWithStatistics(Request $request, $cursoId)
             'estadoCursos' => $estadoCursos
         ],
     ]);
+}
+
+
+public function getDatosCursos(Request $request, $datos_identificacion_id = null)
+{
+    // Verificar si datos_identificacion_id viene como parámetro o en la query string
+    $cursoId = $request->query('curso_id');
+    $datosIdentificacionId = $datos_identificacion_id ?? $request->query('datos_identificacion_id');
+
+    // Iniciar la consulta base
+    $queryPaginated = InformacionInscripcion::query()
+    ->with(['curso']);
+
+    // Filtrar por curso_id si está presente
+    if ($cursoId) {
+        $queryPaginated->where('curso_id', $cursoId);
+    }
+
+    // Filtrar por datos_identificacion_id si está presente
+    if ($datosIdentificacionId) {
+        $queryPaginated->where('datos_identificacion_id', $datosIdentificacionId);
+    }
+    // Consulta paginada con filtros
+    
+
+    if ($request->filled('cohorte_id')) {
+        $queryPaginated->where('cohorte_id', $request->cohorte_id);
+    }
+    if ($request->filled('centro_id')) {
+        $queryPaginated->where('centro_id', $request->centro_id);
+    }
+    if ($request->filled('periodo_id')) {
+        $queryPaginated->where('periodo_id', $request->periodo_id);
+    }
+    if ($request->filled('status_pay')) {
+        $queryPaginated->where('status_pay', $request->status_pay);
+    }
+    if ($request->filled('status_curso')) {
+        $queryPaginated->where('status_curso', $request->status_curso);
+    }
+
+     
+    if ($request->filled('nivel_id')) {
+        $queryPaginated->whereHas('curso', function ($query) use ($request) {
+            $query->where('nivel_id', $request->nivel_id);
+        });
+    }
+    if ($request->filled('area_id')) {
+        $queryPaginated->whereHas('curso', function ($query) use ($request) {
+            $query->where('area_id', $request->area_id);
+        });
+    }
+    if ($request->filled('modalidad_id')) {
+        $queryPaginated->whereHas('curso', function ($query) use ($request) {
+            $query->where('modalidad_id', $request->modalidad_id);
+        });
+    }
+    if ($request->filled('tipo_programa_id')) {
+        $queryPaginated->whereHas('curso', function ($query) use ($request) {
+            $query->where('tipo_programa_id', $request->tipo_programa_id);
+        });
+    }
+    if ($request->filled('unidad_id')) {
+        $queryPaginated->whereHas('curso', function ($query) use ($request) {
+            $query->where('unidad_id', $request->unidad_id);
+        });
+    }
+    
+
+    $datosPaginados = $queryPaginated->paginate(9);
+
+
+    $queryStatistics = InformacionInscripcion::query();
+
+    // Filtrar por curso_id si está presente
+    if ($cursoId) {
+        $queryStatistics->where('curso_id', $cursoId);
+    }
+
+    // Filtrar por datos_identificacion_id si está presente
+    if ($datosIdentificacionId) {
+        $queryStatistics->where('datos_identificacion_id', $datosIdentificacionId);
+    }
+    // Consulta paginada con filtros
+    
+    if ($request->filled('cohorte_id')) {
+        $queryStatistics->where('cohorte_id', $request->cohorte_id);
+    }
+    if ($request->filled('centro_id')) {
+        $queryStatistics->where('centro_id', $request->centro_id);
+    }
+    if ($request->filled('periodo_id')) {
+        $queryStatistics->where('periodo_id', $request->periodo_id);
+    }
+    if ($request->filled('status_pay')) {
+        $queryStatistics->where('status_pay', $request->status_pay);
+    }
+    if ($request->filled('status_curso')) {
+        $queryStatistics->where('status_curso', $request->status_curso);
+    }
+
+     
+    if ($request->filled('nivel_id')) {
+        $queryStatistics->whereHas('curso', function ($query) use ($request) {
+            $query->where('nivel_id', $request->nivel_id);
+        });
+    }
+    if ($request->filled('area_id')) {
+        $queryStatistics->whereHas('curso', function ($query) use ($request) {
+            $query->where('area_id', $request->area_id);
+        });
+    }
+    if ($request->filled('modalidad_id')) {
+        $queryStatistics->whereHas('curso', function ($query) use ($request) {
+            $query->where('modalidad_id', $request->modalidad_id);
+        });
+    }
+    if ($request->filled('tipo_programa_id')) {
+        $queryStatistics->whereHas('curso', function ($query) use ($request) {
+            $query->where('tipo_programa_id', $request->tipo_programa_id);
+        });
+    }
+    if ($request->filled('unidad_id')) {
+        $queryStatistics->whereHas('curso', function ($query) use ($request) {
+            $query->where('unidad_id', $request->unidad_id);
+        });
+    }
+    
+
+    $datosParaEstadisticas = $queryStatistics->get();
+
+    // Calcular estadísticas generales
+    $totalCursos = $datosParaEstadisticas->count();
+
+    $horasCursando = $datosParaEstadisticas->where('status_curso', 1)->sum(function ($item) {
+        return $item->curso->cantidad_horas ?? 0;
+    });
+    $horasFinalizadas = $datosParaEstadisticas->where('status_curso', 2)->sum(function ($item) {
+        return $item->curso->cantidad_horas ?? 0;
+    });
+
+    $cursosPorEstadoCurso = $datosParaEstadisticas->groupBy('status_curso')->map(function ($group, $status) {
+        $labels = [1 => 'No Finalizado', 2 => 'Egresado/Certificado', 3 => 'Retirado'];
+        return [
+            'count' => $group->count(),
+            'description' => $labels[$status] ?? 'Desconocido',
+        ];
+    });
+
+    $cursosPorEstadoPago = $datosParaEstadisticas->groupBy('status_pay')->map(function ($group, $status) {
+        $labels = [
+            1 => 'No Pagado (Rojo)',
+            2 => 'En Proceso (Naranja)',
+            3 => 'Pagado (Verde)',
+            4 => 'Patrocinado (Azul)',
+            5 => 'Exonerado (Rosado)',
+        ];
+        return [
+            'count' => $group->count(),
+            'description' => $labels[$status] ?? 'Desconocido',
+        ];
+    });
+
+    $cursosPorCohorte = $datosParaEstadisticas->groupBy('cohorte.descripcion')->map(function ($group, $descripcion) {
+        return [
+            'count' => $group->count(),
+            'description' => $descripcion,
+        ];
+    });
+
+    $cursosPorPeriodo = $datosParaEstadisticas->groupBy('periodo.descripcion')->map(function ($group, $descripcion) {
+        return [
+            'count' => $group->count(),
+            'description' => $descripcion,
+        ];
+    });
+
+    $cursosPorNivel = $datosParaEstadisticas->groupBy('curso.nivel.descripcion')->map(function ($group, $descripcion) {
+        return [
+            'count' => $group->count(),
+            'description' => $descripcion,
+        ];
+    });
+
+    $cursosPorArea = $datosParaEstadisticas->groupBy('curso.area.descripcion')->map(function ($group, $descripcion) {
+        return [
+            'count' => $group->count(),
+            'description' => $descripcion,
+        ];
+    });
+
+    $cursosPorModalidad = $datosParaEstadisticas->groupBy('curso.modalidad.descripcion')->map(function ($group, $descripcion) {
+        return [
+            'count' => $group->count(),
+            'description' => $descripcion,
+        ];
+    });
+
+    $cursosPorTipoPrograma = $datosParaEstadisticas->groupBy('curso.tipoPrograma.descripcion')->map(function ($group, $descripcion) {
+        return [
+            'count' => $group->count(),
+            'description' => $descripcion,
+        ];
+    });
+
+    $cursosPorUnidad = $datosParaEstadisticas->groupBy('curso.unidad.descripcion')->map(function ($group, $descripcion) {
+        return [
+            'count' => $group->count(),
+            'description' => $descripcion,
+        ];
+    });
+    $statusNoFinalizado = $datosParaEstadisticas->where('status_curso', 1)->count();
+    $statusEgresado = $datosParaEstadisticas->where('status_curso', 2)->count();
+    $statusRetirado = $datosParaEstadisticas->where('status_curso', 3)->count();
+
+
+
+    return response()->json([
+        'datos' => $datosPaginados,
+        'estadisticas' => [
+            'totalCursos' => $totalCursos,
+            'horasCursando' => $horasCursando,
+            'horasFinalizadas' => $horasFinalizadas,
+            'cursosPorEstadoCurso' => $cursosPorEstadoCurso,
+            'cursosPorEstadoPago' => $cursosPorEstadoPago,
+            'cursosPorCohorte' => $cursosPorCohorte,
+            'cursosPorPeriodo' => $cursosPorPeriodo,
+            'cursosPorNivel' => $cursosPorNivel,
+            'cursosPorArea' => $cursosPorArea,
+            'cursosPorModalidad' => $cursosPorModalidad,
+            'cursosPorTipoPrograma' => $cursosPorTipoPrograma,
+            'cursosPorUnidad' => $cursosPorUnidad,
+            'statusNoFinalizado' => $statusNoFinalizado,
+            'statusEgresado' => $statusEgresado,
+            'statusRetirado' => $statusRetirado,
+        ],
+    ]);
+
+   
+
 }
 
 

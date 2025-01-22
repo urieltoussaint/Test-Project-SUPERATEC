@@ -350,10 +350,6 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
     color,
   };
 });
-
-
- 
-
   const columns = ["Estado de Pago","Estado de Curso", "Cédula", "Fecha de Inscripción", "Nombres", "Apellidos", "Acciones Pago","Acciones Curso","Acciones"];
 
   const renderItem = (inscripcion) => (
@@ -402,8 +398,6 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
             <i className="bi bi-check-circle"></i>
           </Button>
         )}
-
-
         {/*
         Botón Retirado */}
          {(userRole === 'admin' || userRole === 'superuser') && (inscripcion.status_curso!=='2'  )  && (
@@ -427,9 +421,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
           <i className="bi bi-x-lg"></i> {/* Icono de "X" */}
         </Button>
         )}
-
         </div>
-
       </td>
       <td>
       <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
@@ -448,19 +440,14 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
             <i className="bi bi-pencil-fill"></i>
           </Button>
         )}
-
         {/* Botón para eliminar si el rol es 'admin' */}
         {userRole === 'admin' && (
           <Button variant="btn btn-danger" onClick={() => handleShowModal(inscripcion.id)} className="me-1">
             <i className="bi bi-trash3-fill"></i>
           </Button>
         )}
-
         </div>
-
       </td>
-
-
     </tr>
   );
 
@@ -470,7 +457,9 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
         {/* Total de Inscritos */}
         <div className="stat-card" style={{  }}>
             <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><FaUserFriends /></div>
-            <div className="stat-number" style={{ color: 'rgba(255, 74, 74, 0.9) ', fontSize: '1.8rem' }}>{statistics?.totalInscritos}</div>
+            <div className="stat-number" style={{ color: 'rgba(255, 74, 74, 0.9)', fontSize: '1.8rem' }}>
+              {statistics?.totalInscritos !== undefined ? statistics.totalInscritos : '0'}
+            </div>
             <h4 style={{ fontSize: '1.1rem', color:'gray' }}>Total de Inscritos</h4>
 
         </div>
@@ -495,14 +484,16 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                         padding: '0 8px',  // Reducimos el padding para que esté más junto
                     }}>
                         <div style={{ color: '#5cb85c', fontWeight: 'bold' }}> {/* Color verde para menor */}
-                            <span>↓ Menor:</span> {statistics.menorEdad} años
+                            <span>↓ Menor:</span> {statistics?.menorEdad != undefined ? statistics?.menorEdad :'0'} años
+                            
                         </div>
                         <div style={{ color: '#d9534f', fontWeight: 'bold' }}> {/* Color rojo para mayor */}
-                            <span>↑ Mayor:</span> {statistics.mayorEdad} años
+                            <span>↑ Mayor:</span> {statistics?.mayorEdad != undefined ? statistics?.mayorEdad :'0'} años
                         </div>
                     </div>
+                  {/* Promedio de Edad */}
+                    {statistics?.promedioEdad !== undefined && statistics?.promedioEdad !== null && (
 
-                    {/* Promedio de Edad */}
                     <div className="stat-number" style={{
                         color: '#ffda1f',
                         fontSize: '1.7rem',  // Reducimos el tamaño de la fuente
@@ -510,9 +501,9 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                         textAlign: 'center',
                         marginBottom: '3px',  // Reducimos el margen
                     }}>
-                        {statistics.promedioEdad.toFixed(0)} Años
+                        {statistics?.promedioEdad?.toFixed(0) || 'N/A'} Años
                     </div>
-
+                    )}
                     <h4 style={{
                         fontSize: '0.9rem',  // Reducimos el tamaño del texto
                         color: '#6c757d',
@@ -523,9 +514,13 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                     </h4>
 
                     {/* Barra de Progreso */}
+                    {statistics?.promedioEdad !== undefined &&
+                    statistics?.mayorEdad !== undefined &&
+                    statistics?.promedioEdad !== null &&
+                    statistics?.mayorEdad !== null && (
                     <div style={{ width: '75%', margin: '0 auto' }}>
                         <ProgressBar
-                            now={(statistics.promedioEdad * 100) /statistics.mayorEdad}
+                            now={(statistics.promedioEdad * 100) / statistics.mayorEdad}
                             variant="warning"
                             style={{
                                 height: '8px',  // Reducimos la altura de la barra
@@ -533,10 +528,8 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                                 backgroundColor: '#f1f1f1'
                             }}
                         />
-                    </div>
+                    </div>)}
                 </div>
-
-
     </div>
 
     <div className="row" style={{ marginTop: '10px' }}>
@@ -560,10 +553,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                   onClick={loadData}
                   disabled={loadingData} // Deshabilita el botón si está cargando
                   style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
-
               >
-
-
                   {/* Icono de recarga */}
                   {loadingData ? (
                   <FaSync className="spin" /> // Ícono girando si está cargando
@@ -774,6 +764,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
     <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
                     <h4 style={{ fontSize: '1.2rem' }}>Participantes por Estado de Pago</h4>
+                    {estadoPago!== undefined && (
                     <ResponsiveContainer width="100%" height={400}>
                       <PieChart>
                         <Pie
@@ -792,11 +783,13 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                         </Pie>
                         <Tooltip />
                       </PieChart>
-                    </ResponsiveContainer>   
+                    </ResponsiveContainer>  
+                    )} 
             </div>
 
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
             <h4 style={{ fontSize: '1.2rem' }}>Participantes por Estado de Curso</h4>
+            {statistics?.totalInscritos !== undefined && (
               <ResponsiveContainer width="100%" height={400}>
                 <PieChart>
                   <Pie
@@ -817,6 +810,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
+            )}
             </div>
         </div>
         

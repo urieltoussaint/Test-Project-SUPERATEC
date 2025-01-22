@@ -14,16 +14,20 @@ const endpoint = 'http://localhost:8000/api';
 
 
 const EditCursos = () => {
-  const [formData, setFormData] = useState({
-    descripcion: '',
-    cantidad_horas: '',
-    fecha_inicio: '',
-    area_id: '',
-    unidad_id:'',
-    nivel_id:'',
-    modalidad_id:'',
-    tipo_programa_id:'',
-  });
+   const [formData, setFormData] = useState({
+      descripcion: '',
+      cantidad_horas: '',
+      fecha_inicio: '',
+      area_id: '',
+      unidad_id:'',
+      nivel_id:'',
+      modalidad_id:'',
+      tipo_programa_id:'',
+      sesiones:0,
+      grupo_id:'',
+      externo:false,
+      
+    });
 
   const [filterOptions, setFilterOptions] = useState({
     areaOptions: [],
@@ -31,6 +35,7 @@ const EditCursos = () => {
     nivelOptions: [],
     tipoProgramaOptions: [],
     modalidadOptions: [],
+    grupoOptions:[],
 });
 
   const { id } = useParams(); // Obtener el id del curso de la URL
@@ -68,7 +73,9 @@ const EditCursos = () => {
       nivel_id: curso.nivel_id || '',
       unidad_id: curso.unidad_id || '',  
       modalidad_id: curso.modalidad_id || '',  
-      tipo_programa_id: curso.tipo_programa_id || ''
+      tipo_programa_id: curso.tipo_programa_id || '',
+      cantidad_sesiones:curso.sesiones || '',
+      grupo_id:curso.grupo_id || '',
     });
 
     } catch (error) {
@@ -187,7 +194,7 @@ const EditCursos = () => {
       });
       
       // Desestructuramos los datos que vienen en la respuesta
-      const { area, unidad, nivel, tipo_programa, modalidad } = response.data;
+      const { area, unidad, nivel, tipo_programa, modalidad,grupo } = response.data;
   
       // Retornamos las opciones en un solo objeto
       setFilterOptions( {
@@ -196,6 +203,7 @@ const EditCursos = () => {
         nivelOptions: nivel,
         tipoProgramaOptions: tipo_programa,
         modalidadOptions: modalidad,
+        grupoOptions:grupo,
       });
       setSelectVisible(true);  // Mostrar los selectores
   
@@ -205,6 +213,28 @@ const EditCursos = () => {
     }
   };
   
+   useEffect(() => {
+      if (formData.tipo_programa_id === "1") {
+        setFormData((prevState) => ({
+          ...prevState,
+          cantidad_horas: 2,
+          sesiones: 1,
+        }));
+      } else if (formData.tipo_programa_id === "2") {
+        setFormData((prevState) => ({
+          ...prevState,
+          cantidad_horas: 4,
+          sesiones: 1,
+        }));
+      } else if (formData.tipo_programa_id === "3") {
+        setFormData((prevState) => ({
+          ...prevState,
+          sesiones: prevState.cantidad_horas
+            ? Math.floor(prevState.cantidad_horas / 4)
+            : "",
+        }));
+      }
+    }, [formData.tipo_programa_id, formData.cantidad_horas]);
 
 
 
@@ -214,43 +244,81 @@ const EditCursos = () => {
       <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
         <h2 className="mb-2">Actualizar Curso {curso.cod}</h2>
         <Form onSubmit={handleSubmit} className="custom-gutter">
-              <Form.Group controlId="descripcion">
-                <Form.Label>Nombre del Curso</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleChange}
-                  maxLength={40}
-                  required
-                />
-              </Form.Group>
-  
-            <Row className="g-2">
-            <Col md={6}>
-              <Form.Group controlId="cantidad_horas">
-                <Form.Label>Cantidad de Horas</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="cantidad_horas"
-                  value={formData.cantidad_horas}
-                  onChange={handleChange}
-                  maxLength={4}
-                />
-              </Form.Group>
-            </Col>
-  
-            <Col md={6}>
+      <Form.Group controlId="externo">
+        <Form.Label>¿Programa externo a Superatec?</Form.Label>
+        <Form.Control
+            as="select"
+            name="externo"
+            value={formData.externo} // Asume que formData tiene la clave curso_externo
+            onChange={handleChange}
+            required
+        >
+            <option value="">Seleccione</option>
+            <option value="1">Sí</option>
+            <option value="0">No</option>
+        </Form.Control>
+    </Form.Group>
+
+      <Form.Group controlId="descripcion">
+              <Form.Label>Nombre del Programa</Form.Label>
+              <Form.Control
+                type="text"
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleChange}
+                maxLength={40}
+                required
+              />
+            </Form.Group>
             <SelectComponent
-              options={filterOptions.nivelOptions}  // Usar el estado filterOptions
+              options={filterOptions.tipoProgramaOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
-              selectedValue={formData.nivel_id}
+              selectedValue={formData.tipo_programa_id}
               handleChange={handleChange}
-              controlId="nivel_id"
-              label="Nivel"
+              controlId="tipo_programa_id"
+              label="Tipo de Programa"
             />
+
+            <SelectComponent
+                options={filterOptions.grupoOptions}  // Usar el estado filterOptions
+                nameField="descripcion"
+                valueField="id"
+                selectedValue={formData.grupo_id}
+                handleChange={handleChange}
+                controlId="grupo_id"
+                label="Grupo"
+              />
+
+          <Row className="g-2">
+          <Col md={6}>
+            <Form.Group controlId="cantidad_horas">
+              <Form.Label>Cantidad de Horas</Form.Label>
+              <Form.Control
+                type="number"
+                name="cantidad_horas"
+                value={formData.cantidad_horas}
+                onChange={handleChange}
+                maxLength={4}
+                disabled={formData.tipo_programa_id === "1" || formData.tipo_programa_id === "2"} // Bloquear si tipo_programa_id es 1 o 2
+              />
+            </Form.Group>
           </Col>
+
+          <Col md={6}>
+            <Form.Group controlId="sesiones">
+              <Form.Label>Cantidad de Sesiones</Form.Label>
+              <Form.Control
+                type="number"
+                name="sesiones"
+                value={formData.sesiones}
+                onChange={handleChange}
+                maxLength={4}
+                disabled={formData.tipo_programa_id !== "3"} // Bloquear si tipo_programa_id no es 3
+              />
+            </Form.Group>
+          </Col>
+
           </Row>
           <Row className="g-2">
           <Col md={6}>
@@ -264,6 +332,7 @@ const EditCursos = () => {
               controlId="area_id"
               label="Área"
             />
+            
             </Col>
 
           <Col md={6}>
@@ -293,38 +362,36 @@ const EditCursos = () => {
           </Col>
           <Col md={6}>
           <SelectComponent
-              options={filterOptions.tipoProgramaOptions}  // Usar el estado filterOptions
+              options={filterOptions.nivelOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
-              selectedValue={formData.tipo_programa_id}
+              selectedValue={formData.nivel_id}
               handleChange={handleChange}
-              controlId="tipo_programa_id"
-              label="Tipo de Programa"
+              controlId="nivel_id"
+              label="Nivel"
             />
-            </Col>
-          </Row>
-          
-          <Form.Group controlId="fecha_inicio">
-                <Form.Label>Fecha de Inicio</Form.Label>
-                <Form.Control
-                  type="date"
-                  name="fecha_inicio"
-                  value={formData.fecha_inicio}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-        <div className='mt-3'>
-          <Button variant="success" type="submit" >
-            Guardar
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={() => navigate('/cursos')}
-            className="ms-2"
-          >
+          </Col>
+        </Row>
+        
+        <Form.Group controlId="fecha_inicio">
+              <Form.Label>Fecha de Inicio</Form.Label>
+              <Form.Control
+                type="date"
+                name="fecha_inicio"
+                value={formData.fecha_inicio}
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+
+        <div className="d-flex justify-content-end mt-3">
+          <Button variant="secondary" onClick={() => navigate('/cursos')} className="me-2">
             Volver
           </Button>
-          </div>
+          <Button variant="success" type="submit">
+            Guardar
+          </Button>
+        </div>
       </Form>
       
     </div>

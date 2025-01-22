@@ -11,7 +11,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PaginationTable from '../../components/PaginationTable';  // Importa el componente de paginación
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch  } from 'react-icons/fa';  // Importamos íconos de react-icons
@@ -26,22 +27,15 @@ const ShowDatos = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
-
-
-
     const [showModal, setShowModal] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
     const [statistics, setStatistics] = useState({});
-    
-
     // Mueve esto al principio del componente
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-
-
     const [nivelInstruccionOptions, setNivelInstruccionOptions] = useState([]);
     const [generoOptions, setGeneroOptions] = useState([]);
     const [estadoOptions, setEstadoOptions] = useState([]);
@@ -56,6 +50,7 @@ const ShowDatos = () => {
     const porcentajeMasculino = statistics?.porcentajesGenero?.masculino || 0;
     const porcentajeFemenino = statistics?.porcentajesGenero?.femenino || 0;
     const porcentajeOtros = statistics?.porcentajesGenero?.otros || 0;
+    const [showModalInfo, setShowModalInfo] = useState(false);
 
     const [filters, setFilters] = useState({
         nivel_instruccion_id: '',
@@ -178,6 +173,7 @@ const ShowDatos = () => {
 
 
 
+
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
         try {
@@ -188,6 +184,88 @@ const ShowDatos = () => {
             setLoadingData(false); // Detener el estado de carga cuando la solicitud haya terminado
         }
     };
+
+
+    const printInfo = async (filters) => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Token no encontrado.");
+            return;
+          }
+      
+          // Realizar la solicitud GET a la ruta que genera los datos en JSON
+          const response = await axios.get(`${endpoint}/datos-filtrados-print`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: filters, // Pasamos los filtros a la ruta
+          });
+      
+          // Extraer los datos principales y las estadísticas
+          const jsonData = response.data.datos; // Clave 'datos'
+          const estadisticasData = response.data.estadisticas; // Clave 'estadisticas'
+      
+          if (!jsonData || jsonData.length === 0) {
+            alert("No hay datos para exportar.");
+            return;
+          }
+      
+          // Convertir los datos principales a una hoja
+          const worksheet1 = XLSX.utils.json_to_sheet(jsonData); // Hoja de datos
+          const workbook = XLSX.utils.book_new(); // Crea un libro nuevo
+          XLSX.utils.book_append_sheet(workbook, worksheet1, "Datos"); // Añade la hoja al libro
+      // Preparar las estadísticas para convertirlas
+        const estadisticasArray = [];
+
+        // Iterar sobre las estadísticas y descomponerlas
+        Object.entries(estadisticasData).forEach(([key, value]) => {
+        if (typeof value === "object" && !Array.isArray(value)) {
+            // Si el valor es un objeto, descomponer sus datos (por ejemplo, participantesPorEstado, nivelesInstruccion)
+            Object.entries(value).forEach(([subKey, subValue]) => {
+            if (typeof subValue === "object") {
+                estadisticasArray.push({
+                Estadística: `${key} - ${subKey}`,
+                Cantidad: subValue.count || 0,
+                Porcentaje: subValue.percentage ? `${subValue.percentage.toFixed(2)}%` : "0%",
+                });
+            } else {
+                estadisticasArray.push({
+                Estadística: `${key} - ${subKey}`,
+                Valor: subValue,
+                });
+            }
+            });
+        } else {
+            // Si es un valor simple, agregarlo directamente
+            estadisticasArray.push({
+            Estadística: key,
+            Valor: value,
+            });
+        }
+        });
+
+        // Convertir las estadísticas a una hoja
+        const worksheet2 = XLSX.utils.json_to_sheet(estadisticasArray);
+        XLSX.utils.book_append_sheet(workbook, worksheet2, "Estadísticas"); // Añade la segunda hoja
+                // Generar el archivo Excel
+                const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+            
+                // Crear un Blob y guardarlo como archivo
+                const blob = new Blob([excelBuffer], {
+                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                });
+                saveAs(blob, "participantes_estadisticas.xlsx");
+                } catch (error) {
+                console.error("Error al generar el archivo Excel", error);
+                alert("Hubo un error al generar el archivo Excel");
+                }
+            };
+      
+      
+
+      const handlePrint = async () => {
+        setShowModalInfo(false); // Cerrar el modal
+        await printInfo(filters); // Llamar a la función de impresión con los filtros
+      };
     
 
 
@@ -484,6 +562,13 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 >
                                     <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
+                                <Button
+                                    variant="btn btn-info"
+                                    onClick={() => setShowModalInfo(true)} // Abrir el modal
+                                    className="me-2"
+                                >
+                                    <i className="bi bi-printer-fill"></i> {/* Icono de impresora */}
+                                </Button>
                                 
 
 
@@ -750,7 +835,26 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                         </PieChart>
                     </ResponsiveContainer>
 
+                    {/* Modal de confirmación */}
+                    <Modal show={showModalInfo} onHide={() => setShowModalInfo(false)} centered>
+                    <Modal.Header closeButton>
+                    <Modal.Title>Confirmar impresión</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                    ¿Está seguro que desea imprimir la información? Esto generará un archivo descargable en formato Excel.
+                    </Modal.Body>
+                    <Modal.Footer>
+                    <div className="d-flex justify-content-end gap-2">
+                        <Button variant="secondary" onClick={() => setShowModalInfo(false)}>
+                            Cancelar
+                        </Button>
+                        <Button variant="primary" onClick={handlePrint}>
+                            Imprimir
+                        </Button>
+                        </div>
 
+                    </Modal.Footer>
+                </Modal>
                 
                 </div>
             </div>

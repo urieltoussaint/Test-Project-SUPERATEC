@@ -52,6 +52,7 @@ import EditInscripciones from './pages/Cursos/EditInscripciones';
 import ShowProcedencias from './pages/Procedencias/ShowProcedencias';
 import CreateProcedencias from './pages/Procedencias/CreateProcedencias';
 import EditProcedencias from './pages/Procedencias/EditProcedencias';
+import ShowPagosProgramas from './pages/Participantes/ReportePagos/ShowPagosProgramas';
 
 
 function App() {
@@ -90,6 +91,7 @@ function App() {
             <Route path="/pagos/:cedula/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagosCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/pagos/:id" element={<AuthenticatedLayout><ShowMorePagos /></AuthenticatedLayout>} />
             <Route path="/pagos/curso/:inscripcion_curso_id" element={<AuthenticatedLayout><ShowPagosCursos /></AuthenticatedLayout>} />
+            <Route path="/pagos/programa/:curso_id" element={<AuthenticatedLayout><ShowPagosProgramas /></AuthenticatedLayout>} />
             <Route path="/voluntariados" element={<AuthenticatedLayout><ShowVoluntariados /></AuthenticatedLayout>} />
             <Route path="/voluntariados/:id" element={<AuthenticatedLayout><ShowMoreVoluntariados /></AuthenticatedLayout>} />
             <Route path="/voluntariados/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateVoluntariados /></AuthenticatedLayout></ProtectedRoute>}  />
@@ -298,7 +300,7 @@ const AuthenticatedLayout = ({ children }) => {
         </div>
         <ul className={`dropdown-menu ${openDropdown === 1 ? 'show' : ''}`}>
           <li><NavLink to="/datos"><i className="bi bi-person-circle"></i> Participantes</NavLink></li>
-          <li><NavLink to="/cursos"><i className="bi bi-book-half"></i> Cursos</NavLink></li>
+          <li><NavLink to="/cursos"><i className="bi bi-book-half"></i> Programas</NavLink></li>
           <li><NavLink to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</NavLink></li>
           <li><NavLink to="/patrocinantes"><i className="bi bi-building"></i> Patrocinantes</NavLink></li>
           <li><NavLink to="/procedencias"><i className="bi bi-geo-fill"></i> Procedencias</NavLink></li>

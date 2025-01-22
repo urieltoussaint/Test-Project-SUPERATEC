@@ -10,6 +10,7 @@ use App\Models\TasaBcv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class ReportePagosController extends Controller
 {
     use ApiResourceTrait, ApiCrudTrait;
@@ -160,46 +161,152 @@ class ReportePagosController extends Controller
 
 
     public function getPagosWithStatistics(Request $request)
+    {
+        // Filtro opcional por cédula de identidad
+        $cedulaFilter = $request->input('cedula_identidad');
+        $cursoIdFilter = $request->input('curso_id'); // Obtener el parámetro curso_id si está presente
+        
+        // Consulta para obtener los datos paginados que se mostrarán en la tabla
+        $queryPaginated = DB::table('reporte_pagos')
+            ->join('informacion_inscripcion', 'reporte_pagos.informacion_inscripcion_id', '=', 'informacion_inscripcion.id')
+            ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id')
+            ->select('reporte_pagos.*', 'datos_identificacion.cedula_identidad') // Incluir cedula_identidad
+            ->orderBy('reporte_pagos.fecha', 'desc'); // Ordena por fecha descendente para mostrar los últimos pagos primero
+    
+        // Aplicar el filtro de cédula de identidad a la consulta paginada
+        if ($request->filled('cedula_identidad')) {
+            $queryPaginated->where('datos_identificacion.cedula_identidad', 'LIKE', '%' . $cedulaFilter . '%');
+        }
+    
+        // Filtro por centro_id
+        if ($request->filled('centro_id')) {
+            $queryPaginated->where('informacion_inscripcion.centro_id', $request->input('centro_id'));
+        }
+    
+        // Filtro por cohorte_id
+        if ($request->filled('cohorte_id')) {
+            $queryPaginated->where('informacion_inscripcion.cohorte_id', $request->input('cohorte_id'));
+        }
+    
+        // Filtro por periodo_id
+        if ($request->filled('periodo_id')) {
+            $queryPaginated->where('informacion_inscripcion.periodo_id', $request->input('periodo_id'));
+        }
+        
+        // Filtro opcional por curso_id
+        if ($request->filled('curso_id')) {
+            $queryPaginated->where('informacion_inscripcion.curso_id', $cursoIdFilter);
+        }
+    
+        // Obtener los datos paginados para mostrar en la tabla
+        $pagosPaginados = $queryPaginated->paginate(10);
+    
+        // Consulta para obtener todos los datos filtrados (sin paginación) para las estadísticas
+        $queryStatistics = DB::table('reporte_pagos')
+            ->join('informacion_inscripcion', 'reporte_pagos.informacion_inscripcion_id', '=', 'informacion_inscripcion.id')
+            ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id')
+            ->select('reporte_pagos.*', 'datos_identificacion.cedula_identidad'); // Incluir cedula_identidad
+    
+        // Aplicar el mismo filtro de cédula a la consulta de estadísticas
+        if ($request->filled('cedula_identidad')) {
+            $queryStatistics->where('datos_identificacion.cedula_identidad', 'LIKE', '%' . $cedulaFilter . '%');
+        }
+    
+        // Filtro por centro_id
+        if ($request->filled('centro_id')) {
+            $queryStatistics->where('informacion_inscripcion.centro_id', $request->input('centro_id'));
+        }
+    
+        // Filtro por cohorte_id
+        if ($request->filled('cohorte_id')) {
+            $queryStatistics->where('informacion_inscripcion.cohorte_id', $request->input('cohorte_id'));
+        }
+    
+        // Filtro por periodo_id
+        if ($request->filled('periodo_id')) {
+            $queryStatistics->where('informacion_inscripcion.periodo_id', $request->input('periodo_id'));
+        }
+    
+        // Filtro opcional por curso_id en estadísticas
+        if ($request->filled('curso_id')) {
+            $queryStatistics->where('informacion_inscripcion.curso_id', $cursoIdFilter);
+        }
+    
+        // Obtener todos los datos filtrados para las estadísticas sin paginación
+        $pagosParaEstadisticas = $queryStatistics->get();
+    
+        // Calcular estadísticas generales
+        $totalPagos = $pagosParaEstadisticas->count();
+        $totalMontoCancelado = $pagosParaEstadisticas->sum('monto_cancelado'); // Cambiado de avg a sum
+    
+        // Retornar los datos paginados y las estadísticas
+        return response()->json([
+            'datos' => $pagosPaginados,
+            'estadisticas' => [
+                'totalPagos' => $totalPagos,
+                'totalMontoCancelado' => $totalMontoCancelado, // Cambiado a totalMontoCancelado
+            ],
+        ]);
+    }
+
+
+    public function getPagosWithStatisticsPrint(Request $request)
 {
     // Filtro opcional por cédula de identidad
     $cedulaFilter = $request->input('cedula_identidad');
+    $cursoIdFilter = $request->input('curso_id'); // Obtener el parámetro curso_id si está presente
+    
+    // Consulta para obtener todos los datos (sin paginación)
+    $query = DB::table('reporte_pagos')
+        ->join('informacion_inscripcion', 'reporte_pagos.informacion_inscripcion_id', '=', 'informacion_inscripcion.id')
+        ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id')
+        ->select('reporte_pagos.*', 'datos_identificacion.cedula_identidad') // Incluir cedula_identidad
+        ->orderBy('reporte_pagos.fecha', 'desc'); // Ordenar por fecha descendente para mostrar los últimos pagos primero
 
-    // Consulta para obtener los datos paginados que se mostrarán en la tabla
-    $queryPaginated = DB::table('reporte_pagos')
-        ->orderBy('fecha', 'desc'); // Ordena por fecha descendente para mostrar los últimos pagos primero
-
-    // Aplicar el filtro de cédula de identidad a la consulta paginada
+    // Filtro de cédula de identidad
     if ($request->filled('cedula_identidad')) {
-        $queryPaginated->where('cedula_identidad', 'LIKE', "%{$cedulaFilter}%");
+        $query->where('datos_identificacion.cedula_identidad', 'LIKE', '%' . $cedulaFilter . '%');
     }
 
-    // Obtener los datos paginados para mostrar en la tabla
-    $pagosPaginados = $queryPaginated->paginate(10);
-
-    // Consulta para obtener todos los datos filtrados (sin paginación) para las estadísticas
-    $queryStatistics = DB::table('reporte_pagos');
-
-    // Aplicar el mismo filtro de cédula a la consulta de estadísticas
-    if ($request->filled('cedula_identidad')) {
-        $queryStatistics->where('cedula_identidad', 'LIKE', "%{$cedulaFilter}%");
+    // Filtro por centro_id
+    if ($request->filled('centro_id')) {
+        $query->where('informacion_inscripcion.centro_id', $request->input('centro_id'));
     }
 
-    // Obtener todos los datos filtrados para las estadísticas sin paginación
-    $pagosParaEstadisticas = $queryStatistics->get();
+    // Filtro por cohorte_id
+    if ($request->filled('cohorte_id')) {
+        $query->where('informacion_inscripcion.cohorte_id', $request->input('cohorte_id'));
+    }
 
-    // Calcular estadísticas generales
-    $totalPagos = $pagosParaEstadisticas->count();
-    $promedioMontoCancelado = $totalPagos > 0 ? $pagosParaEstadisticas->avg('monto_cancelado') : 0;
+    // Filtro por periodo_id
+    if ($request->filled('periodo_id')) {
+        $query->where('informacion_inscripcion.periodo_id', $request->input('periodo_id'));
+    }
+    
+    // Filtro opcional por curso_id
+    if ($request->filled('curso_id')) {
+        $query->where('informacion_inscripcion.curso_id', $cursoIdFilter);
+    }
 
-    // Retornar los datos paginados y las estadísticas
+    // Obtener todos los datos sin paginación
+    $pagos = $query->get();
+
+    // Consulta para obtener las estadísticas
+    $totalPagos = $pagos->count();
+    $totalMontoCancelado = $pagos->sum('monto_cancelado'); // Sumar monto cancelado
+    
+    // Retornar los datos y las estadísticas
     return response()->json([
-        'datos' => $pagosPaginados,
+        'datos' => $pagos,
         'estadisticas' => [
             'totalPagos' => $totalPagos,
-            'promedioMontoCancelado' => $promedioMontoCancelado,
+            'totalMontoCancelado' => $totalMontoCancelado,
         ],
     ]);
 }
+
+    
+    
 
 public function getPagosByInscripcion(Request $request)
 {
