@@ -53,6 +53,7 @@ import ShowProcedencias from './pages/Procedencias/ShowProcedencias';
 import CreateProcedencias from './pages/Procedencias/CreateProcedencias';
 import EditProcedencias from './pages/Procedencias/EditProcedencias';
 import ShowPagosProgramas from './pages/Participantes/ReportePagos/ShowPagosProgramas';
+import CambiarClave from './pages/Users/CambiarClave';
 
 
 function App() {
@@ -70,6 +71,8 @@ function App() {
             <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><ShowUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="users/:id" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><EditUsers /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="users/create" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><CreateUsers /></AuthenticatedLayout></ProtectedRoute>} />
+            <Route path="cambiar_clave" element={<ProtectedRoute allowedRoles={['admin']}><AuthenticatedLayout><CambiarClave /></AuthenticatedLayout></ProtectedRoute>} />
+
             <Route path="/datos" element={<AuthenticatedLayout><ShowDatos /></AuthenticatedLayout>} />
             <Route path="/formulario/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateDatos /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditDatos /></AuthenticatedLayout></ProtectedRoute>} />
@@ -300,7 +303,7 @@ const AuthenticatedLayout = ({ children }) => {
         </div>
         <ul className={`dropdown-menu ${openDropdown === 1 ? 'show' : ''}`}>
           <li><NavLink to="/datos"><i className="bi bi-person-circle"></i> Participantes</NavLink></li>
-          <li><NavLink to="/cursos"><i className="bi bi-book-half"></i> Programas</NavLink></li>
+          <li><NavLink to="/cursos"><i className="bi bi-book-half"></i> Unidad Curricular</NavLink></li>
           <li><NavLink to="/pagos"><i className="bi bi-credit-card-fill"></i> Reporte de Pagos</NavLink></li>
           <li><NavLink to="/patrocinantes"><i className="bi bi-building"></i> Patrocinantes</NavLink></li>
           <li><NavLink to="/procedencias"><i className="bi bi-geo-fill"></i> Procedencias</NavLink></li>
@@ -350,9 +353,11 @@ const AuthenticatedLayout = ({ children }) => {
               <div className="logout-options " >
               <span >Usuario: {user.username}</span>
               </div>
+              <div className="logout-option" onClick={() => navigate('/cambiar_clave')}>
+              <i className="bi bi-lock" style={{ marginRight: '8px' }}></i>
+              <span>Cambiar Clave</span>
+              </div>
               <div className="logout-option" onClick={handleLogout}>
-
-              
                 <i className="bi bi-box-arrow-right" style={{ marginRight: '8px' }}></i>
                 <span>Logout</span>
               </div>

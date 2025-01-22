@@ -516,7 +516,7 @@ const participantsByAportePatrocinado = [
           <div className="col-lg-9"> {/* Ajustado para más espacio a la tabla */}
             <div className="card-box" style={{ padding: '10px' }}> {/* Reduce padding de la tabla */}
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h2 style={{ fontSize: '1.8rem' }}>Lista de Programas</h2>
+                <h2 style={{ fontSize: '1.8rem' }}>Unidad Curricular</h2>
                 <div className="d-flex align-items-center">
                   <Form.Control
                     name="curso_descripcion"

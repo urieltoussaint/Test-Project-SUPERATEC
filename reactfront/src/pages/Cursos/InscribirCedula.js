@@ -355,7 +355,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
         <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
         <Form.Group controlId="cedula" className="custom-gutter" >
           <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
-            <h1>Inscripción al Curso {curso && ` ${curso.cod}`}</h1>
+            <h1>Inscripción a Unidad Curricular {curso && ` ${curso.cod}`}</h1>
             <div>
                 
             <Form.Group controlId="cedula" className="custom-gutter">
@@ -536,7 +536,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
 
 
                         <Form.Group controlId="curso">
-                            <Form.Label>Curso seleccionado</Form.Label>
+                            <Form.Label>Unidad Curricular seleccionada</Form.Label>
                             <div className="d-flex">
                                 {curso ? (
                                     <>
@@ -551,7 +551,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                                     </>
                                 ) : (
                                     <Button variant="info" onClick={handleOpenCursoModal}>
-                                        Seleccionar Curso
+                                        Seleccionar Unidad Curricular
                                     </Button>
                                 )}
                             </div>

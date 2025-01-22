@@ -228,18 +228,11 @@ const InscripcionCursos = () => {
         }
     };
 
-    
-
-    
-    
+  
         const handleOpenModal = () => {
             getAllPatrocinantes(); // Cargar todos los patrocinantes
             setShowModal(true); // Mostrar el modal
         };
-
-     
-        
-        
 
 const handleInscripcion = async (action) => {
     // Objeto para almacenar errores
@@ -250,7 +243,6 @@ const handleInscripcion = async (action) => {
     if (!formData.cohorte_id) errors.cohorte_id = 'El cohorte es requerido';
     if (!formData.centro_id) errors.centro_id = 'El centro es requerido';
     if (!formData.periodo_id) errors.periodo_id = 'El periodo es requerido';
-    if (!formData.grupo) errors.grupo = 'El grupo es requerido';
 
     // Si hay errores, detener la función y mostrar los errores
     if (Object.keys(errors).length > 0) {
@@ -626,9 +618,6 @@ const handleInscripcion = async (action) => {
                         </Button>
                     </Modal.Footer>
                 </Modal>
-
-
-
 
 </div>
         

@@ -56,7 +56,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('users', [AuthController::class, 'index'])->middleware('role:admin'); // 
     Route::post('users', [AuthController::class, 'store'])->middleware('role:admin'); // 
     Route::get('users/{id}', [AuthController::class, 'show'])->middleware('role:admin'); // 
-    Route::put('users/{id}', [AuthController::class, 'update'])->middleware('role:admin'); // 
+    Route::put('users/{id}', [AuthController::class, 'update'])->middleware('role:admin,suoeruser,invitado,pagos'); // 
     Route::delete('users/{id}', [AuthController::class, 'destroy'])->middleware('role:admin'); // Solo admin 
     Route::get('users-with-roles', [AuthController::class, 'getAllUsersWithRoles'])->middleware('role:admin,superuser,invitado'); 
     Route::get('role', [RoleController::class, 'index'])->middleware('role:admin,superuser,invitado'); 
@@ -172,7 +172,6 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::delete('procedencia/{id}', [ProcedenciaController::class, 'destroy'])->middleware('role:admin');
     Route::get('/validate-cod/{cod}', [ProcedenciaController::class, 'validateCOD'])->middleware('role:admin,superuser,invitado'); 
     Route::get('procedencia-estadisticas', [ProcedenciaController::class, 'getProcedenciasWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
-
     // Rutas solo para ver (invitado, superuser y admin)
     Route::get('nacionalidad_seleccion', [NacionalidadController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('area', [AreaController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');

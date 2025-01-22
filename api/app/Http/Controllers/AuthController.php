@@ -235,22 +235,22 @@ public function getUsers(Request $request)
         // Validar los datos recibidos en la solicitud
         $validator = Validator::make($request->all(), [
             'username' => [
-                'required',
+                // 'required',
                 'string',
                 'max:255',
                 Rule::unique('users')->ignore($id), // Ignorar el ID actual para la unicidad
             ],
             'email' => [
-                'required',
+                // 'required',
                 'string',
                 'email',
                 'max:255',
                 Rule::unique('users')->ignore($id), // Ignorar el ID actual para la unicidad
             ],
-            'role_id' => 'required|integer|exists:role,id', // Valida que role_id sea un rol existente
-            'cargo_id'=> 'required|integer|exists:cargo_users,id', // Valida que role_id sea un rol existente
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
+            'role_id' => 'integer|exists:role,id', // Valida que role_id sea un rol existente
+            'cargo_id'=> 'integer|exists:cargo_users,id', // Valida que role_id sea un rol existente
+            'nombre' => 'string|max:255',
+            'apellido' => 'string|max:255',
             'password' => 'nullable|string|min:8|confirmed', // Contraseña opcional, mínimo 8 caracteres y debe confirmarse
             'password_confirmation' => 'nullable|string|min:8', // Confirmación opcional también
         ]);
