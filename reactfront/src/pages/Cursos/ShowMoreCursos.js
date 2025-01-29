@@ -17,7 +17,7 @@ const ShowMoreCursos = ({ onReload }) => {
       setLoading(true); // Inicia la animación de carga
       try {
         let relationsArray = [
-          'area','unidad','modalidad','tipoPrograma','nivel'
+          'area','unidad','modalidad','tipoPrograma','nivel','area2','area3','area4','area5'
         ];
         const relations = relationsArray.join(',');
         const token = localStorage.getItem('token');
@@ -60,6 +60,10 @@ const ShowMoreCursos = ({ onReload }) => {
               <ListGroup.Item>Costo de Cuota: {data.costo}</ListGroup.Item>
               <ListGroup.Item>Cuotas: {data.cuotas}</ListGroup.Item>
               <ListGroup.Item>Fecha de Inicio: {data.fecha_inicio}</ListGroup.Item>
+              <ListGroup.Item>Área 2: {data.area2?.descripcion}</ListGroup.Item>
+              <ListGroup.Item>Área 3: {data.area2?.descripcion}</ListGroup.Item>
+              <ListGroup.Item>Área 4: {data.area2?.descripcion}</ListGroup.Item>
+              <ListGroup.Item>Área 5: {data.area2?.descripcion}</ListGroup.Item>
             </ListGroup>
   
             <div className="text-center mt-4">

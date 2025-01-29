@@ -325,16 +325,18 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
             <td className="col-accioness">
                 <div className="d-flex justify-content-around">
                 <Button
-                    variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
+                    variant="btn btn-info" 
                     onClick={() => navigate(`/datos/${dato.id}`)}
                     className="me-2"
+                    title="Ver más"
                 >
                     <i className="bi bi-eye"></i>
                 </Button>
                 <Button
-                    variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
+                    variant="btn btn-info" 
                     onClick={() => navigate(`/datos/cursos/${dato.id}`)}
                     className="me-2"
+                    title="Ver Unidades Curriculares del Participante"
                 >
                     <i className="bi bi-book-fill"></i>
                 </Button>
@@ -344,6 +346,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 variant="btn btn-warning"
                                 onClick={() => navigate(`/datos/${dato.id}/edit`)}
                                 className="me-2 icon-white"
+                                title="Editar"
                             >
                                 <i className="bi bi-pencil-fill"></i>
                             </Button>
@@ -352,6 +355,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 variant="btn btn-danger"
                                 onClick={() => handleShowModal(dato.id)}
                                 className="me-2"
+                                title="Eliminar"
                                 >
                                 <i className="bi bi-trash3-fill"></i>
                                 </Button>
@@ -543,7 +547,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                     onClick={loadData}
                                     disabled={loadingData} // Deshabilita el botón si está cargando
                                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
-
+                                    title="Recargar datos"
                                 >
                                     
 
@@ -558,7 +562,8 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 <Button 
                                     variant="info me-2" 
                                     onClick={getAllDatos}
-                                    style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                    style={{ padding: '5px 10px', width: '120px' }} 
+                                    title="Buscar"
                                 >
                                     <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
@@ -566,6 +571,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                     variant="btn btn-info"
                                     onClick={() => setShowModalInfo(true)} // Abrir el modal
                                     className="me-2"
+                                    title="Exportar en Excel"
                                 >
                                     <i className="bi bi-printer-fill"></i> {/* Icono de impresora */}
                                 </Button>
@@ -574,7 +580,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
 
                                 {userRole === 'admin' || userRole === 'superuser' ? (
 
-                                <Button variant="btn custom" onClick={() => navigate('/formulario/create')} className="btn-custom">
+                                <Button variant="btn custom" onClick={() => navigate('/formulario/create')} className="btn-custom" title="Crear Participante">
                                 <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
                             </Button>
 

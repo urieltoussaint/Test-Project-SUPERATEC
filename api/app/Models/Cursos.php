@@ -6,8 +6,8 @@ use Illuminate\Support\Str;
 class Cursos extends Model
 {
     protected $table = 'cursos';
-    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion'];
-    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion'];
+    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion','area2_id','area3_id','area4_id','area5_id'];
+    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion','area2_id','area3_id','area4_id','area5_id'];
 
     // Relación con InscripcionCursos (un curso puede tener muchas inscripciones)
     public function InformacionInscripcion()
@@ -39,10 +39,33 @@ class Cursos extends Model
     {
         return $this->belongsTo(Area::class, 'area_id');
     }
+    
+
     public function Grupo()
     {
         return $this->belongsTo(Grupo::class, 'grupo_id');
     }
+
+    public function Area2()
+    {
+        return $this->belongsTo(Area::class, 'area2_id');
+    }
+
+    public function Area3()
+    {
+        return $this->belongsTo(Area::class, 'area3_id');
+    }
+
+    public function Area4()
+    {
+        return $this->belongsTo(Area::class, 'area4_id');
+    }
+
+    public function Area5()
+    {
+        return $this->belongsTo(Area::class, 'area5_id');
+    }
+
     
 
 

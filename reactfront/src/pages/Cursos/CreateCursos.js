@@ -43,10 +43,14 @@ const CreateCursos = () => {
     unidad_id:'',
     nivel_id:'',
     modalidad_id:'',
-    tipo_programa_id:'',
     sesiones:0,
     grupo_id:'',
     externo:false,
+    area2_id:'',
+    area3_id:'',
+    area4_id:'',
+    area5_id:''
+
     
   });
 
@@ -54,7 +58,6 @@ const CreateCursos = () => {
     areaOptions: [],
     unidadOptions: [],
     nivelOptions: [],
-    tipoProgramaOptions: [],
     modalidadOptions: [],
     grupoOptions: [],
 });
@@ -217,14 +220,13 @@ const handleSeleccionar = async () => {
     });
     
     // Desestructuramos los datos que vienen en la respuesta
-    const { area, unidad, nivel, tipo_programa, modalidad,grupo } = response.data;
+    const { area, unidad, nivel, modalidad,grupo } = response.data;
 
     // Retornamos las opciones en un solo objeto
     setFilterOptions( {
       areaOptions: area,
       unidadOptions: unidad,
       nivelOptions: nivel,
-      tipoProgramaOptions: tipo_programa,
       modalidadOptions: modalidad,
       grupoOptions:grupo,
     });
@@ -293,19 +295,19 @@ const handleSeleccionar = async () => {
   };
 
   useEffect(() => {
-    if (formData.tipo_programa_id === "1") {
+    if (formData.unidad_id === "1") {
       setFormData((prevState) => ({
         ...prevState,
         cantidad_horas: 2,
         sesiones: 1,
       }));
-    } else if (formData.tipo_programa_id === "2") {
+    } else if (formData.unidad_id === "2") {
       setFormData((prevState) => ({
         ...prevState,
         cantidad_horas: 4,
         sesiones: 1,
       }));
-    } else if (formData.tipo_programa_id === "3") {
+    } else if (formData.unidad_id === "3") {
       setFormData((prevState) => ({
         ...prevState,
         sesiones: prevState.cantidad_horas
@@ -313,7 +315,7 @@ const handleSeleccionar = async () => {
           : "",
       }));
     }
-  }, [formData.tipo_programa_id, formData.cantidad_horas]);
+  }, [formData.unidad_id, formData.cantidad_horas]);
   
 
   return (
@@ -349,12 +351,12 @@ const handleSeleccionar = async () => {
               />
             </Form.Group>
             <SelectComponent
-              options={filterOptions.tipoProgramaOptions}  // Usar el estado filterOptions
+              options={filterOptions.unidadOptions}  // Usar el estado filterOptions
               nameField="descripcion"
               valueField="id"
-              selectedValue={formData.tipo_programa_id}
+              selectedValue={formData.unidad_id}
               handleChange={handleChange}
-              controlId="tipo_programa_id"
+              controlId="unidad_id"
               label="Unidad"
             />
 
@@ -378,7 +380,7 @@ const handleSeleccionar = async () => {
                 value={formData.cantidad_horas}
                 onChange={handleChange}
                 maxLength={4}
-                disabled={formData.tipo_programa_id === "1" || formData.tipo_programa_id === "2"} // Bloquear si tipo_programa_id es 1 o 2
+                disabled={formData.unidad_id === "1" || formData.unidad_id === "2"} // Bloquear si tipo_programa_id es 1 o 2
               />
             </Form.Group>
           </Col>
@@ -392,7 +394,7 @@ const handleSeleccionar = async () => {
                 value={formData.sesiones}
                 onChange={handleChange}
                 maxLength={4}
-                disabled={formData.tipo_programa_id !== "3"} // Bloquear si tipo_programa_id no es 3
+                disabled={formData.unidad_id !== "3"} // Bloquear si tipo_programa_id no es 3
               />
             </Form.Group>
           </Col>
@@ -412,9 +414,56 @@ const handleSeleccionar = async () => {
             />
             
             </Col>
-
           
           </Row>
+          {formData.unidad_id === "4" && (
+            <>
+            <SelectComponent
+                
+                options={filterOptions.areaOptions}  // Usar el estado filterOptions
+                nameField="descripcion"
+                valueField="id"
+                selectedValue={formData.area2_id}
+                handleChange={handleChange}
+                controlId="area2_id"
+                label="Área 2"
+              />
+          
+
+              <SelectComponent
+                
+                options={filterOptions.areaOptions}  // Usar el estado filterOptions
+                nameField="descripcion"
+                valueField="id"
+                selectedValue={formData.area3_id}
+                handleChange={handleChange}
+                controlId="area3_id"
+                label="Área 3"
+              />
+                <SelectComponent
+                
+                options={filterOptions.areaOptions}  // Usar el estado filterOptions
+                nameField="descripcion"
+                valueField="id"
+                selectedValue={formData.area4_id}
+                handleChange={handleChange}
+                controlId="area4_id"
+                label="Área 4"
+              />
+              <SelectComponent
+                
+                options={filterOptions.areaOptions}  // Usar el estado filterOptions
+                nameField="descripcion"
+                valueField="id"
+                selectedValue={formData.area5_id}
+                handleChange={handleChange}
+                controlId="area5_id"
+                label="Área 5"
+              />
+              </>
+
+            )}
+
           <Row className="g-2">
           <Col md={6}>
           <SelectComponent

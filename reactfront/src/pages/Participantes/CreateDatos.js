@@ -56,7 +56,7 @@ const CreateDatos = () => {
     direccion_email: '',
     telefono_casa: '',
     telefono_celular: '',
-    nacionalidad_id: null,
+    nacionalidad_id: 2,
     genero_id: null,
     grupo_prioritario_id: null,
     estado_id: '',
@@ -295,32 +295,51 @@ const handleRolePageChange = async (newPage) => {
 
 
 
+const handleChange = (event) => {
+  const { name, value, type, checked } = event.target;
 
-  const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
+  let updatedValue = value;
 
-    let updatedValue = value;
+  if (name === 'cedula_identidad') {
+    updatedValue = value.replace(/^V-/, '');  // Elimina "V-" si ya está presente
+    updatedValue = updatedValue.toUpperCase(); // Convertir todo a mayúsculas
 
-    if (name === 'cedula_identidad') {
-      updatedValue = value.replace(/^V-/, '');  
-      updatedValue = updatedValue.replace(/\D/g, ''); 
-      if (updatedValue.length < 7) {
-        setCedulaLengthError('La cédula debe tener al menos 7 caracteres.');
-        setIsCedulaValid(false);
-      } else {
-        setCedulaLengthError('');
-        setIsCedulaValid(true);
-      }
+    // Permitir solo números y UNA sola 'R'
+    const rCount = (updatedValue.match(/R/g) || []).length;
+    updatedValue = updatedValue.replace(/[^0-9R]/gi, ''); // Permitir solo números y "R"
+    
+    if (rCount > 1) {
+      updatedValue = updatedValue.replace(/R/g, ''); // Si hay más de una R, eliminarlas
+      updatedValue += 'R'; // Volver a añadir solo una R si era válida
     }
 
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: type === 'checkbox' ? checked : updatedValue,
-    }));
-  };
+    if (updatedValue.length < 7) {
+      setCedulaLengthError('La cédula debe tener al menos 7 caracteres.');
+      setIsCedulaValid(false);
+    } else {
+      setCedulaLengthError('');
+      setIsCedulaValid(true);
+    }
+  }
+
+  setFormData(prevState => ({
+    ...prevState,
+    [name]: type === 'checkbox' ? checked : updatedValue,
+  }));
+};
+
+
 
   const handleKeyDown = (e) => {
-    if (e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && !/[0-9]/.test(e.key)) {
+    // Permitir números, borrar, tabulación, eliminar y la tecla "R" (en mayúscula)
+    if (
+      e.key !== 'Backspace' &&
+      e.key !== 'Tab' &&
+      e.key !== 'Delete' &&
+      e.key !== 'r' &&
+      e.key !== 'R' &&
+      !/[0-9]/.test(e.key)
+    ) {
       e.preventDefault();
     }
   };
@@ -386,8 +405,6 @@ const handleRolePageChange = async (newPage) => {
       setLoading(false); // Detiene el proceso de carga
     }
   };
-  
-
 
   const handleBlur = async () => {
     if (formData.cedula_identidad) {
@@ -424,31 +441,50 @@ const handleRolePageChange = async (newPage) => {
         className="custom-gutter">
             <Row className="g-2"> 
             <Col md={6}>
-            <Form.Group controlId="cedula_identidad">
-              <Form.Label>Cédula de Identidad</Form.Label>
-              <Form.Control
-                type="text"
-                name="cedula_identidad"
-                value={formData.cedula_identidad ? `V-${formData.cedula_identidad}` : ''}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}  // Evita caracteres no numéricos
-                onBlur={handleBlur}
-                placeholder="V-123321123"
-                maxLength={10}
-                required
-                className={
-                  cedulaError || cedulaLengthError
-                    ? 'is-invalid'
-                    : isCedulaValid ? 'is-valid' : ''
-                }
-              />
+            
+            <Row className="g-2 align-items-end">
+              <Col md={1}>
+                <SelectComponent
+                  options={filterOptions.nacionalidadOptions} // Usar el estado filterOptions
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.nacionalidad_id}
+                  handleChange={handleChange}
+                  controlId="nacionalidad_id"
+                  label="Tipo"
+                />
+              </Col>
+
+              <Col md={9}>
+                <Form.Group controlId="cedula_identidad">
+                  <Form.Label>Número de Documento</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="cedula_identidad"
+                    value={formData.cedula_identidad ? `${formData.cedula_identidad}` : ''}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown} // Evita caracteres no numéricos
+                    onBlur={handleBlur}
+                    placeholder="123321123"
+                    maxLength={10}
+                    required
+                    className={
+                      cedulaError || cedulaLengthError
+                        ? 'is-invalid'
+                        : isCedulaValid ? 'is-valid' : ''
+                    }
+                  />
+                 
+                </Form.Group>
+              </Col>
               {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
-              {!cedulaError && isCedulaValid && (
-                <Form.Control.Feedback type="valid">
-                  Cédula disponible.
-                </Form.Control.Feedback>
-              )}
-            </Form.Group>
+                  {!cedulaError && isCedulaValid && (
+                    <Form.Control.Feedback type="valid">
+                      Cédula disponible.
+                    </Form.Control.Feedback>
+                  )}
+            </Row>
+
             </Col>
             
 
@@ -509,18 +545,7 @@ const handleRolePageChange = async (newPage) => {
             />
             
             </Col>
-            <Col md={6}>
-            <SelectComponent
-              options={filterOptions.nacionalidadOptions}  // Usar el estado filterOptions
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.nacionalidad_id}
-              handleChange={handleChange}
-              controlId="nacionalidad_id"
-              label="Nacionalidad"
-            />
             
-            </Col>
             </Row>
             <Row className="g-2"> 
             <Col md={6}>

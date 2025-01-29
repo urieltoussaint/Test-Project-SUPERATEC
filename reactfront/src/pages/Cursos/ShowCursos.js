@@ -416,23 +416,23 @@ const participantsByAportePatrocinado = [
             <td>
             <div className="d-flex justify-content-center align-items-center">
                   
-                    <Button variant="btn btn-info" onClick={() => navigate(`/cursos/${curso.curso_id}`)} className="me-2">
+                    <Button variant="btn btn-info" onClick={() => navigate(`/cursos/${curso.curso_id}`)} className="me-2" title="Ver más">
                         <i className="bi bi-eye"></i>
                     </Button>
-                    <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/${curso.curso_id}`)} className="me-2">
+                    <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/${curso.curso_id}`)} className="me-2" title="Ver inscritos">
                         <i className="bi bi-person-lines-fill"></i>
                     </Button>
                     {/* Botón para ver pagos */}
-                    <Button variant="btn btn-info" onClick={() => navigate(`/pagos/programa/${curso.curso_id}`)} className="me-1">
+                    <Button variant="btn btn-info" onClick={() => navigate(`/pagos/programa/${curso.curso_id}`)} className="me-1" title="Ver Pagos">
                       <i className="bi bi-currency-exchange"></i>
                     </Button>
                     {userRole === 'admin' || userRole === 'superuser'  || userRole === 'pagos' ? (
                         <>
-                            <Button variant="btn btn-warning" onClick={() => navigate(`/cursos/${curso.curso_id}/edit`)} className="me-2">
+                            <Button variant="btn btn-warning" onClick={() => navigate(`/cursos/${curso.curso_id}/edit`)} className="me-2" title="Editar Unidad Curricular">
                                 <i className="bi bi-pencil-fill"></i>
                             </Button>
 
-                            <Button variant="btn btn-warning" onClick={() => navigate(`/cursos/${curso.curso_id}/pagos`)} className="me-2">
+                            <Button variant="btn btn-warning" onClick={() => navigate(`/cursos/${curso.curso_id}/pagos`)} className="me-2" title="Editar Costo">
                                 <i className="bi bi-coin"></i>
                             </Button>
                             
@@ -440,14 +440,14 @@ const participantsByAportePatrocinado = [
                     ) :null}
                       {userRole === 'admin'  || userRole === 'superuser' ? (
                         <>
-                            <Button variant="btn btn-success" onClick={() => navigate(`/inscribir/${curso.curso_id}`)} className="me-2">
+                            <Button variant="btn btn-success" onClick={() => navigate(`/inscribir/${curso.curso_id}`)} className="me-2" title="Inscribir Participante">
                                 <i className="bi bi-person-plus-fill"></i>
                             </Button>
                         </>
                     ) :null}
                     
                     {userRole === 'admin' && (
-                        <Button variant="btn btn-danger" onClick={() => handleShowModal(curso.curso_id)} className="me-2">
+                        <Button variant="btn btn-danger" onClick={() => handleShowModal(curso.curso_id)} className="me-2" title="Eliminar">
                             <i className="bi bi-trash3-fill"></i>
                         </Button>
                     )}
@@ -525,7 +525,7 @@ const participantsByAportePatrocinado = [
                     onClick={loadData}
                     disabled={loadingData} // Deshabilita el botón si está cargando
                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
-
+                    title="Recargar datos"
                   >
                     {/* Icono de recarga */}
                     {loadingData ? (
@@ -538,6 +538,7 @@ const participantsByAportePatrocinado = [
                       variant="info me-2" 
                       onClick={getCursosWithMetrics} // Cargar datos usando los filtros actuales
                       style={{ padding: '5px 10px', width: '120px' }}
+                      title="Buscar"
                   >
                       <FaSearch className="me-1" />
                   </Button>
@@ -545,12 +546,13 @@ const participantsByAportePatrocinado = [
                       variant="btn btn-info"
                       onClick={() => setShowModalInfo(true)} // Abrir el modal
                       className="me-2"
+                      title="Exportar en Excel"
                   >
                       <i className="bi bi-printer-fill"></i> {/* Icono de impresora */}
                   </Button>
 
                   {userRole === 'admin' || userRole === 'superuser' ? (
-                    <Button variant="btn custom" onClick={() => navigate('/cursos/create')} className="btn-custom" style={{ fontSize: '0.9rem' }}>
+                    <Button variant="btn custom" onClick={() => navigate('/cursos/create')} className="btn-custom" style={{ fontSize: '0.9rem' }} title="Crear Unidad Curricular" >
                       <i className="bi bi-book-half me-2"></i> Nuevo
                     </Button>
                   ) : null}
@@ -610,18 +612,7 @@ const participantsByAportePatrocinado = [
                   ))}
                 </Form.Select>
 
-                <Form.Select
-                  name="tipo_programa_id"
-                  value={filters.tipo_programa_id}
-                  onChange={handleFilterChange}
-                  className="me-2"
-                  style={{ fontSize: '0.9rem' }}
-                >
-                  <option value="">Filtrar por Tipo de Programa</option>
-                  {tipoProgramaOptions.map(option => (
-                    <option key={option.id} value={option.id}>{option.descripcion}</option>
-                  ))}
-                </Form.Select>
+                
 
                 <Form.Select
                   name="modalidad_id"
