@@ -15,8 +15,6 @@ import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch } from 'react-icons/fa';
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 
-
-
 const endpoint = 'http://localhost:8000/api';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -107,10 +105,6 @@ const ShowCursos = () => {
           ]);
  
           setCursos(cursosData);
-          
-          
- 
-          // Set options for filters
           const { areaOptions, unidadOptions, nivelOptions, tipoProgramaOptions, modalidadOptions,grupoOptions } = filterOptionsData;
           setAreaOptions(areaOptions);
           setUnidadOptions(unidadOptions);
@@ -198,8 +192,6 @@ useEffect(() => {
     const fetchFilterOptions = async () => {
   try {
     const token = localStorage.getItem('token');
-    
-    // Suponiendo que el endpoint unificado sea `/filtros-cursos`
     const response = await axios.get(`${endpoint}/filtros-cursos`, {
       headers: { Authorization: `Bearer ${token}` }
     });

@@ -320,7 +320,7 @@ const handleSeleccionar = async () => {
     <div className="row" style={{ marginTop: '50px' }}>
   <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
     <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
-      <h2 className="mb-2">Agregar Nuevo Programa</h2>
+      <h2 className="mb-2">Agregar Nueva Unidad Curricular</h2>
       <Form onSubmit={handleSubmit} className="custom-gutter">
       <Form.Group controlId="externo">
         <Form.Label>¿Programa externo a Superatec?</Form.Label>
@@ -355,7 +355,7 @@ const handleSeleccionar = async () => {
               selectedValue={formData.tipo_programa_id}
               handleChange={handleChange}
               controlId="tipo_programa_id"
-              label="Tipo de Programa"
+              label="Unidad"
             />
 
             <SelectComponent
@@ -413,17 +413,7 @@ const handleSeleccionar = async () => {
             
             </Col>
 
-          <Col md={6}>
-            <SelectComponent
-              options={filterOptions.unidadOptions}  // Usar el estado filterOptions
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.unidad_id}
-              handleChange={handleChange}
-              controlId="unidad_id"
-              label="Unidad"
-            />
-          </Col>
+          
           </Row>
           <Row className="g-2">
           <Col md={6}>
