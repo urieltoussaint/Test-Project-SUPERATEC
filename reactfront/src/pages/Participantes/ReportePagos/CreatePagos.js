@@ -43,6 +43,8 @@ const CreatePago = () => {
   const [modalMessage, setModalMessage] = useState('');  // Mensaje del modal
   const [cuotas, setCuotas] = useState('');  // Mensaje del modal
   const [cuotasCursos, setCuotasCursos] = useState('');  // Mensaje del modal
+  const [costoInscripcion, setCostoInscripcion] = useState(false);
+  
 
 
   useEffect(() => {
@@ -111,7 +113,6 @@ const CreatePago = () => {
           conversion_exonerado: '',
           conversion_restante: ''
         });
-        console.log("alo?",cursos);
         setError(''); // Clear any previous errors
       } catch (error) {
         console.error('Error fetching cursos:', error);
@@ -137,9 +138,7 @@ const CreatePago = () => {
         informacion_inscripcion_id: selectedCursoId // Guarda el ID en el formulario
       }));
     }
- 
 
-    console.log("coñooooooo",selectedCurso);
    
     try {
       // Obtener la cantidad de pagos ya realizados
@@ -148,10 +147,16 @@ const CreatePago = () => {
       setCuotasCursos(selectedCurso.curso_cuotas);
   
       let montoTotal = parseFloat(selectedCurso.curso_costo); // Valor original por defecto
-
+      setCostoInscripcion(false);
       if (cantidadPagos > 0) {
         // Si hay pagos previos, utilizamos el monto restante del último pago
         montoTotal = parseFloat(ultimoPago.monto_restante);
+      }
+      if ((cantidadPagos == 0) && (selectedCurso.status_pay==1)) {
+        // Si hay pagos previos, utilizamos el monto restante del último pago
+        montoTotal = parseFloat(selectedCurso.costo_inscripcion);
+        setCostoInscripcion(true);
+        
       }
     
       // Determinamos si es la última cuota
@@ -423,6 +428,9 @@ const CreatePago = () => {
           </Form.Group>
         )}
         {cursoSeleccionado && (
+          
+
+          
           <>
             <Form.Group controlId="monto_total">
               <Form.Label>Monto Total</Form.Label>

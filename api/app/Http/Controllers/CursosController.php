@@ -53,6 +53,7 @@ class CursosController extends Controller
             ->select(
                 'informacion_inscripcion.*',
                 'cursos.descripcion as curso_descripcion',
+                'cursos.costo_inscripcion as costo_inscripcion',
                 'cursos.costo as curso_costo',
                 'cursos.cod as curso_cod',
                 'cursos.cuotas as curso_cuotas',
