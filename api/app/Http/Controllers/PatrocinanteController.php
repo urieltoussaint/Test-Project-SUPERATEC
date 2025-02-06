@@ -6,6 +6,7 @@ use App\Models\Estado;
 use App\Models\Pais;
 use App\Models\Patrocinante as Model;
 use App\Models\Patrocinante;
+use App\Models\TipoDoc;
 use App\Models\TipoIndustria;
 use App\Models\TipoPatrocinante;
 use Illuminate\Http\Request;
@@ -273,12 +274,14 @@ class PatrocinanteController extends Controller
         $estados = Estado::all();
         $tipo_industria = TipoIndustria::all();
         $tipo_patrocinante= TipoPatrocinante::all();
+        $tipo_doc=TipoDoc::all();
 
         return response()->json([
             'estado' => $estados,
             'pais' => $pais,
             'tipo_industria' =>$tipo_industria,
             'tipo_patrocinante'=>$tipo_patrocinante,
+            'tipo_doc'=>$tipo_doc,
         ]);
     
 } 

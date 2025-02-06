@@ -207,13 +207,14 @@ const ShowUsers = () => {
                                 variant="btn btn-warning"
                                 onClick={() => navigate(`/users/${users.id}`)}
                                 className="me-2 icon-white"
+                                title='Editar'
                             >
                                 <i className="bi bi-pencil-fill"></i>
                             </Button>
                     
 
 
-                                <Button variant="btn btn-danger" onClick={() => handleShowModal(users.id)} className="me-2">
+                                <Button variant="btn btn-danger" onClick={() => handleShowModal(users.id)} className="me-2" title='Eliminar'>
                                  <i className="bi bi-trash3-fill"></i>
                                 </Button>
                     
@@ -260,6 +261,7 @@ const ShowUsers = () => {
                             onClick={loadData}
                             disabled={loadingData} // Deshabilita el botón si está cargando
                             style={{ padding: '8px 16px', width: '90px' }} // Ajustamos el padding para aumentar el grosor
+                            title='Recargar datos'
                             >
                             {/* Icono de recarga */}
                             {loadingData ? (
@@ -272,11 +274,12 @@ const ShowUsers = () => {
                                     variant="info me-2" 
                                     onClick={getAllUsers}
                                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                    title='Buscar'
                                 >
                                     <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
                             
-                            <Button variant="btn custom" onClick={() => navigate('/users/create')} className="btn-custom">
+                            <Button variant="btn custom" onClick={() => navigate('/users/create')} className="btn-custom" title='Crear Usuario'>
                                 <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
                             </Button>
                         </div>

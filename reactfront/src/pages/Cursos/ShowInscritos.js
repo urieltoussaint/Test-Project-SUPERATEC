@@ -383,6 +383,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
            justifyContent: 'center',
            borderRadius: '5px'
          }}
+         title='Exonerar Pago'
        >
          <i className="bi bi-coin"></i>
        </Button>
@@ -394,7 +395,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
         <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
         {/* Botón para marcar como culminado si el rol es 'admin' o 'superuser' y status_pay es 3 */}
         {(userRole === 'admin' || userRole === 'superuser') && (inscripcion.status_curso!=='2'  )  && (
-          <Button variant="btn btn-success" onClick={() => handleShowCompleteModal(inscripcion.id)} className="me-1">
+          <Button variant="btn btn-success" onClick={() => handleShowCompleteModal(inscripcion.id)} className="me-1" title='Marcar como culminado'>
             <i className="bi bi-check-circle"></i>
           </Button>
         )}
@@ -417,6 +418,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
             justifyContent: 'center',
             borderRadius: '5px'
           }}
+          title='Retirar'
         >
           <i className="bi bi-x-lg"></i> {/* Icono de "X" */}
         </Button>
@@ -426,23 +428,23 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
       <td>
       <div className="d-flex justify-content-center align-items-center" style={{ gap: '5px' }}>
 
-      <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/show/${inscripcion.id}`)} className="me-1">
+      <Button variant="btn btn-info" onClick={() => navigate(`/inscritos/show/${inscripcion.id}`)} className="me-1" title='Ver más'>
           <i className="bi bi-eye"></i>
         </Button>
         {/* Botón para ver pagos */}
-        <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${inscripcion.id}`)} className="me-1">
+        <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${inscripcion.id}`)} className="me-1" title='Ver pagos'>
           <i className="bi bi-currency-exchange"></i>
         </Button>
 
         {/* Botón para editar si el rol es 'admin' */}
         {(userRole === 'admin' || userRole === 'superuser') && (
-          <Button variant="btn btn-warning" onClick={() => navigate(`/inscritos/edit/${inscripcion.id}/${inscripcion.cedula_identidad}`)} className="me-1">
+          <Button variant="btn btn-warning" onClick={() => navigate(`/inscritos/edit/${inscripcion.id}/${inscripcion.cedula_identidad}`)} className="me-1" title='Editar'>
             <i className="bi bi-pencil-fill"></i>
           </Button>
         )}
         {/* Botón para eliminar si el rol es 'admin' */}
         {userRole === 'admin' && (
-          <Button variant="btn btn-danger" onClick={() => handleShowModal(inscripcion.id)} className="me-1">
+          <Button variant="btn btn-danger" onClick={() => handleShowModal(inscripcion.id)} className="me-1" title='Eliminar'> 
             <i className="bi bi-trash3-fill"></i>
           </Button>
         )}
@@ -553,6 +555,7 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                   onClick={loadData}
                   disabled={loadingData} // Deshabilita el botón si está cargando
                   style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                  title='Recargar datos'
               >
                   {/* Icono de recarga */}
                   {loadingData ? (
@@ -565,16 +568,17 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
                   variant="info me-2"
                   onClick={getInscritos}
                   style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                  title='Buscar'
               >
                   <FaSearch className="me-1" /> {/* Ícono de lupa */}
               </Button>
           {(userRole === 'admin' || userRole === 'superuser' ) && (
-            <Button variant="btn custom" onClick={() => navigate(`/inscribir/${cursoId}`)} className="btn-custom me-2" style={{ fontSize: '0.9rem' }}>
+            <Button variant="btn custom" onClick={() => navigate(`/inscribir/${cursoId}`)} className="btn-custom me-2" style={{ fontSize: '0.9rem' }} title='Nueva Inscripción'>
               <i className="bi bi-person-plus-fill"></i> Nuevo
             </Button>
           )}
 
-          <Button variant="secondary" onClick={() => navigate(-1)} className="secondary" style={{ fontSize: '0.9rem' }}>
+          <Button variant="secondary" onClick={() => navigate(-1)} className="secondary" style={{ fontSize: '0.9rem' }} title='Volver'>
             <i className="bi bi-arrow-90deg-left"></i>
           </Button>
         </div>
@@ -646,6 +650,8 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
           <option value="2">Egresado/Certificado (Verde)</option>
           <option value="3">Retirado (Rojo)</option>
         </Form.Select>
+        
+
 
       </div>
 

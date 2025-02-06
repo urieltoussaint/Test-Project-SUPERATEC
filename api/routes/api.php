@@ -104,6 +104,9 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('datos/cursos/{cedula_identidad?}', [InformacionInscripcionController::class, 'getDatosCursos']);
     Route::put('informacion_inscripcion/{id}', [InformacionInscripcionController::class, 'update'])->middleware('role:admin,superuser,pagos');
     Route::get('cursos_inscripcion-filtros/{cursoId}/', [InformacionInscripcionController::class, 'getInscripcionesWithStatistics'])->middleware('role:admin,superuser,pagos');
+    Route::get('indicadores-filtrados/', [InformacionInscripcionController::class, 'getIndicadoresWithStatistics'])->middleware('role:admin,superuser,pagos');
+    Route::get('indicadores-print/', [InformacionInscripcionController::class, 'getIndicadoresWithStatisticsPrint'])->middleware('role:admin,superuser,pagos');
+
 
 
 
@@ -216,6 +219,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('filter-promocion', [PromocionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-voluntariados', [PersonalesVoluntariadosController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('filter-inscripciones', [InformacionInscripcionController::class, 'fetchFilterOptions'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('filter-indicadores', [InformacionInscripcionController::class, 'fetchFilterIndicadoresOptions'])->middleware('role:admin,superuser,invitado,pagos');
 
 
     //slect

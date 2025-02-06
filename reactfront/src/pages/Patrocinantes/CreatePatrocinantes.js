@@ -21,38 +21,29 @@ const CreatePatrocinantes = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);  
   const [showUserRoleModal, setShowUserRoleModal] = useState(false); 
   const [showUserSearchModal, setShowUserSearchModal] = useState(false);  // Modal de búsqueda de usuarios
-  const [users, setUsers] = useState([]);  // Lista de usuarios
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [searchName, setSearchName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState(null);
   const navigate = useNavigate();
   const { setLoading } = useLoading();
   const [selectedUserName, setSelectedUserName] = useState(''); // Nombre del usuario seleccionado
   const [showRoleSearchModal, setShowRoleSearchModal] = useState(false);  // Modal de búsqueda de roles
-  const [roles, setRoles] = useState([]);  // Lista de roles
   const [selectedRoleId, setSelectedRoleId] = useState(null);  // ID del rol seleccionado
   const [selectedRoleName, setSelectedRoleName] = useState('');  // Nombre del rol seleccionado
-  const [filteredRoles, setFilteredRoles] = useState([]);
-  const [searchRoleName, setSearchRoleName] = useState(''); // Estado específico para la búsqueda de roles
-  const [previousModal, setPreviousModal] = useState(null);
+
   const [comentario, setComentario] = useState('');
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState([]);  // Municipios que se mostrarán según el estado seleccionado
 
-  const [allUsers, setAllUsers] = useState([]); // Todos los usuarios cargados
   const [paginatedUsers, setPaginatedUsers] = useState([]); // Usuarios en la página actual
   const [currentPageUsers, setCurrentPageUsers] = useState(1);
   
-  const [allRoles, setAllRoles] = useState([]); // Todos los roles cargados
   const [paginatedRoles, setPaginatedRoles] = useState([]); // Roles en la página actual
   const [currentPageRoles, setCurrentPageRoles] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
   
-  const itemsPerPage = 8; // Elementos por página
 
 
   const [formData, setFormData] = useState({
     nombre_patrocinante: '',
-    empresa_persona: '',
+    // empresa_persona: '',
     rif_cedula: '',
     nit:'',
     tipo_patrocinante_id:'',
@@ -67,6 +58,7 @@ const CreatePatrocinantes = () => {
     web: '',
     es_patrocinante: '',
     bolsa_empleo: '',
+    tipo_doc_id:1,
     exterior: '',
     referido_por: '',
     otra_info: '',
@@ -94,6 +86,7 @@ const CreatePatrocinantes = () => {
     paisOptions: [],
     tipoIndustriaOptions: [],
     tipoPatrocinanteOptions: [],
+    tipoDocOptions:[],
 });
 const [selectVisible, setSelectVisible] = useState(false);  // Control de la visibilidad de los selectores
 
@@ -194,24 +187,24 @@ const handleRolePageChange = async (newPage) => {
     });
   };
  
-  const handleUserSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchName(value);
-    const filtered = users.filter(user => user.username.toLowerCase().includes(value));
-    setFilteredUsers(filtered);
-  };
+  // const handleUserSearch = (e) => {
+  //   const value = e.target.value.toLowerCase();
+  //   setSearchName(value);
+  //   const filtered = users.filter(user => user.username.toLowerCase().includes(value));
+  //   setFilteredUsers(filtered);
+  // };
 
-  const handleRoleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchRoleName(value); // Actualiza el estado de búsqueda para roles
+  // const handleRoleSearch = (e) => {
+  //   const value = e.target.value.toLowerCase();
+  //   setSearchRoleName(value); // Actualiza el estado de búsqueda para roles
     
-    // Filtrar los roles basados en el valor ingresado en el campo de búsqueda
-    const filtered = roles.filter(role => role.name.toLowerCase().includes(value)
-    );
+  //   // Filtrar los roles basados en el valor ingresado en el campo de búsqueda
+  //   const filtered = roles.filter(role => role.name.toLowerCase().includes(value)
+  //   );
     
-    // Actualizar el estado de filteredRoles con los resultados filtrados
-    setFilteredRoles(filtered);
-  };
+  //   // Actualizar el estado de filteredRoles con los resultados filtrados
+  //   setFilteredRoles(filtered);
+  // };
   
 
   const handleSelectUser = (user) => {
@@ -364,12 +357,14 @@ const handleSeleccionar = async () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const { estado, pais, tipo_industria, tipo_patrocinante } = response.data;
+      const { estado, pais, tipo_industria, tipo_patrocinante,tipo_doc } = response.data;
       setFilterOptions( {
         estadoOptions: estado,
         paisOptions: pais,
         tipoIndustriaOptions: tipo_industria,
         tipoPatrocinanteOptions: tipo_patrocinante,
+        tipoDocOptions:tipo_doc,
+
       });
       setSelectVisible(true);  // Mostrar los selectores
 
@@ -416,22 +411,24 @@ const handleSeleccionar = async () => {
               <h4 className="mb-4">Datos de la Empresa o Individuo</h4>
 
               
-                    <Form.Group controlId="empresa_persona">
-                      <Form.Label>¿Empresa o Persona?</Form.Label>
-                      <Form.Select
-                        name="empresa_persona"
-                        value={formData.empresa_persona}
-                        onChange={handleChange}
-                      >
-                        <option value="">Seleccione una opción</option>
-                        <option value="Empresa">Empresa</option>
-                        <option value="Persona">Persona</option>
-                      </Form.Select>
-                    </Form.Group>
                     <Row className="g-2"> 
                     <Col md={6}>
+                    <Row className="g-2 align-items-end">
+                  <Col md={1}>
+                    <SelectComponent
+                      options={filterOptions.tipoDocOptions} // Usar el estado filterOptions
+                      nameField="descripcion"
+                      valueField="id"
+                      selectedValue={formData.tipo_doc_id}
+                      handleChange={handleChange}
+                      controlId="tipo_doc_id"
+                      label="Tipo"
+                    />
+                  </Col>
+
+                  <Col md={9}>
                     <Form.Group controlId="rif_cedula">
-                      <Form.Label>Rif/Cédula</Form.Label>
+                      <Form.Label>Número de Documento</Form.Label>
                       <Form.Control
                         type="text"
                         name="rif_cedula"
@@ -439,7 +436,7 @@ const handleSeleccionar = async () => {
                         onChange={handleChange}
                         onKeyDown={handleKeyDown}  // Evita caracteres no numéricos
                         onBlur={handleBlur}
-                        placeholder="V-123321123"
+                        placeholder="123321123"
                         maxLength={10}
                         required
                         className={
@@ -448,13 +445,16 @@ const handleSeleccionar = async () => {
                             : isCedulaValid ? 'is-valid' : ''
                         }
                       />
-                      {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
+                      
+                    </Form.Group>
+                    </Col>
+                    {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
                       {!cedulaError && isCedulaValid && (
                         <Form.Control.Feedback type="valid">
                           Rif/Cédula No disponible.
                         </Form.Control.Feedback>
                       )}
-                    </Form.Group>
+                    </Row>
                     </Col>
                     </Row>
 

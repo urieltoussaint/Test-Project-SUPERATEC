@@ -214,6 +214,7 @@ const ShowPatrocinantes = () => {
                     variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
                     onClick={() => navigate(`/patrocinantes/${dato.id}`)}
                     className="me-2"
+                    title='Ver más'
                 >
                     <i className="bi bi-eye"></i>
                 </Button>
@@ -225,6 +226,7 @@ const ShowPatrocinantes = () => {
                                 variant="btn btn-warning"
                                 onClick={() => navigate(`/patrocinantes/${dato.id}/edit`)}
                                 className="me-2 icon-white"
+                                title='Editar'
                             >
                                 <i className="bi bi-pencil-fill"></i>
                             </Button>
@@ -238,6 +240,7 @@ const ShowPatrocinantes = () => {
                                 variant="btn btn-danger"
                                 onClick={() => handleShowModal(dato.id)}
                                 className="me-2"
+                                title='Eliminar'
                                 >
                                 <i className="bi bi-trash3-fill"></i>
                                 </Button>
@@ -342,6 +345,7 @@ const ShowPatrocinantes = () => {
                                     onClick={loadData}
                                     disabled={loadingData} // Deshabilita el botón si está cargando
                                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                    title='Recargar datos'
 
                                 >
                                     {/* Icono de recarga */}
@@ -356,6 +360,7 @@ const ShowPatrocinantes = () => {
                                     variant="info me-2" 
                                     onClick={getAllPatrocinantes}
                                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                    title='Buscar'
                                 >
                                     <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
@@ -363,7 +368,7 @@ const ShowPatrocinantes = () => {
 
                                 {userRole === 'admin' || userRole === 'superuser' ? (
 
-                                <Button variant="btn custom" onClick={() => navigate('/patrocinantes/create')} className="btn-custom">
+                                <Button variant="btn custom" onClick={() => navigate('/patrocinantes/create')} className="btn-custom"title='Crear Patrocinante'>
                                 <i className="bi bi-person-plus-fill me-2  "></i> Nuevo
                             </Button>
 

@@ -321,7 +321,7 @@ body {
 }
 
 .sidebar li.expanded {
-  margin-bottom: 280px; /* Ajusta el espacio entre módulos cuando está expandido */
+  margin-bottom: 340px; /* Ajusta el espacio entre módulos cuando está expandido */
 }
 
 

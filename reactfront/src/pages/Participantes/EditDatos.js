@@ -210,32 +210,24 @@ const handleSeleccionar = async () => {
             },
         });
 
-        if (!hasEmptyFields) {
-            // Si no hay campos vacíos, proceder con la actualización de la petición
-            let allPeticiones = [];
-            let currentPage = 1;
-            let totalPages = 1;
-
-            // 2. Obtener todas las páginas de peticiones y combinarlas
-            while (currentPage <= totalPages) {
-                const response = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+          if (!hasEmptyFields) {
+            // Realizar la solicitud con filtros directamente en la API
+                const response = await axios.get(`${endpoint}/peticiones`, {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+                  params: {
+                      key: id,
+                      zona_id: 1,
+                      status: false
+                  }
                 });
 
-                allPeticiones = [...allPeticiones, ...response.data.data];
-                totalPages = response.data.last_page;
-                currentPage++;
-            }
+                // Obtener solo las peticiones filtradas
+                const peticionesFiltradas = response.data.data;
 
-            // Filtrar las peticiones por cedula_identidad, zona_id, y status
-            const peticionesFiltradas = allPeticiones.filter(peticion =>
-                peticion.key === id && peticion.zona_id === 1 && peticion.status === false
-            );
-
-            if (peticionesFiltradas.length > 0) {
-                const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
+                if (peticionesFiltradas.length > 0) {
+                  const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
 
                 // 3. Actualizar el status de la petición a true
                 await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
@@ -310,6 +302,20 @@ const handleKeyDown = (e) => {
         className="custom-gutter">
             <Row className="g-2"> 
             <Col md={6}>
+            <Row className="g-2 align-items-end">
+              <Col md={1}>
+                <SelectComponent
+                  options={filterOptions.nacionalidadOptions} // Usar el estado filterOptions
+                  nameField="descripcion"
+                  valueField="id"
+                  selectedValue={formData.nacionalidad_id}
+                  handleChange={handleChange}
+                  controlId="nacionalidad_id"
+                  label="Tipo"
+                />
+              </Col>
+
+              <Col md={9}>
             <Form.Group controlId="cedula_identidad">
               <Form.Label>Cédula de Identidad</Form.Label>
               <Form.Control
@@ -328,13 +334,16 @@ const handleKeyDown = (e) => {
                     : isCedulaValid ? 'is-valid' : ''
                 }
               />
-              {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
+            
+            </Form.Group>
+            </Col>
+            {cedulaError && <Alert variant="danger">{cedulaError}</Alert>}
               {!cedulaError && isCedulaValid && (
                 <Form.Control.Feedback type="valid">
                   Cédula disponible.
                 </Form.Control.Feedback>
               )}
-            </Form.Group>
+              </Row>
             </Col>
             
 
@@ -395,18 +404,7 @@ const handleKeyDown = (e) => {
             />
             
             </Col>
-            <Col md={6}>
-            <SelectComponent
-              options={filterOptions.nacionalidadOptions}  // Usar el estado filterOptions
-              nameField="descripcion"
-              valueField="id"
-              selectedValue={formData.nacionalidad_id}
-              handleChange={handleChange}
-              controlId="nacionalidad_id"
-              label="Nacionalidad"
-            />
-            
-            </Col>
+           
             </Row>
             <Row className="g-2"> 
             <Col md={6}>

@@ -129,13 +129,13 @@ const ShowProcedencias = () => {
     const totalProcedencias = statistics.totalProcedencias || 0;
 
 
-    const columns = ["id", "Nombre", "Dirección","COD","Fecha de Creación", "Acciones"];
+    const columns = ["id", "Nombre", "Código Plantel","COD","Fecha de Creación", "Acciones"];
 
     const renderItem = (procedencias) => (
         <tr key={procedencias.id}>
         <td >{procedencias.id}</td>
         <td >{procedencias.descripcion}</td>
-        <td >{procedencias.direccion}</td>
+        <td >{procedencias.codigo_plantel}</td>
         <td >{procedencias.cod}</td>
         <td >{moment(procedencias.fecha).format('YYYY-MM-DD')}</td>
        
@@ -146,6 +146,7 @@ const ShowProcedencias = () => {
                     variant="btn btn-warning" 
                     onClick={() => navigate(`/procedencias/edit/${procedencias.id}`)}
                     className="me-2"
+                    title='Editar'
                 >
                     <i className="bi bi-pencil-fill"></i>
                 </Button>
@@ -156,6 +157,7 @@ const ShowProcedencias = () => {
                 variant="btn btn-danger"
                 onClick={() => handleShowModal(procedencias.id)}
                 className="me-2"
+                title='Eliminar'
                 >
                 <i className="bi bi-trash3-fill"></i>
                 </Button>
@@ -201,6 +203,7 @@ const ShowProcedencias = () => {
                                 onClick={loadData}
                                 disabled={loadingData} // Deshabilita el botón si está cargando
                                 style={{ padding: '5px 10px', width: '90px' }} // Ajusta padding y ancho
+                                title='Recargar datos'
 
                                 >
                                 {/* Icono de recarga */}
@@ -214,26 +217,20 @@ const ShowProcedencias = () => {
                                     variant="info me-2" 
                                     onClick={getAllProcedencias}
                                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                    title='Buscar'
                                 >
                                     <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
                             {userRole === 'admin' ||userRole === 'pagos' ? (
 
-                            <Button variant="btn custom" onClick={() => navigate('/procedencias/create')} className="btn-custom">
+                            <Button variant="btn custom" onClick={() => navigate('/procedencias/create')} className="btn-custom" title='Crear Procedencia'>
                             <i className="bi bi-geo-fill me-2  "></i> Nuevo
                             </Button>
                             ):null}
                         </div>
                     </div>
                     {/* Tabla paginada */}
-                    {/* <PaginationTable
-                        data={filteredReportes}  // Datos filtrados
-                        itemsPerPage={itemsPerPage}
-                        columns={columns}
-                        renderItem={renderItem}
-                        currentPage={currentPage}  // Página actual
-                        onPageChange={setCurrentPage}  // Función para cambiar de página
-                        /> */}
+                    
                         <PaginationTable
                             data={procedencias}
                             itemsPerPage={itemsPerPage}

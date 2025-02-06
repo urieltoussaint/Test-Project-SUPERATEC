@@ -54,6 +54,7 @@ import CreateProcedencias from './pages/Procedencias/CreateProcedencias';
 import EditProcedencias from './pages/Procedencias/EditProcedencias';
 import ShowPagosProgramas from './pages/Participantes/ReportePagos/ShowPagosProgramas';
 import CambiarClave from './pages/Users/CambiarClave';
+import ShowIndicadores from './pages/CalculoIndicadores/ShowIndicadores';
 
 
 function App() {
@@ -82,6 +83,8 @@ function App() {
             <Route path="/inscritos/:cursoId" element={<AuthenticatedLayout><ShowInscritos /></AuthenticatedLayout>} />
             <Route path="/inscritos/show/:id" element={<AuthenticatedLayout><ShowMoreInscripciones /></AuthenticatedLayout>} />
             <Route path="/inscritos/edit/:inscripcionId/:cedula" element={<AuthenticatedLayout><EditInscripciones /></AuthenticatedLayout>} />
+            <Route path="/indicadores" element={<AuthenticatedLayout><ShowIndicadores /></AuthenticatedLayout>} />
+
 
             <Route path="/cursos" element={<AuthenticatedLayout><ShowCursos /></AuthenticatedLayout>} />
             <Route path="/cursos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateCursos /></AuthenticatedLayout></ProtectedRoute>}  />
@@ -243,7 +246,6 @@ const AuthenticatedLayout = ({ children }) => {
   
     // Calcular el tiempo restante hasta la ejecución
     const timeUntilUpdate = targetTime.getTime() - now.getTime();
-    console.log("MANO TA HACIENDO ALGOOOO");
   
     setTimeout(() => {
       checkAndFetchTasa(); // Llamar la función en el momento indicado
@@ -308,6 +310,7 @@ const AuthenticatedLayout = ({ children }) => {
           <li><NavLink to="/patrocinantes"><i className="bi bi-building"></i> Patrocinantes</NavLink></li>
           <li><NavLink to="/procedencias"><i className="bi bi-geo-fill"></i> Procedencias</NavLink></li>
           <li><NavLink to="/promocion"><i className="bi bi-star-fill"></i> Promoción</NavLink></li>
+          <li><NavLink to="/indicadores"><i className="bi bi-sliders"></i> Indicadores</NavLink></li>
         </ul>
       </li>
       <li className={openDropdown === 2 ? 'expanded' : ''}>
@@ -331,11 +334,11 @@ const AuthenticatedLayout = ({ children }) => {
           <div className="user-section ">
             {/* Íconos a la izquierda */}
             <div className="icon-container">
-              <div className="user-icon" onClick={() => navigate('/peticiones')}>
+              <div className="user-icon" onClick={() => navigate('/peticiones')} title='Bandeja de Entrada'>
                 <i className="bi bi-inbox-fill" style={{ fontSize: '1.6rem', cursor: 'pointer', }}></i>
               </div>
               {userRole === 'admin' && (
-                <div className="user-icon" onClick={() => navigate('/users')}>
+                <div className="user-icon" onClick={() => navigate('/users')} title='Administrar Usuarios'>
                   <i className="bi bi-person-fill-gear" style={{ fontSize: '1.5rem', cursor: 'pointer', }}></i>
                 </div>
               )}
@@ -343,7 +346,7 @@ const AuthenticatedLayout = ({ children }) => {
 
             {/* Nombre de Rol y Círculo */}
             <span className="user-role  ">{userRole}</span>
-            <div className="user-circle" onClick={toggleDropdowns}>
+            <div className="user-circle" onClick={toggleDropdowns} title='Ver Opciones'>
               <span className="user-initial">{user?.username?.charAt(0).toUpperCase()}</span>
             </div>
 

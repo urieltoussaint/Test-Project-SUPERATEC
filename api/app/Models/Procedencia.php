@@ -7,8 +7,8 @@ class Procedencia extends Model
 {
     protected $table = 'procedencia';
 
-    protected $listable = ['descripcion','direccion','fecha','id','cod'];
-    protected $fillable = ['descripcion','direccion','fecha','cod'];
+    protected $listable = ['descripcion','codigo_plantel','fecha','id','cod'];
+    protected $fillable = ['descripcion','codigo_plantel','fecha','cod'];
 
 
     protected static function boot()

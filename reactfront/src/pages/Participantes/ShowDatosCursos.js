@@ -293,16 +293,17 @@ const renderStatusCursoTriangle = (status_curso) => {
                                 variant="btn btn-info"
                                 onClick={() => navigate(`/inscritos/show/${informacion_inscripcion.id}`)}
                                 className="me-2 icon-white"
+                                title='Ver más'
                             >
                                 <i className="bi bi-eye"></i>
                             </Button>
 
-                            <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${informacion_inscripcion.id}`)} className="me-1">
+                            <Button variant="btn btn-info" onClick={() => navigate(`/pagos/curso/${informacion_inscripcion.id}`)} className="me-1" title='Ver Pagos'>
                             <i className="bi bi-currency-exchange"></i>
                             </Button>
                             {/* Botón para editar si el rol es 'admin' */}
                             {(userRole === 'admin' || userRole === 'superuser') && (
-                            <Button variant="btn btn-warning" onClick={() => navigate(`/inscritos/edit/${informacion_inscripcion.id}/${informacion_inscripcion.cedula_identidad}`)} className="me-1">
+                            <Button variant="btn btn-warning" onClick={() => navigate(`/inscritos/edit/${informacion_inscripcion.id}/${informacion_inscripcion.cedula_identidad}`)} className="me-1" title='Editar'>
                                 <i className="bi bi-pencil-fill"></i>
                             </Button>
                             )}
@@ -394,6 +395,7 @@ const renderStatusCursoTriangle = (status_curso) => {
                             onClick={loadData}
                             disabled={loadingData} // Deshabilita el botón si está cargando
                             style={{ padding: '8px 16px', width: '90px' }} // Ajustamos el padding para aumentar el grosor
+                            title='Recargar datos'
                             >
                             {/* Icono de recarga */}
                             {loadingData ? (
@@ -406,10 +408,11 @@ const renderStatusCursoTriangle = (status_curso) => {
                                 variant="info me-2"
                                 onClick={getAllDatosCursos}
                                 style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                title='Buscar'
                             >
                                 <FaSearch className="me-1" /> {/* Ícono de lupa */}
                             </Button>
-                            <Button variant="secondary" onClick={() => navigate("/datos")} className="secondary" style={{ fontSize: '0.9rem' }}>
+                            <Button variant="secondary" onClick={() => navigate("/datos")} className="secondary" style={{ fontSize: '0.9rem' }} title='Volver'>
                                 <i className="bi bi-arrow-90deg-left"></i>
                             </Button>
 

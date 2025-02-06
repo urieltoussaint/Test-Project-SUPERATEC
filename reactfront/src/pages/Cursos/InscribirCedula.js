@@ -82,6 +82,7 @@ const [filtrosCurso, setFiltrosCurso] = useState({
     unidad_id:'',
     cod:'',
     grupo_id:'',
+    curso_descripcion:''
 });
 
 const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
@@ -705,6 +706,15 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                     </div>
                 </Col>
             </Row>
+            <Row>
+            <Form.Control 
+                    name= "curso_descripcion"
+                    type="text" 
+                    placeholder="Buscar por Nombre" 
+                    value={filtrosCurso.curso_descripcion} 
+                    onChange={handleFilterCursoChange} 
+                />
+            </Row>
 
                     <Row>
                         <Col>
@@ -755,26 +765,16 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                         </Col>
                         <Col>
                             <Form.Select 
-                            name='tipo_programa_id'
-                            value={filtrosCurso.tipo_programa_id}
-                            onChange={(e) => setFiltrosCurso({ ...filtrosCurso, tipo_programa_id: e.target.value })}>
-                                <option value="">Filtrar por Tipo de Programa</option>
-                                {filterOptions.tipoProgramaOptions.map(tipo => (
-                                    <option key={tipo.id} value={tipo.id}>{tipo.descripcion}</option>
-                                ))}
-                            </Form.Select>
-                        </Col>
-                        <Col>
-                            <Form.Select 
                             name='grupo_id'
                             value={filtrosCurso.grupo_id}
                             onChange={(e) => setFiltrosCurso({ ...filtrosCurso, grupo_id: e.target.value })}>
                                 <option value="">Filtrar por Grupo</option>
-                                {filterOptions.grupoOptions.map(tipo => (
-                                    <option key={tipo.id} value={tipo.id}>{tipo.descripcion}</option>
+                                {filterOptions.grupoOptions.map(grupo => (
+                                    <option key={grupo.id} value={grupo.id}>{grupo.descripcion}</option>
                                 ))}
                             </Form.Select>
                         </Col>
+                        
                     </Row>
 
                     <Table striped bordered hover className='mt-3'>
@@ -790,7 +790,7 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                             {paginatedCursos.map((curso) => (
                                 <tr key={curso.id}>
                                     <td>{curso.cod}</td>
-                                    <td>{curso.descripcion}</td>
+                                    <td>{curso.curso_descripcion}</td>
                                     <td>{curso.cantidad_horas}</td>
                                     <td>
                                         <div className="d-flex justify-content-center align-items-center">

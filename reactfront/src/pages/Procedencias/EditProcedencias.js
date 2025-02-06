@@ -17,7 +17,7 @@ const EditProcedencias = () => {
   const [formData, setFormData] = useState({
     cod:'',
     descripcion:'',
-    direccion:''
+    codigo_plantel:''
   });
 
   const { id } = useParams(); // Obtener el id del curso de la URL
@@ -50,7 +50,7 @@ const EditProcedencias = () => {
       setFormData({
         cod: procedencia.cod || '',
         descripcion: procedencia.descripcion || '',
-        direccion: procedencia.direccion || '',
+        codigo_plantel: procedencia.codigo_plantel || '',
 
       });
       setOriginalCod(procedencia.cod); // Guarda el valor original de cod
@@ -210,12 +210,12 @@ const EditProcedencias = () => {
                 />
               </Form.Group>
   
-              <Form.Group controlId="direccion">
+              <Form.Group controlId="codigo_plantel">
                 <Form.Label>Dirección</Form.Label>
                 <Form.Control
                   type="textarea"
-                  name="direccion"
-                  value={formData.direccion}
+                  name="codigo_plantel"
+                  value={formData.codigo_plantel}
                   onChange={handleChange}
                 />
               </Form.Group>

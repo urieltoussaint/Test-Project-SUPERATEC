@@ -256,6 +256,7 @@ const handlePageChange = (newPage) => {
                     variant="btn btn-info" 
                     onClick={() => navigate(`/pagos/${reporte.id}`)}
                     className="me-2"
+                    title= "Ver más"
                 >
                     <i className="bi bi-eye"></i>
                 </Button>
@@ -268,6 +269,7 @@ const handlePageChange = (newPage) => {
                 variant="btn btn-danger"
                 onClick={() => handleShowModal(reporte.id)}
                 className="me-2"
+                title= "Eliminar"
                 >
                 <i className="bi bi-trash3-fill"></i>
                 </Button>
@@ -333,6 +335,7 @@ const handlePageChange = (newPage) => {
                                 onClick={loadData}
                                 disabled={loadingData} // Deshabilita el botón si está cargando
                                 style={{ padding: '5px 10px', width: '90px' }} // Ajusta padding y ancho
+                                title= "Recargar datos"
 
                                 >
                                 {/* Icono de recarga */}
@@ -347,6 +350,7 @@ const handlePageChange = (newPage) => {
                                     variant="info me-2" 
                                     onClick={getAllReportes}
                                     style={{ padding: '5px 10px', width: '120px' }} // Ajusta padding y ancho
+                                    title="Buscar"
                                 >
                                     <FaSearch className="me-1" /> {/* Ícono de lupa */}
                                 </Button>
@@ -356,13 +360,14 @@ const handlePageChange = (newPage) => {
                                 variant="btn btn-info"
                                 onClick={() => setShowModalInfo(true)} // Abrir el modal
                                 className="me-2"
+                                title="Exportar en Excel"
                             >
                                 <i className="bi bi-printer-fill"></i> {/* Icono de impresora */}
                             </Button>
 
                             {userRole === 'admin' ||userRole === 'pagos' ? (
 
-                            <Button variant="btn custom" onClick={() => navigate('/pagos/create')} className="btn-custom">
+                            <Button variant="btn custom" onClick={() => navigate('/pagos/create')} className="btn-custom" title="Crear Nuevo Reporte de Pago">
                             <i className="bi bi-cash-coin me-2  "></i> Nuevo
                             </Button>
                             ):null}

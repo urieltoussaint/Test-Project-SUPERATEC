@@ -259,6 +259,7 @@ const ShowPagosCursos = () => {
                     variant="btn btn-info" 
                     onClick={() => navigate(`/pagos/${reporte.id}`)}
                     className="me-2"
+                    title='Ver más'
                 >
                     <i className="bi bi-eye"></i>
                 </Button>
@@ -269,6 +270,7 @@ const ShowPagosCursos = () => {
                         variant="btn btn-danger"
                         onClick={() => handleShowModal(reporte.id)}
                         className="me-2"
+                        title='Eliminar'
                         >
                         <i className="bi bi-trash3-fill"></i>
                         </Button>
@@ -330,6 +332,7 @@ const ShowPagosCursos = () => {
                                 onClick={loadData}
                                 disabled={loadingData} // Deshabilita el botón si está cargando
                                 style={{ padding: '5px 10px', width: '90px' }} // Ajusta padding y ancho
+                                title='Recargar datos'
 
                                 >
                                 {/* Icono de recarga */}
@@ -339,10 +342,10 @@ const ShowPagosCursos = () => {
                                     <FaSync />
                                 )}
                             </Button>
-                                <Button variant="btn custom" onClick={() => navigate(`/pagos/${cedulaInscripcion}/${inscripcion_curso_id}`)} className="btn-custom">
+                                <Button variant="btn custom" onClick={() => navigate(`/pagos/${cedulaInscripcion}/${inscripcion_curso_id}`)} className="btn-custom" title='Nuevo Pago'>
                                     <i className="bi bi-cash-coin me-2"></i> Nuevo
                                 </Button>
-                                <Button variant="secondary" onClick={() => navigate(-1)} className="secondary" style={{ fontSize: '0.9rem' }}>
+                                <Button variant="secondary" onClick={() => navigate(-1)} className="secondary" style={{ fontSize: '0.9rem' }} title='Volver'>
                                     <i className="bi bi-arrow-90deg-left"></i>
                                 </Button>
                             </div>

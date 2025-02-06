@@ -48,7 +48,7 @@ const CreateProcedencias = () => {
 
   const [formData, setFormData] = useState({
     descripcion: '',
-    direccion: '',
+    codigo_plantel: '',
     cod:'',
    
   });
@@ -298,12 +298,12 @@ const handleRolePageChange = async (newPage) => {
               />
             </Form.Group>
 
-            <Form.Group controlId="direccion">
-              <Form.Label>Dirección</Form.Label>
+            <Form.Group controlId="codigo_plantel">
+              <Form.Label>Código Plantel</Form.Label>
               <Form.Control
                 type="textarea"
-                name="direccion"
-                value={formData.direccion}
+                name="codigo_plantel"
+                value={formData.codigo_plantel}
                 onChange={handleChange}
               />
             </Form.Group>
