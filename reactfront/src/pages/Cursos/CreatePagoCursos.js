@@ -18,6 +18,7 @@ const CreatePagoCursos = () => {
     costo_inscripcion:'',
     costo_total:'',
     costo_cuotas:'',
+    costo_total_cuotas:'',
     cuotas:'',
     periodicidad:''
   });
@@ -103,8 +104,10 @@ useEffect(() => {
       // 1. Actualizar los datos del curso
       const formDataWithStatus = {
         ...formData,
-        status: !hasEmptyFields  // Si no hay campos vacíos, el status será true, de lo contrario, false
+        status: !hasEmptyFields,  // Si no hay campos vacíos, el status será true
+        costo_total_cuota: formData.costo_cuotas * formData.cuotas // Multiplicación de costo_cuotas por cuotas
       };
+      
   
       const cursoResponse = await axios.put(`${endpoint}/cursos/${id}`, formDataWithStatus, {
         headers: {

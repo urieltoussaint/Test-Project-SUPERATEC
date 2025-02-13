@@ -22,12 +22,14 @@ const CreatePago = () => {
     tasa_bcv_id: '',
     comentario_cuota: '',
     monto_total: '',
-    monto_restante: '',
+    monto_restante_cuota: '',
+    monto_restante_inscripcion: '',
     conversion_total: '',
     conversion_cancelado: '',
     conversion_exonerado: '',
     conversion_restante: '',
     tipo_pago_id:'',
+    forma_pago_id:''
   });
   const [cedula, setCedula] = useState('');
   const [cursos, setCursos] = useState([]);
@@ -45,8 +47,9 @@ const CreatePago = () => {
   const [modalMessage, setModalMessage] = useState('');  // Mensaje del modal
   const [cuotas, setCuotas] = useState('');  // Mensaje del modal
   const [cuotasCursos, setCuotasCursos] = useState('');  // Mensaje del modal
-  const [costoInscripcion, setCostoInscripcion] = useState(false);
-  const [tipoPagoOptions, setTipoPagoOptions] = useState([]);
+  const [costoCuota, setCostoCuota] = useState('');  // Mensaje del modal
+  // const [costoInscripcion, setCostoInscripcion] = useState(false);
+  // const [tipoPagoOptions, setTipoPagoOptions] = useState([]);
   
 
 
@@ -75,6 +78,8 @@ const CreatePago = () => {
   };
     const [filterOptions, setFilterOptions] = useState({
       tipoPagoOptions: [],
+      formaPagoOptions: [],
+
    
   });
 
@@ -102,11 +107,12 @@ const CreatePago = () => {
       });
       
       // Desestructuramos los datos que vienen en la respuesta
-      const { tipo_pago } = response.data;
+      const { tipo_pago,forma_pago } = response.data;
   
       // Retornamos las opciones en un solo objeto
       setFilterOptions( {
         tipoPagoOptions: tipo_pago,
+        formaPagoOptions:forma_pago,
      
       });
   
@@ -147,7 +153,8 @@ const handleChange = (event) => {
           tasa_bcv_id: formData.tasa_bcv_id,
           comentario_cuota: '',
           monto_total: '',
-          monto_restante: '',
+          monto_restante_cuota: '',
+          monto_restante_inscripcion: '',
           conversion_total: '',
           conversion_cancelado: '',
           conversion_exonerado: '',
@@ -173,6 +180,7 @@ const handleChange = (event) => {
       console.log("Curso seleccionado:", selectedCurso);
       setCursoSeleccionado(selectedCurso); 
       setCursoId(selectedCurso.id); 
+      setCostoCuota(selectedCurso.costo_cuotas);
   
       setFormData(prevData => ({
         ...prevData,
@@ -227,7 +235,7 @@ const handleChange = (event) => {
       setCuotasCursos(selectedCurso.curso_cuotas);
   
       let montoTotal = 0;
-      setCostoInscripcion(false);
+      // setCostoInscripcion(false);
   
       if (formData.tipo_pago_id === "1") { 
         // Pago de inscripción
@@ -236,19 +244,19 @@ const handleChange = (event) => {
         setFormData((prevState) => ({
           ...prevState,
           monto_total: montoTotal,
-          monto_restante: montoTotal,
+          monto_restante_inscripcion: montoTotal,
           conversion_total: calcularConversion(montoTotal),
         }));
   
       } else if (formData.tipo_pago_id === "2") { 
         // Pago de cuota
-        montoTotal = cantidadPagos > 0 ? parseFloat(ultimoPago.monto_restante_cuota) : parseFloat(selectedCurso.costo_cuotas);
+        montoTotal = cantidadPagos > 0 ? parseFloat(ultimoPago.monto_restante_cuota) : parseFloat(selectedCurso.costo_total_cuota);
         const esUltimaCuota = cantidadPagos + 1 === selectedCurso.curso_cuotas;
   
         setFormData((prevState) => ({
           ...prevState,
           monto_total: montoTotal,
-          monto_restante: montoTotal,
+          monto_restante_cuota: montoTotal,
           conversion_total: calcularConversion(montoTotal),
           esUltimaCuota,
         }));
@@ -451,7 +459,8 @@ const handleChange = (event) => {
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
-      monto_restante: montoRestante > 0 ? montoRestante.toFixed(2) : '0.00',
+      monto_restante_inscripcion: montoRestante > 0 ? montoRestante.toFixed(2) : '0.00',
+      monto_restante_cuota: montoRestante > 0 ? montoRestante.toFixed(2) : '0.00',
       conversion_restante: calcularConversion(montoRestante),
       conversion_cancelado: calcularConversion(cancelado),
       conversion_exonerado: calcularConversion(exonerado)
@@ -520,7 +529,7 @@ const handleChange = (event) => {
               <>
             <p><strong>Pago Inscripción</strong></p>
             <Form.Group controlId="monto_total">
-              <Form.Label>Monto Restante de Inscripción</Form.Label>
+              <Form.Label>Monto a Pagar de Inscripción</Form.Label>
               <Form.Control
                 type="text"
                 name="monto_total"
@@ -562,7 +571,18 @@ const handleChange = (event) => {
             </Form.Group>
             </Col>
             </Row>
-           
+            <Form.Group controlId="monto_restante_inscripcion">
+              <Form.Label>Monto Restante de Inscripción</Form.Label>
+              <Form.Control
+                type="text"
+                name="monto_restante_inscripcion"
+                value={formData.monto_restante_inscripcion}
+                readOnly
+              />
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_restante)}BsF</Form.Text>
+            </Form.Group>
+            <Row className="g-2">
+          <Col md={6}>
             <Form.Group controlId="tipo_moneda">
               <Form.Label>Tipo de Moneda</Form.Label>
               <Form.Control
@@ -576,6 +596,19 @@ const handleChange = (event) => {
                 <option value="$">$</option>
               </Form.Control>
             </Form.Group>
+            </Col>
+            <Col md={6}>
+            <SelectComponent
+              options={filterOptions.formaPagoOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.forma_pago_id}
+              handleChange={handleChange}
+              controlId="forma_pago_id"
+              label="Forma de Pago"
+            />
+            </Col>
+            </Row>
             <Form.Group controlId="comentario_cuota">
               <Form.Label>Comentario Cuota</Form.Label>
               <Form.Control
@@ -585,13 +618,16 @@ const handleChange = (event) => {
                 onChange={handleMontoChange}
               />
             </Form.Group>
+
             </>
             
           ) : (
             <>
             <p mb-3><strong>Pago de Cuota</strong></p>
+            <Row className="g-2">
+          <Col md={6}>
             <Form.Group controlId="monto_total">
-              <Form.Label>Monto Restante de Cuotas</Form.Label>
+              <Form.Label>Monto a Pagar de Cuotas</Form.Label>
               <Form.Control
                 type="text"
                 name="monto_total"
@@ -600,6 +636,20 @@ const handleChange = (event) => {
               />
               <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)}BsF</Form.Text>
             </Form.Group>
+            </Col>
+            <Col md={6}>
+            <Form.Group controlId="costo_cuota">
+              <Form.Label>Costo de Cuota</Form.Label>
+              <Form.Control
+                type="text"
+                name="costo_cuota"
+                value={costoCuota}
+                readOnly
+              />
+              <Form.Text className="text-muted">Conversión: {calcularConversion(costoCuota)}BsF</Form.Text>
+            </Form.Group>
+            </Col>
+            </Row>
             <Row className="g-2">
           <Col md={6}>
             <Form.Group controlId="monto_cancelado">
@@ -632,16 +682,18 @@ const handleChange = (event) => {
             </Form.Group>
             </Col>
             </Row>
-            <Form.Group controlId="monto_restante">
-              <Form.Label>Monto Restante</Form.Label>
+            <Form.Group controlId="monto_restante_cuota">
+              <Form.Label>Monto Restante de Cuotas</Form.Label>
               <Form.Control
                 type="text"
-                name="monto_restante"
-                value={formData.monto_restante}
+                name="monto_restante_cuota"
+                value={formData.monto_restante_cuota}
                 readOnly
               />
-              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_restante)}BsF</Form.Text>
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_restante_cuota)}BsF</Form.Text>
             </Form.Group>
+            <Row className="g-2">
+          <Col md={6}>
             <Form.Group controlId="tipo_moneda">
               <Form.Label>Tipo de Moneda</Form.Label>
               <Form.Control
@@ -655,6 +707,19 @@ const handleChange = (event) => {
                 <option value="$">$</option>
               </Form.Control>
             </Form.Group>
+            </Col>
+            <Col md={6}>
+            <SelectComponent
+              options={filterOptions.formaPagoOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.forma_pago_id}
+              handleChange={handleChange}
+              controlId="forma_pago_id"
+              label="Forma de Pago"
+            />
+            </Col>
+            </Row>
             <Form.Group controlId="comentario_cuota">
               <Form.Label>Comentario Cuota</Form.Label>
               <Form.Control
@@ -697,7 +762,7 @@ const handleChange = (event) => {
         </div>
         
       )}
-      {cursoSeleccionado && (
+      {formData.tipo_pago_id==2  && (
       <div className="mt-2">
         <p><strong>Cuotas:</strong> {cuotas+1 }/{cuotasCursos}</p>
       </div>

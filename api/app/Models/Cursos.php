@@ -6,8 +6,8 @@ use Illuminate\Support\Str;
 class Cursos extends Model
 {
     protected $table = 'cursos';
-    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo_total', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion','costo_cuotas','area2_id','area3_id','area4_id','area5_id','periodicidad','fecha_fin'];
-    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo_total', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion','costo_cuotas','area2_id','area3_id','area4_id','area5_id','periodicidad','fecha_fin'];
+    protected $fillable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo_total', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion','costo_cuotas','area2_id','area3_id','area4_id','area5_id','periodicidad','fecha_fin','costo_total_cuota'];
+    protected $listable = ['id', 'descripcion', 'cantidad_horas', 'area_id', 'costo_total', 'fecha_inicio','cod','status','cuotas','unidad_id','modalidad_id','tipo_programa_id','nivel_id','externo','sesiones','grupo_id','costo_inscripcion','costo_cuotas','area2_id','area3_id','area4_id','area5_id','periodicidad','fecha_fin',];
 
     // Relación con InscripcionCursos (un curso puede tener muchas inscripciones)
     public function InformacionInscripcion()

@@ -56,6 +56,7 @@ class CursosController extends Controller
                 'cursos.costo_inscripcion as costo_inscripcion',
                 'cursos.costo_total as curso_costo',
                 'cursos.costo_cuotas as costo_cuotas',
+                'cursos.costo_total_cuota as costo_total_cuota',
                 'cursos.cod as curso_cod',
                 'cursos.cuotas as curso_cuotas',
                 'datos_identificacion.cedula_identidad'
