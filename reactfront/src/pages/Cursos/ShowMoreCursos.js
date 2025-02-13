@@ -57,13 +57,16 @@ const ShowMoreCursos = ({ onReload }) => {
               <ListGroup.Item>Unidad: {data.unidad?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Tipo de Programa: {data.tipo_programa?.descripcion}</ListGroup.Item>
               <ListGroup.Item>Costo de Inscripcion: {data.costo_inscripcion}</ListGroup.Item>
-              <ListGroup.Item>Costo de Cuota: {data.costo}</ListGroup.Item>
-              <ListGroup.Item>Cuotas: {data.cuotas}</ListGroup.Item>
+              <ListGroup.Item>Costo de Cuotas: {data.costo_cuotas}</ListGroup.Item>
+              <ListGroup.Item> Número de Cuotas: {data.cuotas}</ListGroup.Item>
+              <ListGroup.Item>Costo de Total: {data.costo_total}</ListGroup.Item>
+              <ListGroup.Item>Periodicidad (días): {data.periodicidad}</ListGroup.Item>
+              
               <ListGroup.Item>Fecha de Inicio: {data.fecha_inicio}</ListGroup.Item>
               <ListGroup.Item>Área 2: {data.area2?.descripcion}</ListGroup.Item>
-              <ListGroup.Item>Área 3: {data.area2?.descripcion}</ListGroup.Item>
-              <ListGroup.Item>Área 4: {data.area2?.descripcion}</ListGroup.Item>
-              <ListGroup.Item>Área 5: {data.area2?.descripcion}</ListGroup.Item>
+              <ListGroup.Item>Área 3: {data.area3?.descripcion}</ListGroup.Item>
+              <ListGroup.Item>Área 4: {data.area4?.descripcion}</ListGroup.Item>
+              <ListGroup.Item>Área 5: {data.area5?.descripcion}</ListGroup.Item>
             </ListGroup>
   
             <div className="text-center mt-4">

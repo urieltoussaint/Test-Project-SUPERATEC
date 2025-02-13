@@ -230,7 +230,6 @@ const handleSeleccionar = async () => {
       modalidadOptions: modalidad,
       grupoOptions:grupo,
     });
-    setSelectVisible(true);  // Mostrar los selectores
 
   } catch (error) {
     console.error('Error fetching filter options:', error);

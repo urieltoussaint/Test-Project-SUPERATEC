@@ -18,6 +18,7 @@ use App\Models\Grupo;
 use App\Models\NivelInstruccion;
 use App\Models\Patrocinante;
 use App\Models\Procedencia;
+use App\Models\TipoPago;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -138,11 +139,13 @@ public function fetchFilterOptions()
         $centro = Centro::all();
         $cohorte = Cohorte::all();
         $periodo = Periodo::all();
+        $tipo_pago=TipoPago::all();
    
         return response()->json([
             'centro' => $centro,
             'cohorte' =>$cohorte,
             'periodo'=>$periodo,
+            'tipo_pago'=>$tipo_pago,
          
         ]);
 } 

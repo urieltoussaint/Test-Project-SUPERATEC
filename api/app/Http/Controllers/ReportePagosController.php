@@ -17,58 +17,58 @@ class ReportePagosController extends Controller
 
     protected $class = Model::class;
 
-    public function store(Request $request)
-    {
-        $inscripcionCurso = InformacionInscripcion::find($request->informacion_inscripcion_id);
-        $cedulaIdentidad = $inscripcionCurso->cedula_identidad;
-        $cursoId = $inscripcionCurso->curso_id;
+    // public function store(Request $request)
+    // {
+    //     $inscripcionCurso = InformacionInscripcion::find($request->informacion_inscripcion_id);
+    //     $cedulaIdentidad = $inscripcionCurso->cedula_identidad;
+    //     $cursoId = $inscripcionCurso->curso_id;
 
-        // Verificar si ya existe un pago para esta inscripción
-        $pagoExistente = ReportePagos::where('informacion_inscripcion_id', $request->informacion_inscripcion_id)
-                             ->orderBy('id', 'desc')
-                             ->first();
+    //     // Verificar si ya existe un pago para esta inscripción
+    //     $pagoExistente = ReportePagos::where('informacion_inscripcion_id', $request->informacion_inscripcion_id)
+    //                          ->orderBy('id', 'desc')
+    //                          ->first();
 
-        if ($pagoExistente) {
-            // Si existe un pago previo, usar el monto restante del pago más reciente
-            $montoTotal = $pagoExistente->monto_restante;
-        } else {
-            // Si no hay pagos previos, usar el costo del curso
-            $curso = Cursos::find($cursoId);
-            $montoTotal = $curso->costo;
-        }
+    //     if ($pagoExistente) {
+    //         // Si existe un pago previo, usar el monto restante del pago más reciente
+    //         $montoTotal = $pagoExistente->monto_restante;
+    //     } else {
+    //         // Si no hay pagos previos, usar el costo del curso
+    //         $curso = Cursos::find($cursoId);
+    //         $montoTotal = $curso->costo;
+    //     }
 
-        $montoCancelado = $request->monto_cancelado;
-        $montoExonerado = $request->monto_exonerado;
-        $montoRestante = $montoTotal - $montoCancelado - $montoExonerado;
+    //     $montoCancelado = $request->monto_cancelado;
+    //     $montoExonerado = $request->monto_exonerado;
+    //     $montoRestante = $montoTotal - $montoCancelado - $montoExonerado;
 
-        // Obtener la tasa de conversión más reciente
-        $tasaBcv = TasaBcv::orderBy('id', 'desc')->first();
-        $tasa = $tasaBcv ? $tasaBcv->tasa : 1;
+    //     // Obtener la tasa de conversión más reciente
+    //     $tasaBcv = TasaBcv::orderBy('id', 'desc')->first();
+    //     $tasa = $tasaBcv ? $tasaBcv->tasa : 1;
 
-        $conversionTotal = $montoTotal * $tasa;
-        $conversionCancelado = $montoCancelado * $tasa;
-        $conversionExonerado = $montoExonerado * $tasa;
-        $conversionRestante = $montoRestante * $tasa;
+    //     $conversionTotal = $montoTotal * $tasa;
+    //     $conversionCancelado = $montoCancelado * $tasa;
+    //     $conversionExonerado = $montoExonerado * $tasa;
+    //     $conversionRestante = $montoRestante * $tasa;
 
-        $pago = new ReportePagos([
-            'informacion_inscripcion_id' => $request->informacion_inscripcion_id,
-            'monto_total' => $montoTotal,
-            'monto_cancelado' => $montoCancelado,
-            'monto_exonerado' => $montoExonerado,
-            'monto_restante' => $montoRestante,
-            'tipo_moneda' => $request->tipo_moneda,
-            'conversion_total' => $conversionTotal,
-            'conversion_cancelado' => $conversionCancelado,
-            'conversion_exonerado' => $conversionExonerado,
-            'conversion_restante' => $conversionRestante,
-            'tasa_bcv_id' => $tasaBcv->id,
-            'comentario_cuota' => $request->comentario_cuota 
-        ]);
+    //     $pago = new ReportePagos([
+    //         'informacion_inscripcion_id' => $request->informacion_inscripcion_id,
+    //         'monto_total' => $montoTotal,
+    //         'monto_cancelado' => $montoCancelado,
+    //         'monto_exonerado' => $montoExonerado,
+    //         'monto_restante' => $montoRestante,
+    //         'tipo_moneda' => $request->tipo_moneda,
+    //         'conversion_total' => $conversionTotal,
+    //         'conversion_cancelado' => $conversionCancelado,
+    //         'conversion_exonerado' => $conversionExonerado,
+    //         'conversion_restante' => $conversionRestante,
+    //         'tasa_bcv_id' => $tasaBcv->id,
+    //         'comentario_cuota' => $request->comentario_cuota 
+    //     ]);
 
-        $pago->save();
+    //     $pago->save();
 
-        return response()->json($pago, 201);
-    }
+    //     return response()->json($pago, 201);
+    // }
 
     public function obtenerUltimoPago($inscripcionCursoId, )
 {
@@ -91,72 +91,99 @@ class ReportePagosController extends Controller
     ]);
 }
 
-    public function obtenerDetallePago($id)
-    {
-        // Obtener el reporte de pago por ID
-        $reportePago = ReportePagos::findOrFail($id);
+public function obtenerDetallePago($id)
+{
+    // Obtener el reporte de pago por ID
+    $reportePago = ReportePagos::findOrFail($id);
 
-        // Obtener la inscripción del curso relacionada
-        $inscripcionCurso = InformacionInscripcion::where('informacion_inscripcion.id', $reportePago->informacion_inscripcion_id)
-                            ->join('cursos', 'informacion_inscripcion.curso_id', '=', 'cursos.id')
-                            ->select('informacion_inscripcion.*', 'cursos.descripcion', 'cursos.costo')
-                            ->first();
+    // Obtener la inscripción del curso relacionada
+    $inscripcionCurso = InformacionInscripcion::where('informacion_inscripcion.id', $reportePago->informacion_inscripcion_id)
+        ->join('cursos', 'informacion_inscripcion.curso_id', '=', 'cursos.id')
+        ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id') // Para obtener la cédula
+        ->select(
+            'informacion_inscripcion.*', 
+            'cursos.descripcion', 
+            'cursos.costo_total', 
+            'cursos.costo_inscripcion', 
+            'cursos.costo_cuotas',
+            'datos_identificacion.cedula_identidad' // Cedula desde la relación
+        )
+        ->first();
 
-        // Obtener la tasa BCV relacionada
-        $tasaBcv = TasaBcv::find($reportePago->tasa_bcv_id);
+    // Obtener la tasa BCV relacionada
+    $tasaBcv = TasaBcv::find($reportePago->tasa_bcv_id);
 
-        // Verificar si no se encontró la inscripción del curso o la tasa BCV
-        if (!$inscripcionCurso || !$tasaBcv) {
-            return response()->json(['error' => 'Datos no encontrados'], 404);
-        }
+    // Obtener la descripción del tipo de pago
+    $tipoPago = DB::table('tipo_pago')
+        ->where('id', $reportePago->tipo_pago_id)
+        ->value('descripcion');
 
-        // Construir la respuesta con los datos necesarios
-        $data = [
-            'id' => $reportePago->id,
-            'cedula_identidad' => $reportePago->cedula_identidad,
-            'fecha' => $reportePago->fecha,
-            'monto_cancelado' => $reportePago->monto_cancelado,
-            'monto_total' => $reportePago->monto_total,
-            'monto_exonerado' => $reportePago->monto_exonerado,
-            'monto_restante' => $reportePago->monto_restante,
-            'tipo_moneda' => $reportePago->tipo_moneda,
-            'comentario_cuota' => $reportePago->comentario_cuota,
-            'informacion_inscripcion_id' => $reportePago->informacion_inscripcion_id,
-            'conversion_cancelado' => $reportePago->conversion_cancelado,
-            'conversion_restante' => $reportePago->conversion_restante,
-            'conversion_total' => $reportePago->conversion_total,
-            'conversion_exonerado' => $reportePago->conversion_exonerado,
-            'tasa_bcv' => $tasaBcv->tasa,
-            'curso_descripcion' => $inscripcionCurso->descripcion
-        ];
-
-        return response()->json($data);
+    // Verificar si no se encontró la inscripción del curso o la tasa BCV
+    if (!$inscripcionCurso || !$tasaBcv) {
+        return response()->json(['error' => 'Datos no encontrados'], 404);
     }
+
+    // Construir la respuesta con los datos necesarios
+    $data = [
+        'id' => $reportePago->id,
+        'cedula_identidad' => $inscripcionCurso->cedula_identidad, // Se obtiene desde la relación
+        'fecha' => $reportePago->fecha,
+        'monto_cancelado' => $reportePago->monto_cancelado,
+        'monto_total' => $reportePago->monto_total,
+        'monto_exonerado' => $reportePago->monto_exonerado,
+        'monto_restante_cuota' => $reportePago->monto_restante_cuota,
+        'monto_restante_inscripcion' => $reportePago->monto_restante_inscripcion,
+        'tipo_moneda' => $reportePago->tipo_moneda,
+        'comentario_cuota' => $reportePago->comentario_cuota,
+        'informacion_inscripcion_id' => $reportePago->informacion_inscripcion_id,
+        'conversion_cancelado' => $reportePago->conversion_cancelado,
+        'conversion_restante' => $reportePago->conversion_restante,
+        'conversion_total' => $reportePago->conversion_total,
+        'conversion_exonerado' => $reportePago->conversion_exonerado,
+        'tasa_bcv' => $tasaBcv->tasa,
+        'curso_descripcion' => $inscripcionCurso->descripcion,
+        'tipo_pago_id' => $tipoPago // Se obtiene desde la relación
+    ];
+
+    return response()->json($data);
+}
+
 
     public function getPagosByCurso(Request $request, $cursoId)
-    {
-        try {
-            // Obtener todos los pagos filtrados por curso_id
-            $pagos = ReportePagos::where('informacion_inscripcion_id', $cursoId)->get();
-    
-            // Calcular la cantidad de pagos
-            $cantidadPagos = $pagos->count();
-    
-            // Obtener el último pago realizado (ordenado por la fecha de creación)
-            $ultimoPago = $pagos->sortByDesc('created_at')->first();
-    
-            // Retornar la cantidad de pagos y el último pago
-            return response()->json([
-                'cantidadPagos' => $cantidadPagos,
-                'ultimoPago' => $ultimoPago,
-            ]);
-        } catch (\Exception $e) {
-            // Manejo de errores
-            return response()->json([
-                'error' => 'Error al obtener los pagos: ' . $e->getMessage(),
-            ], 500);
+{
+    try {
+        // Obtener el tipo_pago_id si está presente en la solicitud
+        $tipoPagoId = $request->input('tipo_pago_id');
+
+        // Construir la consulta base
+        $query = ReportePagos::where('informacion_inscripcion_id', $cursoId);
+
+        // Aplicar el filtro de tipo_pago_id si está presente
+        if ($tipoPagoId) {
+            $query->where('tipo_pago_id', $tipoPagoId);
         }
+
+        // Obtener todos los pagos filtrados
+        $pagos = $query->get();
+
+        // Calcular la cantidad de pagos
+        $cantidadPagos = $pagos->count();
+
+        // Obtener el último pago realizado (ordenado por la fecha de creación)
+        $ultimoPago = $pagos->sortByDesc('created_at')->first();
+
+        // Retornar la cantidad de pagos y el último pago
+        return response()->json([
+            'cantidadPagos' => $cantidadPagos,
+            'ultimoPago' => $ultimoPago,
+        ]);
+    } catch (\Exception $e) {
+        // Manejo de errores
+        return response()->json([
+            'error' => 'Error al obtener los pagos: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
 
 

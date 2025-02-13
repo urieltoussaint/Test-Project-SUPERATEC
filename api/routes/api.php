@@ -89,6 +89,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('cursos-estadisticas', [CursosController::class, 'getCursosWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('cursos-estadisticas-print', [CursosController::class, 'getCursosWithStatisticsPrint'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('cursos-paginate', [CursosController::class, 'getCursos'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula'])->middleware('role:admin,superuser,invitado,pagos');
 
     
 
@@ -155,6 +156,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::delete('peticiones/{id}', [PeticionesController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('peticiones-estadisticas', [PeticionesController::class, 'getPeticionesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('peticionesAtendidas', [PeticionesController::class, 'getPeticionesAtendidas'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('peticiones-filtro', [PeticionesController::class, 'getPeticiones'])->middleware('role:admin,superuser,invitado,pagos');
 
      // Patrocinantes
      Route::get('patrocinantes', [PatrocinanteController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
@@ -195,7 +197,6 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('/identificacion/{cedula}', [DatosIdentificacionController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('cedulas', [DatosIdentificacionController::class, 'searchByCedula2']);
     Route::get('identificacion/{cedula}', [DatosIdentificacionController::class, 'getDatosByCedula']);
-    Route::get('cursos_por_cedula/{cedula}', [CursosController::class, 'obtenerCursosPorCedula'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('/ultimo_pago/{inscripcionCursoId}', [ReportePagosController::class, 'obtenerUltimoPago'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('tasa_bcv', [TasaBcvController::class, 'getLatestTasa'])->middleware('role:admin,superuser,invitado,pagos');
     Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');

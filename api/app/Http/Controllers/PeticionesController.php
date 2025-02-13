@@ -203,6 +203,25 @@ public function getPeticionesAtendidas(Request $request)
 }
 
 
+public function getPeticiones(Request $request)
+{
+    $query = Peticiones::query();
+
+    if ($request->filled('key')) {
+        $query->where('key', $request->key);
+    }
+
+    if ($request->filled('zona_id')) {
+        $query->where('zona_id', $request->zona_id);
+    }
+
+    if ($request->filled('status')) {
+        $query->where('status', filter_var($request->status, FILTER_VALIDATE_BOOLEAN));
+    }
+
+    return response()->json($query->paginate(10));
+}
+
 
 
 

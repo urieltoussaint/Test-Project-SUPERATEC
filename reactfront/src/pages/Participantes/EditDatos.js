@@ -212,7 +212,7 @@ const handleSeleccionar = async () => {
 
           if (!hasEmptyFields) {
             // Realizar la solicitud con filtros directamente en la API
-                const response = await axios.get(`${endpoint}/peticiones`, {
+                const response = await axios.get(`${endpoint}/peticiones-filtro`, {
                   headers: {
                       Authorization: `Bearer ${token}`,
                   },

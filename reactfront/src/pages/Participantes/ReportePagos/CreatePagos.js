@@ -7,7 +7,7 @@ import { Modal } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import { Card, Row, Col } from 'react-bootstrap'; 
 import moment from 'moment';
-
+import SelectComponent from '../../../components/SelectComponent';
 
 const endpoint = 'http://localhost:8000/api';
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
@@ -26,7 +26,8 @@ const CreatePago = () => {
     conversion_total: '',
     conversion_cancelado: '',
     conversion_exonerado: '',
-    conversion_restante: ''
+    conversion_restante: '',
+    tipo_pago_id:'',
   });
   const [cedula, setCedula] = useState('');
   const [cursos, setCursos] = useState([]);
@@ -37,6 +38,7 @@ const CreatePago = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [canceladoError, setCanceladoError] = useState('');
   const [exoneradoError, setExoneradoError] = useState('');
+  const [statusPay, setStatusPay] = useState('');
   const navigate = useNavigate();
   const [cursoId, setCursoId] = useState(null); // <-- Añadido el estado para cursoId
   const [showModal, setShowModal] = useState(false);  // Controlar el modal
@@ -44,11 +46,13 @@ const CreatePago = () => {
   const [cuotas, setCuotas] = useState('');  // Mensaje del modal
   const [cuotasCursos, setCuotasCursos] = useState('');  // Mensaje del modal
   const [costoInscripcion, setCostoInscripcion] = useState(false);
+  const [tipoPagoOptions, setTipoPagoOptions] = useState([]);
   
 
 
   useEffect(() => {
     fetchTasaBcv();
+    handleSeleccionar();
   }, []);
 
   const fetchTasaBcv = async () => {
@@ -69,6 +73,10 @@ const CreatePago = () => {
       console.error('Error fetching tasa:', error);
     }
   };
+    const [filterOptions, setFilterOptions] = useState({
+      tipoPagoOptions: [],
+   
+  });
 
   const fetchOptions = async (inputValue) => {
     try {
@@ -84,6 +92,38 @@ const CreatePago = () => {
       return [];
     }
   };
+  const handleSeleccionar = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Suponiendo que el endpoint unificado sea `/filtros-cursos`
+      const response = await axios.get(`${endpoint}/filter-inscripciones`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Desestructuramos los datos que vienen en la respuesta
+      const { tipo_pago } = response.data;
+  
+      // Retornamos las opciones en un solo objeto
+      setFilterOptions( {
+        tipoPagoOptions: tipo_pago,
+     
+      });
+  
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+      
+    }
+  };
+
+const handleChange = (event) => {
+  const { name, value } = event.target;
+  setFormData(prevState => ({
+    ...prevState,
+    [name]: value
+  }));
+};
+
 
   const handleCedulaChange = async (selectedOption) => {
     const selectedCedula = selectedOption ? selectedOption.value : '';
@@ -125,54 +165,95 @@ const CreatePago = () => {
   };
 
 
-  const handleCursoChange = async (event) => {
-    const selectedCursoId = event.target.value; // Obtén el ID del curso seleccionado
-    const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId)); // Busca el objeto completo
+  const handleCursoChange = (event) => {
+    const selectedCursoId = event.target.value; 
+    const selectedCurso = cursos.find(curso => curso.id === parseInt(selectedCursoId));
   
     if (selectedCurso) {
       console.log("Curso seleccionado:", selectedCurso);
-      setCursoSeleccionado(selectedCurso); // Guarda el objeto completo en el estado
-      setCursoId(selectedCurso.id); // Guarda el ID del curso en el estado
+      setCursoSeleccionado(selectedCurso); 
+      setCursoId(selectedCurso.id); 
+  
       setFormData(prevData => ({
         ...prevData,
-        informacion_inscripcion_id: selectedCursoId // Guarda el ID en el formulario
+        informacion_inscripcion_id: selectedCursoId 
       }));
     }
+  };
+  
+  // Se ejecuta cuando cursoSeleccionado y tipo_pago_id cambian
+  useEffect(() => {
+    if (cursoSeleccionado && formData.tipo_pago_id) {
+      handlePay(cursoSeleccionado.id, cursoSeleccionado);
+    }
+  }, [cursoSeleccionado, formData.tipo_pago_id]);
+  
+  // const handlePay = async (selectedCursoId, selectedCurso) => {
+  //   try {
+  //     const { cantidadPagos, ultimoPago } = await getPagosByCurso(selectedCursoId, formData.tipo_pago_id);
+  //     setCuotas(cantidadPagos);
+  //     setCuotasCursos(selectedCurso.curso_cuotas);
+  
+  //     let montoTotal = parseFloat(selectedCurso.curso_costo); 
+  //     setCostoInscripcion(false);
+  //     if (cantidadPagos > 0) {
+  //       montoTotal = parseFloat(ultimoPago.monto_restante);
+  //     }
+  
+  //     const esUltimaCuota = cantidadPagos + 1 === selectedCurso.curso_cuotas;
+  
+  //     setFormData((prevState) => ({
+  //       ...prevState,
+  //       monto_total: montoTotal,  
+  //       monto_restante: montoTotal, 
+  //       conversion_total: calcularConversion(montoTotal),  
+  //       esUltimaCuota,  
+  //     }));
+  
+  //     console.log('Cuotas del curso:', selectedCurso.curso_cuotas);
+  //     console.log('Pagos realizados:', cantidadPagos);
+  //     console.log('Último pago:', ultimoPago);
+  //   } catch (error) {
+  //     console.error('Error fetching curso info:', error);
+  //     setError('Error al obtener la información del curso');
+  //   }
+  // };
+  
 
-   
+  const handlePay = async (selectedCursoId, selectedCurso) => {
     try {
-      // Obtener la cantidad de pagos ya realizados
-      const { cantidadPagos, ultimoPago } = await getPagosByCurso(selectedCursoId);
+      const { cantidadPagos, ultimoPago } = await getPagosByCurso(selectedCursoId, formData.tipo_pago_id);
       setCuotas(cantidadPagos);
       setCuotasCursos(selectedCurso.curso_cuotas);
   
-      let montoTotal = parseFloat(selectedCurso.curso_costo); // Valor original por defecto
+      let montoTotal = 0;
       setCostoInscripcion(false);
-      if (cantidadPagos > 0) {
-        // Si hay pagos previos, utilizamos el monto restante del último pago
-        montoTotal = parseFloat(ultimoPago.monto_restante);
-      }
-      if ((cantidadPagos == 0) && (selectedCurso.status_pay==1)) {
-        // Si hay pagos previos, utilizamos el monto restante del último pago
-        montoTotal = parseFloat(selectedCurso.costo_inscripcion);
-        setCostoInscripcion(true);
+  
+      if (formData.tipo_pago_id === "1") { 
+        // Pago de inscripción
+        montoTotal = cantidadPagos > 0 ? parseFloat(ultimoPago.monto_restante_inscripcion) : parseFloat(selectedCurso.costo_inscripcion);
         
+        setFormData((prevState) => ({
+          ...prevState,
+          monto_total: montoTotal,
+          monto_restante: montoTotal,
+          conversion_total: calcularConversion(montoTotal),
+        }));
+  
+      } else if (formData.tipo_pago_id === "2") { 
+        // Pago de cuota
+        montoTotal = cantidadPagos > 0 ? parseFloat(ultimoPago.monto_restante_cuota) : parseFloat(selectedCurso.costo_cuotas);
+        const esUltimaCuota = cantidadPagos + 1 === selectedCurso.curso_cuotas;
+  
+        setFormData((prevState) => ({
+          ...prevState,
+          monto_total: montoTotal,
+          monto_restante: montoTotal,
+          conversion_total: calcularConversion(montoTotal),
+          esUltimaCuota,
+        }));
       }
-    
-      // Determinamos si es la última cuota
-      const esUltimaCuota = cantidadPagos + 1 === selectedCurso.curso_cuotas;
-    
-      // Actualizamos el estado del formulario
-      setFormData((prevState) => ({
-        ...prevState,
-        monto_total: montoTotal,  // Actualizamos monto total
-        monto_restante: montoTotal, // Aseguramos que el monto restante también se actualice
-        conversion_total: calcularConversion(montoTotal),  // Calculamos la conversión
-        esUltimaCuota,  // Indicamos si es la última cuota
-      }));
-    
-      // Logs para depuración
-      console.log('Curso seleccionado:', selectedCurso.curso_cod);
+  
       console.log('Cuotas del curso:', selectedCurso.curso_cuotas);
       console.log('Pagos realizados:', cantidadPagos);
       console.log('Último pago:', ultimoPago);
@@ -183,27 +264,31 @@ const CreatePago = () => {
   };
   
   
+  
+  
 
  
 
-  const getPagosByCurso = async (informacion_inscripcion_id) => {
+  const getPagosByCurso = async (informacion_inscripcion_id, tipo_pago_id) => {
     try {
-      const token = localStorage.getItem('token');
-  
-      // Realizamos la solicitud para obtener pagos
-      const response = await axios.get(`${endpoint}/pagos-inscripcion/${informacion_inscripcion_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      const { cantidadPagos, ultimoPago } = response.data; // Ajustamos según la estructura del backend
-  
-      // Retornamos los datos directamente
-      return { cantidadPagos, ultimoPago };
+        const token = localStorage.getItem('token');
+
+        // Realizamos la solicitud para obtener pagos con el filtro de tipo_pago_id
+        const response = await axios.get(`${endpoint}/pagos-inscripcion/${informacion_inscripcion_id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { tipo_pago_id } // Enviar como parámetro en la petición
+        });
+
+        const { cantidadPagos, ultimoPago } = response.data; // Ajustamos según la estructura del backend
+
+        // Retornamos los datos directamente
+        return { cantidadPagos, ultimoPago };
     } catch (error) {
-      console.error('Error fetching pagos:', error);
-      return { cantidadPagos: 0, ultimoPago: null }; // Devolvemos valores por defecto
+        console.error('Error fetching pagos:', error);
+        return { cantidadPagos: 0, ultimoPago: null }; // Devolvemos valores por defecto
     }
-  };
+};
+
   
 
 
@@ -228,7 +313,8 @@ const CreatePago = () => {
       await axios.post(`${endpoint}/pagos`, { 
         ...formData, 
         cedula_identidad: cedula, 
-        conversion_total: calcularConversion(formData.monto_total) 
+        conversion_total: calcularConversion(formData.monto_total) ,
+        
       }, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -248,30 +334,20 @@ const CreatePago = () => {
         });
   
         // Buscar todas las peticiones paginadas y actualizar la petición correspondiente
-        let allPeticiones = [];
-        let currentPage = 1;
-        let totalPages = 1;
-  
-        while (currentPage <= totalPages) {
-          const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
-            params: {
-              key: formData.informacion_inscripcion_id, 
+        // Realizar la solicitud con filtros directamente en la API
+        const response = await axios.get(`${endpoint}/peticiones-filtro`, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+          params: {
+              key: formData.informacion_inscripcion_id,
               zona_id: 3,
               status: false
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-  
-          allPeticiones = [...allPeticiones, ...peticionesResponse.data.data];
-          totalPages = peticionesResponse.data.last_page;
-          currentPage++;
-        }
-  
-        const peticionesFiltradas = allPeticiones.filter(
-          peticion => peticion.key === formData.informacion_inscripcion_id && peticion.zona_id === 3 && peticion.status === false
-        );
+          }
+        });
+
+        // Obtener solo las peticiones filtradas
+        const peticionesFiltradas = response.data.data;
   
         if (peticionesFiltradas.length > 0) {
           const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
@@ -296,31 +372,19 @@ const CreatePago = () => {
           },
         });
   
-        // Agregar lógica para actualizar el comentario de peticiones a "Pagos Faltantes"
-        let allPeticiones = [];
-        let currentPage = 1;
-        let totalPages = 1;
-  
-        while (currentPage <= totalPages) {
-          const peticionesResponse = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
-            params: {
+        const response = await axios.get(`${endpoint}/peticiones-filtro`, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+          params: {
               key: formData.informacion_inscripcion_id,
               zona_id: 3,
               status: false
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-  
-          allPeticiones = [...allPeticiones, ...peticionesResponse.data.data];
-          totalPages = peticionesResponse.data.last_page;
-          currentPage++;
-        }
-  
-        const peticionesFiltradas = allPeticiones.filter(
-          peticion => peticion.key === formData.informacion_inscripcion_id && peticion.zona_id === 3 && peticion.status === false
-        );
+          }
+        });
+
+        // Obtener solo las peticiones filtradas
+        const peticionesFiltradas = response.data.data;
   
         if (peticionesFiltradas.length > 0) {
           const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
@@ -366,6 +430,14 @@ const CreatePago = () => {
         setExoneradoError('El monto cancelado más el exonerado no pueden exceder el monto restante.');
       }
     } 
+
+    else if (statusPay===1 && montoRestante !== 0) {
+      if (name === 'monto_cancelado') {
+        setCanceladoError('En el pago de inscripción, el monto debe cubrir el total ');
+      } else {
+        setExoneradoError('En el pago de inscripción, el monto debe cubrir el total ');
+      }
+    }
     // Validar si es la última cuota y si cancelado + exonerado no cubren el monto restante
     else if (formData.esUltimaCuota && montoRestante !== 0) {
       if (name === 'monto_cancelado') {
@@ -429,11 +501,97 @@ const CreatePago = () => {
         )}
         {cursoSeleccionado && (
           
-
-          
+           <SelectComponent
+              options={filterOptions.tipoPagoOptions}  // Usar el estado filterOptions
+              nameField="descripcion"
+              valueField="id"
+              selectedValue={formData.tipo_pago_id}
+              handleChange={handleChange}
+              controlId="tipo_pago_id"
+              label="Tipo de Pago"
+              onChange={handlePay}
+            />
+        )}
+            
+          {/* Solo se muestra si se ha seleccionado un tipo de pago */}
+        {formData.tipo_pago_id && (
           <>
+            {formData.tipo_pago_id==1 ? (
+              <>
+            <p><strong>Pago Inscripción</strong></p>
             <Form.Group controlId="monto_total">
-              <Form.Label>Monto Total</Form.Label>
+              <Form.Label>Monto Restante de Inscripción</Form.Label>
+              <Form.Control
+                type="text"
+                name="monto_total"
+                value={formData.monto_total}
+                onChange={handlePay}
+                readOnly
+              />
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)}BsF</Form.Text>
+            </Form.Group>
+            <Row className="g-2">
+          <Col md={6}>
+            <Form.Group controlId="monto_cancelado">
+              <Form.Label>Monto Cancelado</Form.Label>
+              <Form.Control
+                type="number"
+                name="monto_cancelado"
+                value={formData.monto_cancelado}
+                onChange={handleMontoChange}
+                className={canceladoError ? 'is-invalid' : ''}
+                required
+              />
+              {canceladoError && <Alert variant="danger">{canceladoError}</Alert>}
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_cancelado)}BsF</Form.Text>
+            </Form.Group>
+            </Col>
+            <Col md={6}>
+            <Form.Group controlId="monto_exonerado">
+              <Form.Label>Monto Exonerado</Form.Label>
+              <Form.Control
+                type="number"
+                name="monto_exonerado"
+                value={formData.monto_exonerado}
+                onChange={handleMontoChange}
+                className={exoneradoError ? 'is-invalid' : ''}
+                required
+              />
+              {exoneradoError && <Alert variant="danger">{exoneradoError}</Alert>}
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_exonerado)}BsF</Form.Text>
+            </Form.Group>
+            </Col>
+            </Row>
+           
+            <Form.Group controlId="tipo_moneda">
+              <Form.Label>Tipo de Moneda</Form.Label>
+              <Form.Control
+                as="select"
+                name="tipo_moneda"
+                value={formData.tipo_moneda}
+                onChange={handleMontoChange}
+                required
+              >
+                <option value="bsF">bsF</option>
+                <option value="$">$</option>
+              </Form.Control>
+            </Form.Group>
+            <Form.Group controlId="comentario_cuota">
+              <Form.Label>Comentario Cuota</Form.Label>
+              <Form.Control
+                as="textarea"
+                name="comentario_cuota"
+                value={formData.comentario_cuota}
+                onChange={handleMontoChange}
+              />
+            </Form.Group>
+            </>
+            
+          ) : (
+            <>
+            <p mb-3><strong>Pago de Cuota</strong></p>
+            <Form.Group controlId="monto_total">
+              <Form.Label>Monto Restante de Cuotas</Form.Label>
               <Form.Control
                 type="text"
                 name="monto_total"
@@ -506,8 +664,10 @@ const CreatePago = () => {
                 onChange={handleMontoChange}
               />
             </Form.Group>
-          </>
-        )}
+            </>
+    )}
+  </>
+)}
         <div className='mt-3'>
         <Button variant="success" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Registrando...' : 'Registrar Pago'}

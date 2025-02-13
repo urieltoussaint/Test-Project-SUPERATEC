@@ -16,8 +16,10 @@ const endpoint = 'http://localhost:8000/api';
 const CreatePagoCursos = () => {
   const [formData, setFormData] = useState({
     costo_inscripcion:'',
-    costo:'',
-    cuotas:''
+    costo_total:'',
+    costo_cuotas:'',
+    cuotas:'',
+    periodicidad:''
   });
 
   const { id } = useParams(); // Obtener el id del curso de la URL
@@ -32,6 +34,17 @@ const CreatePagoCursos = () => {
         setLoading(false);
     });
 }, []);
+useEffect(() => {
+  const inscripcion = parseFloat(formData.costo_inscripcion) || 0;
+  const costo_cuotas = parseFloat(formData.costo_cuotas) || 0;
+  const cuotas = parseFloat(formData.cuotas) || 0;
+  
+  setFormData(prevState => ({
+    ...prevState,
+    costo_total: inscripcion + (costo_cuotas*cuotas)
+  }));
+}, [formData.costo_inscripcion, formData.costo_cuotas,formData.cuotas]);
+
 
 
 
@@ -45,7 +58,9 @@ const CreatePagoCursos = () => {
       setCurso(curso);
       setFormData({
         cuotas: curso.cuotas || '',
-        costo: curso.costo || '',
+        costo_cuotas: curso.costo_cuotas || '',
+        costo_inscripcion: curso.costo_inscripcion || '',
+        periodicidad:curso.periodicidad || '',
         
         
 
@@ -97,30 +112,21 @@ const CreatePagoCursos = () => {
         },
       });
   
-      if (!hasEmptyFields) {
-        // 2. Si el formulario está completo, buscar todas las peticiones paginadas
-        const cursoId = cursoResponse.data.id;  // Usamos el ID del curso
-        let allPeticiones = [];
-        let currentPage = 1;
-        let totalPages = 1;
+     if (!hasEmptyFields) {
+    const cursoId = cursoResponse.data.id;  
+   
+      const response = await axios.get(`${endpoint}/peticiones-filtro`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          key: cursoId,
+          zona_id: 4,
+          status: false,
+        },
+      });
+
+      // Guardar solo las peticiones recibidas (sin necesidad de filtrar en frontend)
+      const peticionesFiltradas = response.data.data;
   
-        // 3. Obtener todas las páginas de peticiones
-        while (currentPage <= totalPages) {
-          const response = await axios.get(`${endpoint}/peticiones?page=${currentPage}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-  
-          allPeticiones = [...allPeticiones, ...response.data.data];
-          totalPages = response.data.last_page;
-          currentPage++;
-        }
-  
-        // 4. Filtrar las peticiones por key = cursoId, zona_id = 2, y status = false
-        const peticionesFiltradas = allPeticiones.filter(peticion =>
-          peticion.key === String(cursoId) && peticion.zona_id === 4 && peticion.status === false
-        );
   
         if (peticionesFiltradas.length > 0) {
           const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
@@ -165,8 +171,10 @@ const CreatePagoCursos = () => {
       <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
         <h2 className="mb-2">Actualizar Costo de Curso {curso.cod}</h2>
         <Form onSubmit={handleSubmit} className="custom-gutter">
-        <Form.Group controlId="costo_inscripcion">
-                <Form.Label>Costo de Inscripcion en $</Form.Label>
+           <Row className="g-2">
+                  <Col md={6}>
+              <Form.Group controlId="costo_inscripcion">
+                <Form.Label>Costo de Inscripcion ($)</Form.Label>
                 <Form.Control
                   type="number"
                   name="costo_inscripcion"
@@ -175,16 +183,22 @@ const CreatePagoCursos = () => {
                   maxLength={40}
                 />
               </Form.Group>
-              <Form.Group controlId="costo">
-                <Form.Label>Costo de Cuotas en $</Form.Label>
+              </Col>
+              <Col md={6}>
+              <Form.Group controlId="costo_cuotas">
+                <Form.Label>Costo de Cuotas ($)</Form.Label>
                 <Form.Control
                   type="number"
-                  name="costo"
-                  value={formData.costo}
+                  name="costo_cuotas"
+                  value={formData.costo_cuotas}
                   onChange={handleChange}
                   maxLength={40}
                 />
-              </Form.Group>
+                </Form.Group>
+                </Col>
+                </Row>
+                <Row className="g-2">
+                <Col md={6}>
               <Form.Group controlId="cuotas">
                 <Form.Label>Número de Cuotas</Form.Label>
                 <Form.Control
@@ -195,6 +209,34 @@ const CreatePagoCursos = () => {
                   maxLength={40}
                 />
               </Form.Group>
+              </Col>
+              <Col md={6}>
+              <Form.Group controlId="periodicidad">
+                <Form.Label>Periodicidad (núm de días)</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="periodicidad"
+                  value={formData.periodicidad}
+                  onChange={handleChange}
+                  maxLength={40}
+                />
+              </Form.Group>
+              </Col>
+              </Row>
+                <Form.Group controlId="costo_total">
+                <Form.Label>Costo Total ($)</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="costo_total"
+                  value={formData.costo_total}
+                  onChange={handleChange}
+                  maxLength={40}
+                  readOnly
+                />
+                </Form.Group>
+
+
+                
   
             
         <div className='mt-3'>
