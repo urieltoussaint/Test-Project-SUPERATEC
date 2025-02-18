@@ -633,8 +633,8 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
         >
           <option value="">Estado de pago</option>
           <option value="1">No pagado (Rojo)</option>
-          <option value="2">En proceso (Naranja)</option>
-          <option value="3">Pagado (Verde)</option>
+          <option value="2">Pago Inscripción Completo (Naranja)</option>
+          <option value="3">Pago Inscripción y Cuota Completo (Verde)</option>
           <option value="4">Patrocinado (Azul)</option>
           <option value="5">Exonerado (Rosado)</option>
         </Form.Select>
@@ -662,8 +662,8 @@ const estadoCurso = statistics?.estadoCursos?.map(({ nombre, cantidad }) => {
       {/* Leyenda de colores */}
       <div className="status-legend d-flex justify-content-start mb-3">
         <span className="status-dot red"></span> No pagado (Rojo)
-        <span className="status-dot orange ms-3"></span> En proceso (Naranja)
-        <span className="status-dot green ms-3"></span> Pagado (Verde)
+        <span className="status-dot orange ms-3"></span> Pago Inscripción Completo (Naranja)
+        <span className="status-dot green ms-3"></span> Pago Inscripción y Cuota Completo(Verde)
         <span className="status-dot blue ms-3"></span> Patrocinado (Azul)
         <span className="status-dot pink ms-3"></span> Exonerado (Rosado)
       </div>

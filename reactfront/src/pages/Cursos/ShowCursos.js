@@ -33,11 +33,8 @@ const ShowCursos = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const [inscripciones, setInscripciones] = useState(0);
-    const [avgHours, setAvgHours] = useState(0);
-    const [statusPayCounts, setStatusPayCounts] = useState({ 1: 0, 2: 0, 3: 0, 4: 0 });
-    const [statusCursoCounts, setStatusCursoCounts] = useState({ 1: 0, 2: 0, 3: 0 });
+ 
 
-    const [avgCost, setAvgCost] = useState(0);
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [currentPage, setCurrentPage] = useState(1);  // Estado para la página actual
     const [unidadOptions, setUnidadOptions] = useState([]);
@@ -51,14 +48,8 @@ const ShowCursos = () => {
 
     const [modalidadOptions, setModalidadOptions] = useState([]);
     const [grupoOptions, setGrupoOptions] = useState([]);
-    
-    const [selectedModalidad, setSelectedModalidad] = useState('');
-    const [inscritosPorCurso, setInscritosPorCurso] = useState({});
 
-    const [totalHours, setTotalHours] = useState(0);
- 
-    const [participantesPorCurso, setParticipantesPorCurso] = useState({});
-    const [ingresosPorCurso, setIngresosPorCurso] = useState([]);
+
     const [statistics, setStatistics] = useState({});
 
     const [totalCursos, setTotalCursos] = useState(0);
@@ -778,8 +769,8 @@ const participantsByAportePatrocinado = [
                   <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={[
                     { name: 'No Pagado', value: inscritosPorStatusPay[1], fill: '#FF0000' },
-                    { name: 'En Proceso', value: inscritosPorStatusPay[2], fill: '#FFA500' },
-                    { name: 'Pagado', value: inscritosPorStatusPay[3], fill: '#008000' },
+                    { name: 'Pago Inscripción Completo', value: inscritosPorStatusPay[2], fill: '#FFA500' },
+                    { name: 'Pago Inscripción y Cuota Completo', value: inscritosPorStatusPay[3], fill: '#008000' },
                     { name: 'Patrocinado', value: inscritosPorStatusPay[4], fill: '#0000FF' },
                     { name: 'Exonerado', value: inscritosPorStatusPay[5], fill: '#FF69B4' }
                   ]}>

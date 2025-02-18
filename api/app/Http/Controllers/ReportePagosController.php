@@ -209,6 +209,12 @@ public function obtenerDetallePago($id)
         if ($request->filled('centro_id')) {
             $queryPaginated->where('informacion_inscripcion.centro_id', $request->input('centro_id'));
         }
+        if ($request->filled('tipo_pago_id')) {
+            $queryPaginated->where('tipo_pago_id', $request->input('tipo_pago_id'));
+        }
+        if ($request->filled('forma_pago_id')) {
+            $queryPaginated->where('forma_pago_id', $request->input('forma_pago_id'));
+        }
     
         // Filtro por cohorte_id
         if ($request->filled('cohorte_id')) {
@@ -223,6 +229,9 @@ public function obtenerDetallePago($id)
         // Filtro opcional por curso_id
         if ($request->filled('curso_id')) {
             $queryPaginated->where('informacion_inscripcion.curso_id', $cursoIdFilter);
+        }
+        if ($request->filled('fecha_pago')) {
+            $queryPaginated->where('fecha_pago', '>=', $request->fecha_pago);
         }
     
         // Obtener los datos paginados para mostrar en la tabla
@@ -243,6 +252,13 @@ public function obtenerDetallePago($id)
         if ($request->filled('centro_id')) {
             $queryStatistics->where('informacion_inscripcion.centro_id', $request->input('centro_id'));
         }
+        if ($request->filled('tipo_pago_id')) {
+            $queryStatistics->where('tipo_pago_id', $request->input('tipo_pago_id'));
+        }
+        if ($request->filled('forma_pago_id')) {
+            $queryStatistics->where('forma_pago_id', $request->input('forma_pago_id'));
+        }
+       
     
         // Filtro por cohorte_id
         if ($request->filled('cohorte_id')) {
@@ -257,6 +273,9 @@ public function obtenerDetallePago($id)
         // Filtro opcional por curso_id en estadísticas
         if ($request->filled('curso_id')) {
             $queryStatistics->where('informacion_inscripcion.curso_id', $cursoIdFilter);
+        }
+        if ($request->filled('fecha_pago')) {
+            $queryStatistics->where('fecha_pago', '>=', $request->fecha_pago);
         }
     
         // Obtener todos los datos filtrados para las estadísticas sin paginación
@@ -313,6 +332,12 @@ public function obtenerDetallePago($id)
     // Filtro opcional por curso_id
     if ($request->filled('curso_id')) {
         $query->where('informacion_inscripcion.curso_id', $cursoIdFilter);
+    }
+    if ($request->filled('tipo_pago_id')) {
+        $query->where('tipo_pago_id', $request->input('tipo_pago_id'));
+    }
+    if ($request->filled('forma_pago_id')) {
+        $query->where('forma_pago_id', $request->input('forma_pago_id'));
     }
 
     // Obtener todos los datos sin paginación

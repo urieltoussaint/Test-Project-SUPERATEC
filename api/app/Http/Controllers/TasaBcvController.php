@@ -4,6 +4,7 @@ use Symfony\Component\BrowserKit\HttpBrowser;
 use Symfony\Component\HttpClient\HttpClient;
 use App\Models\TasaBcv;
 use App\Models\TasaBcv as Model;
+use Illuminate\Http\Request;
 
 class TasaBcvController extends Controller
 {
@@ -83,4 +84,37 @@ class TasaBcvController extends Controller
         $tasaBcv = TasaBcv::findOrFail($id);
         return response()->json($tasaBcv);
     }
+
+
+    public function GetBcvFecha(Request $request)
+{
+    try {
+        // Validar que se envíe fecha_pago en la solicitud
+        $request->validate([
+            'fecha_pago' => 'required|date'
+        ]);
+
+        // Buscar la tasa BCV que coincida con la fecha proporcionada
+        $tasaBcv = TasaBcv::whereDate('created_at', $request->fecha_pago)->first();
+
+        // Si no se encuentra, devolver un error
+        if (!$tasaBcv) {
+            return response()->json([
+                'error' => 'No se encontró una tasa BCV para la fecha especificada.'
+            ], 404);
+        }
+
+        // Devolver la tasa encontrada
+        return response()->json([
+            'id' => $tasaBcv->id,
+            'tasa' => $tasaBcv->tasa,
+            'fecha' => $tasaBcv->created_at
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error al obtener la tasa BCV: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
 }

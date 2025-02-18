@@ -128,6 +128,7 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('tasa_bcv/{id}', [TasaBcvController::class, 'show'])->middleware('role:admin,superuser,invitado');
     Route::get('/tasa-bcv/get', [TasaBcvController::class, 'getPrecioActual']);
     Route::get('/tasa-bcv/save', [TasaBcvController::class, 'savePrecioActual']);
+    Route::get('tasa_bcv-fecha', [TasaBcvController::class, 'GetBcvFecha'])->middleware('role:admin,superuser,invitado');
 
 
 

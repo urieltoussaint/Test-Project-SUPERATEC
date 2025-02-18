@@ -20,7 +20,8 @@ class InformacionInscripcion extends Model
         'patrocinante_id2',
         'patrocinante_id3',
         'status_curso',
-        'realiza_aporte'
+        'realiza_aporte',
+        'check'
 
     ];
     protected $listable = [
@@ -38,7 +39,8 @@ class InformacionInscripcion extends Model
         'patrocinante_id2',
         'patrocinante_id3',
         'status_curso',
-        'realiza_aporte'
+        'realiza_aporte',
+        'check'
     ];
 
     // Definir relaciones

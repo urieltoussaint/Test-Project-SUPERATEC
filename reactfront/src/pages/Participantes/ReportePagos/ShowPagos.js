@@ -50,12 +50,18 @@ const ShowPagos = () => {
     const [centroOptions, setCentroOptions] = useState([]);
     const [cohorteOptions, setCohorteOptions] = useState([]);
     const [periodoOptions, setPeriodoOptions] = useState([]);
+    const [tipoPagoOptions, setTipoPagoOptions] = useState([]);
+    const [formaPagoOptions, setFormaPagoOptions] = useState([]);
+
     const [showModalInfo, setShowModalInfo] = useState(false);
 
      const [filters, setFilters] = useState({
                 cedula_identidad: '',
                 cohorte_id: '',
                 centro_id: '',
+                tipo_pago_id:'',
+                forma_pago_id:'',
+                fecha_pago:'',
             });
     
     const handleShowModal = (id) => {
@@ -112,6 +118,8 @@ const fetchFilterOptions = async () => {
         setCentroOptions(response.data.centro);
         setCohorteOptions(response.data.cohorte);
         setPeriodoOptions(response.data.periodo);
+        setTipoPagoOptions(response.data.tipo_pago);
+        setFormaPagoOptions(response.data.forma_pago);
 
     } catch (error) {
         setError('Error fetching filter options');
@@ -228,11 +236,6 @@ const handlePageChange = (newPage) => {
           alert("Hubo un error al generar el archivo Excel");
         }
       };
-      
-      
-
-      
-      
 
       const handlePrint = async () => {
         setShowModalInfo(false); // Cerrar el modal
@@ -374,7 +377,31 @@ const handlePageChange = (newPage) => {
                         </div>
                     </div>
                     <div className="d-flex align-items-center" style={{ gap: '10px' }}> {/* Ajusta el espacio entre el buscador y el filtro */}
+                    <Form.Select
+                            name="tipo_pago_id"
+                            value={filters.tipo_pago_id}
+                            onChange={handleFilterChange}
+                            className="me-2"
+                        >
+                            <option value="">Tipo de Pago</option>
+                            {tipoPagoOptions?.map(option => (
+                                <option key={option.id} value={option.id}>{option.descripcion}</option>
+                            ))}
 
+                        </Form.Select>
+
+                        <Form.Select
+                            name="forma_pago_id"
+                            value={filters.forma_pago_id}
+                            onChange={handleFilterChange}
+                            className="me-2"
+                        >
+                            <option value="">Forma de Pago</option>
+                            {formaPagoOptions?.map(option => (
+                                <option key={option.id} value={option.id}>{option.descripcion}</option>
+                            ))}
+
+                        </Form.Select>
                         <Form.Select
                             name="centro_id"
                             value={filters.centro_id}
@@ -411,11 +438,22 @@ const handlePageChange = (newPage) => {
                             ))}
 
                         </Form.Select>
-
+                             
 
 
 
                         </div>
+                          {/* Fecha con label en la misma línea */}
+                          <div className="d-flex align-items-center">
+                            <Form.Label className="me-2 mb-0">Fecha mayor que: </Form.Label>
+                            <Form.Control
+                            type="date"
+                            name="fecha_pago"
+                            value={filters.fecha_pago}
+                            onChange={handleFilterChange}
+                            style={{ width: 'auto' }}
+                            />
+                                </div>  
 
                     {/* Tabla paginada */}
                     <PaginationTable

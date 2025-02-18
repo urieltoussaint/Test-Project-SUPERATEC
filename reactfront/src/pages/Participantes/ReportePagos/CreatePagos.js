@@ -29,7 +29,10 @@ const CreatePago = () => {
     conversion_exonerado: '',
     conversion_restante: '',
     tipo_pago_id:'',
-    forma_pago_id:''
+    forma_pago_id:'',
+    numero_comprobante:'',
+    serial_billete:'',
+    fecha_pago:'',
   });
   const [cedula, setCedula] = useState('');
   const [cursos, setCursos] = useState([]);
@@ -48,6 +51,9 @@ const CreatePago = () => {
   const [cuotas, setCuotas] = useState('');  // Mensaje del modal
   const [cuotasCursos, setCuotasCursos] = useState('');  // Mensaje del modal
   const [costoCuota, setCostoCuota] = useState('');  // Mensaje del modal
+  const [costoInscripcion, setCostoInscripcion] = useState('');  // Mensaje del modal
+  const [showModal2, setShowModal2] = useState(false);
+  const [nuevaTasa, setNuevaTasa] = useState("");
   // const [costoInscripcion, setCostoInscripcion] = useState(false);
   // const [tipoPagoOptions, setTipoPagoOptions] = useState([]);
   
@@ -82,6 +88,57 @@ const CreatePago = () => {
 
    
   });
+  // Función para obtener la tasa BCV según la fecha seleccionada
+const obtenerTasaBcv = async (fechaPago) => {
+  try {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.error("Error: Token no encontrado.");
+      return;
+    }
+
+    const response = await axios.get(`${endpoint}/tasa_bcv-fecha`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { fecha_pago: fechaPago },
+    });
+
+    setTasaBcv(response.data.tasa); // Guardar la tasa obtenida
+  } catch (error) {
+    console.error("Error obteniendo la tasa BCV:", error.response?.data?.error || error.message);
+    setShowModal2(true); // Mostrar modal si no se encuentra la tasa
+  }
+};
+
+// Función para guardar una nueva tasa en el backend
+const guardarNuevaTasa = async () => {
+  try {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.error("Error: Token no encontrado.");
+      return;
+    }
+
+    await axios.post(
+      `${endpoint}/tasa_bcv`,
+      {
+        tasa: nuevaTasa,
+        created_at: formData.fecha_pago, // Usar la fecha seleccionada
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    setShowModal2(false);
+    setTasaBcv(nuevaTasa); // Guardar la nueva tasa ingresada
+  } catch (error) {
+    console.error("Error guardando la nueva tasa:", error.response?.data?.error || error.message);
+  }
+};
+
+
 
   const fetchOptions = async (inputValue) => {
     try {
@@ -122,13 +179,22 @@ const CreatePago = () => {
     }
   };
 
-const handleChange = (event) => {
-  const { name, value } = event.target;
-  setFormData(prevState => ({
-    ...prevState,
-    [name]: value
-  }));
-};
+// const handleChange = (event) => {
+//   const { name, value } = event.target;
+//   setFormData(prevState => ({
+//     ...prevState,
+//     [name]: value
+//   }));
+// };
+  // Manejar cambios en los inputs
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({ ...formData, [name]: value });
+
+    if (name === "fecha_pago") {
+      obtenerTasaBcv(value); // Llamar a la API cuando se selecciona la fecha
+    }
+  };
 
 
   const handleCedulaChange = async (selectedOption) => {
@@ -181,6 +247,7 @@ const handleChange = (event) => {
       setCursoSeleccionado(selectedCurso); 
       setCursoId(selectedCurso.id); 
       setCostoCuota(selectedCurso.costo_cuotas);
+      setCostoInscripcion(selectedCurso.costo_inscripcion);
   
       setFormData(prevData => ({
         ...prevData,
@@ -332,9 +399,9 @@ const handleChange = (event) => {
       const montoRestante = parseFloat(formData.monto_restante);
   
       // Actualizar informacion_inscripcion según el monto restante
-      if (montoRestante === 0) {
+      if (montoRestante === 0 && formData.tipo_pago_id===1) {
         await axios.put(`${endpoint}/informacion_inscripcion/${formData.informacion_inscripcion_id}`, {
-          status_pay: 3
+          status_pay: 2
         }, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -370,16 +437,19 @@ const handleChange = (event) => {
           });
         }
   
-      } else if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
-        // Actualizar status_pay a 2 (pago en proceso)
+      }
+      // Actualizar informacion_inscripcion según el monto restante
+      if (montoRestante === 0 && formData.tipo_pago_id===2) {
         await axios.put(`${endpoint}/informacion_inscripcion/${formData.informacion_inscripcion_id}`, {
-          status_pay: 2
+          status_pay: 3
         }, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
   
+        // Buscar todas las peticiones paginadas y actualizar la petición correspondiente
+        // Realizar la solicitud con filtros directamente en la API
         const response = await axios.get(`${endpoint}/peticiones-filtro`, {
           headers: {
               Authorization: `Bearer ${token}`,
@@ -397,14 +467,51 @@ const handleChange = (event) => {
         if (peticionesFiltradas.length > 0) {
           const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
           await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
-            comentario: "Pagos Faltantes", // Actualizar el comentario
+            comentario: "Pago Cuotas Faltantes", // Actualizar el comentario
+            user_success: userId, 
           }, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
         }
+  
       }
+      //  if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
+      //   // Actualizar status_pay a 2 (pago en proceso)
+      //   await axios.put(`${endpoint}/informacion_inscripcion/${formData.informacion_inscripcion_id}`, {
+      //     status_pay: 2
+      //   }, {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   });
+  
+      //   const response = await axios.get(`${endpoint}/peticiones-filtro`, {
+      //     headers: {
+      //         Authorization: `Bearer ${token}`,
+      //     },
+      //     params: {
+      //         key: formData.informacion_inscripcion_id,
+      //         zona_id: 3,
+      //         status: false
+      //     }
+      //   });
+
+      //   // Obtener solo las peticiones filtradas
+      //   const peticionesFiltradas = response.data.data;
+  
+      //   if (peticionesFiltradas.length > 0) {
+      //     const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
+      //     await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
+      //       comentario: "Pagos Faltantes", // Actualizar el comentario
+      //     }, {
+      //       headers: {
+      //         Authorization: `Bearer ${token}`,
+      //       },
+      //     });
+      //   }
+      // }
   
       toast.success('Reporte de pago creado con Éxito');
       navigate('/pagos');
@@ -528,6 +635,46 @@ const handleChange = (event) => {
             {formData.tipo_pago_id==1 ? (
               <>
             <p><strong>Pago Inscripción</strong></p>
+            <>
+            {/* Input de Fecha de Pago */}
+            <Form.Group controlId="fecha_pago">
+              <Form.Label>Fecha de Pago</Form.Label>
+              <Form.Control type="date" name="fecha_pago" value={formData.fecha_pago} onChange={handleChange} />
+            </Form.Group>
+
+            {/* Mostrar la tasa obtenida */}
+            {tasaBcv && <p>Tasa BCV: {tasaBcv}</p>}
+
+            {/* Modal para ingresar nueva tasa si no existe */}
+            <Modal show={showModal2} onHide={() => setShowModal2(false)}>
+              <Modal.Header closeButton>
+                <Modal.Title>Tasa BCV no encontrada</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <p>No hay una tasa BCV para la fecha seleccionada. Ingresa la tasa manualmente.</p>
+                <Form.Group controlId="nueva_tasa">
+                  <Form.Label>Ingresar Tasa BCV</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={nuevaTasa}
+                    onChange={(e) => setNuevaTasa(e.target.value)}
+                  />
+                </Form.Group>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowModal2(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="primary" onClick={guardarNuevaTasa}>
+                  Guardar Tasa
+                </Button>
+              </Modal.Footer>
+            </Modal>
+    </>
+            <Row className="g-2">
+          <Col md={6}>
+         
             <Form.Group controlId="monto_total">
               <Form.Label>Monto a Pagar de Inscripción</Form.Label>
               <Form.Control
@@ -539,6 +686,21 @@ const handleChange = (event) => {
               />
               <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)}BsF</Form.Text>
             </Form.Group>
+            </Col>
+            <Col md={6}>
+            <Form.Group controlId="monto_inscripcion">
+              <Form.Label>Monto de Inscripción </Form.Label>
+              <Form.Control
+                type="text"
+                name="monto_inscripcion"
+                value={costoInscripcion}
+                readOnly
+              />
+              <Form.Text className="text-muted">Conversión: {calcularConversion(formData.monto_total)}BsF</Form.Text>
+            </Form.Group>
+            </Col>
+            
+            </Row>
             <Row className="g-2">
           <Col md={6}>
             <Form.Group controlId="monto_cancelado">
@@ -609,6 +771,40 @@ const handleChange = (event) => {
             />
             </Col>
             </Row>
+            <>
+            {formData.forma_pago_id && ( // Solo se muestra si se ha seleccionado una forma de pago
+              <>
+                {formData.forma_pago_id == 4 ? (
+                  <Form.Group controlId="serial_billete">
+                    <Form.Label>Serial Billete</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="serial_billete"
+                      value={formData.serial_billete}
+                      onChange={handleChange} // Asegúrate de manejar el cambio
+                    />
+                  </Form.Group>
+                ) : (
+                  <>
+                  <Form.Group controlId="numero_comprobante">
+                    <Form.Label>Número Comprobante</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="numero_comprobante"
+                      value={formData.numero_comprobante}
+                      onChange={handleChange} // Asegúrate de manejar el cambio
+                    />
+                  </Form.Group>
+                 
+                </>
+                )}
+              </>
+            )}
+            </>
+            
+
+
+            
             <Form.Group controlId="comentario_cuota">
               <Form.Label>Comentario Cuota</Form.Label>
               <Form.Control
@@ -620,12 +816,23 @@ const handleChange = (event) => {
             </Form.Group>
 
             </>
+           
             
           ) : (
             <>
             <p mb-3><strong>Pago de Cuota</strong></p>
+            <Form.Group controlId="fecha_pago">
+                  <Form.Label>Fecha de Pago</Form.Label>
+                  <Form.Control
+                    type="date"
+                    name="fecha_pago"
+                    value={formData.fecha_pago}
+                    onChange={handleChange} // Asegúrate de manejar el cambio
+                  />
+                </Form.Group>
             <Row className="g-2">
           <Col md={6}>
+        
             <Form.Group controlId="monto_total">
               <Form.Label>Monto a Pagar de Cuotas</Form.Label>
               <Form.Control
@@ -720,6 +927,34 @@ const handleChange = (event) => {
             />
             </Col>
             </Row>
+            <>
+            {formData.forma_pago_id && ( // Solo se muestra si se ha seleccionado una forma de pago
+              <>
+                {formData.forma_pago_id == 4 ? (
+                  <Form.Group controlId="serial_billete">
+                    <Form.Label>Serial Billete</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="serial_billete"
+                      value={formData.serial_billete}
+                      onChange={handleChange} // Asegúrate de manejar el cambio
+                    />
+                  </Form.Group>
+                ) : (
+                  <Form.Group controlId="numero_comprobante">
+                    <Form.Label>Número Comprobante</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="numero_comprobante"
+                      value={formData.numero_comprobante}
+                      onChange={handleChange} // Asegúrate de manejar el cambio
+                    />
+                  </Form.Group>
+                )}
+              </>
+            )}
+            </>
+
             <Form.Group controlId="comentario_cuota">
               <Form.Label>Comentario Cuota</Form.Label>
               <Form.Control

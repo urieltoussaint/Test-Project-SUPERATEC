@@ -607,8 +607,8 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                                 >
                                 <option value="">Estado de pago</option>
                                 <option value="1">No pagado (Rojo)</option>
-                                <option value="2">En proceso (Naranja)</option>
-                                <option value="3">Pagado (Verde)</option>
+                                <option value="2">Pago Inscripción Completo (Naranja)</option>
+                                <option value="3">Pago Inscripción y Cuota Completo (Verde)</option>
                                 <option value="4">Patrocinado (Azul)</option>
                                 <option value="5">Exonerado (Rosado)</option>
                                 </Form.Select>

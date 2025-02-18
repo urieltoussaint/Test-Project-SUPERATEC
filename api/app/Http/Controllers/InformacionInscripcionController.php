@@ -195,11 +195,13 @@ public function getInscripcionesWithStatistics(Request $request, $cursoId)
         return response()->json(['error' => 'El curso_id es obligatorio'], 400);
     }
 
-    // Consulta paginada con filtros
+   // Consulta paginada con filtros
     $queryPaginated = InformacionInscripcion::query()
-        ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion'])
-        ->where('curso_id', $cursoId) // Filtrar por curso_id
-        ->orderBy('id', 'desc'); // Ordenar por ID descendente
+    ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion'])
+    ->where('curso_id', $cursoId) // Filtrar por curso_id
+    ->where('check', true) // Filtrar SIEMPRE los registros con check = true
+    ->orderBy('id', 'desc'); // Ordenar por ID descendente
+
 
     // Aplicar filtros adicionales 
     if ($request->filled('cohorte_id')) {
@@ -225,6 +227,7 @@ public function getInscripcionesWithStatistics(Request $request, $cursoId)
     // Consulta para estadísticas (sin paginación)
     $queryStatistics = InformacionInscripcion::query()
         ->where('curso_id', $cursoId) // Filtrar por curso_id
+        ->where('check', true) // Filtrar SIEMPRE los registros con check = true
         ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion']);
 
     // Aplicar los mismos filtros adicionales
@@ -319,7 +322,9 @@ public function getDatosCursos(Request $request, $datos_identificacion_id = null
 
     // Iniciar la consulta base
     $queryPaginated = InformacionInscripcion::query()
+    ->where('check', true) // Filtrar SIEMPRE los registros con check = true
     ->with(['curso']);
+    
 
     // Filtrar por curso_id si está presente
     if ($cursoId) {
@@ -558,6 +563,7 @@ public function getIndicadoresWithStatistics(Request $request)
     // Consulta paginada con filtros
     $queryPaginated = InformacionInscripcion::query()
         ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion','curso','datosIdentificacion.procedencia','datosIdentificacion.estado','curso.grupo'])
+        ->where('check', true) // Filtrar SIEMPRE los registros con check = true
         ->orderBy('id', 'desc'); // Ordenar por ID descendente
 
     // Aplicar filtros adicionales 
@@ -662,7 +668,9 @@ public function getIndicadoresWithStatistics(Request $request)
 
     // Consulta para estadísticas (sin paginación)
     $queryStatistics = InformacionInscripcion::query()
+        ->where('check', true) // Filtrar SIEMPRE los registros con check = true
         ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion']);
+        
      // Aplicar filtros adicionales 
      if ($request->filled('cohorte_id')) {
         $queryStatistics->where('cohorte_id', $request->cohorte_id);
@@ -885,6 +893,7 @@ public function getIndicadoresWithStatisticsPrint(Request $request)
     // Consulta para estadísticas (sin paginación)
     $queryStatistics = InformacionInscripcion::query()
     ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion','curso','datosIdentificacion.procedencia','datosIdentificacion.estado','curso.grupo'])
+    ->where('check', true) // Filtrar SIEMPRE los registros con check = true
     ->orderBy('id', 'desc'); // Ordenar por ID descendente
      // Aplicar filtros adicionales 
      if ($request->filled('cohorte_id')) {
@@ -1098,10 +1107,6 @@ $datos = $queryStatistics->get();
         
     ]);
 }
-
-
-
-
 
 
 }
