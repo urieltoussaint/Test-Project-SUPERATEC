@@ -178,7 +178,11 @@ const handleNavigate = (peticiones) => {
         navigate(`/promocion/${peticiones.key}/edit`);
     } else if (id === 9) {
         navigate(`/voluntariados/${peticiones.key}/edit`);
-    } else {
+    } 
+     else if (id === 10) {
+        navigate(`/inscripcion-confirm/${peticiones.key}/`);
+    } 
+    else {
         toast.error('Zona no válida');
     }
 };

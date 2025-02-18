@@ -15,15 +15,10 @@ import { FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
-const EditInscripciones = () => {
+const ConfirmInscripciones = () => {
     const { inscripcionId } = useParams();
     const { cedula } = useParams();
-    const [cursos, setCursos] = useState([]);
-    const [searchCod, setSearchCod] = useState(''); // Nuevo estado para el buscador por COD
     const [filteredCursos, setFilteredCursos] = useState([]);
-    const [searchCurso, setSearchCurso] = useState('');
-    const [areaOptions, setAreaOptions] = useState([]);
-    const [selectedArea, setSelectedArea] = useState('');
     const [error, setError] = useState(null);
     const { setLoading } = useLoading();
     const navigate = useNavigate();
@@ -49,20 +44,16 @@ const EditInscripciones = () => {
 
 // Cursos que se mostrarán en la página actual
 
-
-
-
     const itemsPerPage = 3;  // Definir cuántos elementos por página
 
     useEffect(() => {
         console.log("ID de inscripción:", inscripcionId); // Para verificar si inscripcionId tiene valor
 
         getInscripcion();
-        // if (cedula) {
-        //     searchDatos(); // Llama a la búsqueda de datos cuando cambie la cédula
-        // }
-        
-    }, [inscripcionId]); // Ejecutar solo cuando cambia la cédula
+        if (cedula) {
+            searchDatos(); // Llama a la búsqueda de datos cuando cambie la cédula
+        }
+    }, [cedula,inscripcionId]); // Ejecutar solo cuando cambia la cédula
     
     useEffect(() => {
         setLoading(true);
@@ -144,7 +135,6 @@ const EditInscripciones = () => {
     
             const inscripcionData = response.data;
             setInscripcion(inscripcionData);
-            setDatos(response.data.datos_identificacion); // Almacena los datos encontrados en el estado
     
             setFormData({
                 cedula_identidad: inscripcionData.cedula_identidad || '',
@@ -157,7 +147,6 @@ const EditInscripciones = () => {
                 patrocinante_id: inscripcionData.patrocinante_id || '',
                 observaciones: inscripcionData.observaciones || '',
             });
-            setLoading(false);
     
         } catch (error) {
             setError('Error fetching course');
@@ -233,14 +222,7 @@ const EditInscripciones = () => {
         setFiltrosPatrocinante(prev => ({ ...prev, [name]: value }));
       };
 
-    
-
-    const filteredPatrocinantes = Array.isArray(patrocinantes) 
-        ? patrocinantes.filter(patrocinante =>
-            patrocinante.rif_cedula.toLowerCase().includes(searchCedula.toLowerCase())
-        )
-        : [];
-    
+ 
     
     // Llama a `fetchPatrocinantes` al abrir el modal:
     const handleOpenModal = () => {
@@ -250,26 +232,26 @@ const EditInscripciones = () => {
 
     
     
-    // const searchDatos = async () => {
-    //     try {
-    //         const token = localStorage.getItem('token');
-    //         const response = await axios.get(`${endpoint}/identificacion/${cedula}`, {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //         });
-    //         setDatos(response.data); // Almacena los datos encontrados en el estado
-    //     } catch (error) {
-    //         if (error.response && error.response.status === 404) {
-    //             setError('Datos no encontrados'); // Mostrar mensaje si no se encuentran datos
-    //         } else {
-    //             setError('Error al buscar los datos'); // Error de otro tipo
-    //             console.error(error);
-    //         }
-    //     } finally {
-    //         setLoading(false); // Detener el loading cuando termina la búsqueda
-    //     }
-    // };
+    const searchDatos = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/identificacion/${cedula}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setDatos(response.data); // Almacena los datos encontrados en el estado
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                setError('Datos no encontrados'); // Mostrar mensaje si no se encuentran datos
+            } else {
+                setError('Error al buscar los datos'); // Error de otro tipo
+                console.error(error);
+            }
+        } finally {
+            setLoading(false); // Detener el loading cuando termina la búsqueda
+        }
+    };
     
 
     const handleInscribir = async () => {
@@ -288,8 +270,7 @@ const EditInscripciones = () => {
                 patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado1?.id : null,
                 patrocinante_id2: formData.es_patrocinado === "true" ? patrocinanteSeleccionado2?.id || null :null,
                 patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
-
-
+                check:true,
 
                 }, // Datos a actualizar
                 {
@@ -323,26 +304,7 @@ const EditInscripciones = () => {
         return <div>{error}</div>;
     }
 
-    const columns = ["COD", "Curso", "Horas", "Fecha de Inicio", "Costo", "Acciones"];
 
-    const renderItem = (curso) => (
-        <tr key={curso.id}>
-            <td>{curso.cod}</td>
-            <td>{curso.descripcion}</td>
-            <td>{curso.cantidad_horas} h</td>
-            <td>{curso.fecha_inicio}</td>
-            <td>{curso.costo} $</td>
-            <td>
-                <Button
-                    variant="success"
-                    onClick={() => handleInscribir(curso.id)}
-                    className="d-flex align-items-center"
-                >
-                    <i className="bi bi-person-plus-fill me-2"></i> 
-                </Button>
-            </td>
-        </tr>
-    );
 
     return (
         <div className="row" style={{ marginTop: '50px' }}>
@@ -548,7 +510,7 @@ const EditInscripciones = () => {
                         
                         <div className="d-flex justify-content">
                         <Button variant="info" onClick={() => handleInscribir('guardar')} className='mt-3 'style={{marginRight:"10px"}}>
-                            Guardar
+                            Confirmar
                         </Button>
 
                         <Button variant="secondary" onClick={() => navigate(-1)}   className='mt-3 '>
@@ -657,4 +619,4 @@ const EditInscripciones = () => {
     );
 };
 
-export default EditInscripciones;
+export default ConfirmInscripciones;

@@ -55,7 +55,7 @@ import EditProcedencias from './pages/Procedencias/EditProcedencias';
 import ShowPagosProgramas from './pages/Participantes/ReportePagos/ShowPagosProgramas';
 import CambiarClave from './pages/Users/CambiarClave';
 import ShowIndicadores from './pages/CalculoIndicadores/ShowIndicadores';
-
+import ConfirmInscripciones from './pages/Cursos/ConfirmInscripciones';
 
 function App() {
   return (
@@ -83,6 +83,8 @@ function App() {
             <Route path="/inscritos/:cursoId" element={<AuthenticatedLayout><ShowInscritos /></AuthenticatedLayout>} />
             <Route path="/inscritos/show/:id" element={<AuthenticatedLayout><ShowMoreInscripciones /></AuthenticatedLayout>} />
             <Route path="/inscritos/edit/:inscripcionId/:cedula" element={<AuthenticatedLayout><EditInscripciones /></AuthenticatedLayout>} />
+            <Route path="/inscripcion-confirm/:inscripcionId" element={<AuthenticatedLayout><ConfirmInscripciones /></AuthenticatedLayout>} />
+
             <Route path="/indicadores" element={<AuthenticatedLayout><ShowIndicadores /></AuthenticatedLayout>} />
 
 
