@@ -35,7 +35,6 @@ const InscripcionCursos = () => {
     const [patrocinanteSeleccionado3, setPatrocinanteSeleccionado3] = useState(null);
     const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
     const [paginatedPatrocinantes, setPaginatedPatrocinantes] = useState([]); // Patrocinantes en la página actual
-    const [inscripcionId, setInscripcionId] = useState([]); // Patrocinantes en la página actual
 
     const [currentPagePatrocinantes, setCurrentPagePatrocinantes] = useState(1);
     const userRole = localStorage.getItem('role');
@@ -50,7 +49,8 @@ const InscripcionCursos = () => {
         centro_id: '',
         periodo_id: '',
         es_patrocinado: false,
-        observaciones:''
+        observaciones:'',
+        realiza_aporte:''
     });
     const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
         rif_cedula:'',
@@ -240,6 +240,7 @@ const InscripcionCursos = () => {
 const handleInscripcion = async (action) => {
     // Objeto para almacenar errores
     let errors = {};
+    let inscripcionId = null;
 
     // Validar si hay campos vacíos (excepto es_patrocinado)
     if (!cedula) errors.cedula = 'La cédula es requerida';
@@ -276,10 +277,12 @@ const handleInscripcion = async (action) => {
         // 1. Realizar la inscripción con todos los datos
         const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataWithStatus, {
             headers: { Authorization: `Bearer ${token}` },
-        });
-        setInscripcionId(inscripcionResponse.data.id);
-        console.log(inscripcionId);
+        }
+    )
+    inscripcionId = inscripcionResponse.data.id; // Asignar el ID recibido
+       
     }
+
 
         else if (userRole!='admin') {
             
@@ -302,12 +305,10 @@ const handleInscripcion = async (action) => {
             // 1. Realizar la inscripción con todos los datos
             const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataWithStatus, {
                 headers: { Authorization: `Bearer ${token}` },
-            });
-            setInscripcionId(inscripcionResponse.data.id);
-            console.log(inscripcionId);
+            })
+            inscripcionId = inscripcionResponse.data.id; // Asignar el ID recibido
         };
-        // const inscripcionId = inscripcionResponse.data.id;  // El ID de la inscripción};
-
+        
 
         // 2. Crear petición par confirmar inscripcion
         if (userRole==='admin') {
@@ -322,19 +323,7 @@ const handleInscripcion = async (action) => {
                 headers: { Authorization: `Bearer ${token}` },
             });
         }
-        // if ((formData.es_patrocinado === "false" || !formData.es_patrocinado)&& formData.realiza_aporte==='true') {
-        //     const peticionResponse = await axios.post(`${endpoint}/peticiones`, {
-        //         zona_id: 3,
-        //         comentario: 'Pago no realizado',
-        //         user_id: userId,
-        //         role_id: 4,
-        //         status: false,
-        //         key: inscripcionId,  // Usar el ID de la inscripción como key
-        //     }, {
-        //         headers: { Authorization: `Bearer ${token}` },
-        //     });
-        // }
-        
+
 
         // Si la inscripción fue exitosa, redirigir
         toast.success("Participante inscrito con éxito");

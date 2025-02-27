@@ -32,6 +32,80 @@ class InformacionInscripcionController extends Controller
     protected $class = InformacionInscripcion::class;
 
 
+
+
+    public function store(Request $request)
+{
+    // Si la solicitud incluye 'inscripciones', procesarlas primero
+    if ($request->has('inscripciones')) {
+        $inscripciones = $request->inscripciones;
+
+        if (is_array($inscripciones)) {
+            // Si es un array, insertar múltiples registros
+            $nuevasInscripciones = collect($inscripciones)->map(function ($inscripcion) {
+                return InformacionInscripcion::create([
+                    'curso_id' => $inscripcion['curso_id'] ?? null,
+                    'datos_identificacion_id' => $inscripcion['datos_identificacion_id'] ?? null,
+                    'status_pay' => $inscripcion['status_pay'] ?? 4,
+                    'status_curso' => $inscripcion['status_curso'] ?? 1,
+                    'patrocinante_id' => $inscripcion['patrocinante_id'] ?? null,
+                    'check' => $inscripcion['check'] ?? true,
+                    'es_patrocinado' => $inscripcion['es_patrocinado'] ?? true,
+                    'cohorte_id' => $inscripcion['cohorte_id'] ?? null,
+                    'periodo_id' => $inscripcion['periodo_id'] ?? null,
+                    'observaciones' => $inscripcion['observaciones'] ?? null,
+                ]);
+            });
+
+            // Convertir la colección a un array de IDs y curso_id
+            $inscripcionesConIds = $nuevasInscripciones->map(function ($i) {
+                return [
+                    'id' => $i->id,
+                    'curso_id' => $i->curso_id
+                ];
+            });
+
+            return response()->json([
+                'inscripciones' => $inscripcionesConIds
+            ], 201);
+        } elseif (is_object($inscripciones)) {
+            // Si es un solo objeto, insertarlo individualmente
+            $nuevaInscripcion = InformacionInscripcion::create([
+                'curso_id' => $inscripciones->curso_id ?? null,
+                'datos_identificacion_id' => $inscripciones->datos_identificacion_id ?? null,
+                'status_pay' => $inscripciones->status_pay ?? 4,
+                'status_curso' => $inscripciones->status_curso ?? 1,
+                'patrocinante_id' => $inscripciones->patrocinante_id ?? null,
+                'check' => $inscripciones->check ?? true,
+                'es_patrocinado' => $inscripciones->es_patrocinado ?? true,
+                'cohorte_id' => $inscripciones->cohorte_id ?? null,
+                'periodo_id' => $inscripciones->periodo_id ?? null,
+                'observaciones' => $inscripciones->observaciones ?? null,
+            ]);
+
+            return response()->json([
+                'inscripciones' => [
+                    [
+                        'id' => $nuevaInscripcion->id,
+                        'curso_id' => $nuevaInscripcion->curso_id
+                    ]
+                ]
+            ], 201);
+        }
+    }
+
+    // Si no hay inscripciones, procesar la solicitud normal
+    $resource = $this->new(
+        $this->class,
+        $request
+    );
+
+    return response($resource, 201);
+}
+
+    
+
+
     public function index(Request $request, $datos_identificacion_id = null)
     {
         // Verificar si datos_identificacion_id viene como parámetro o en la query string
@@ -53,7 +127,7 @@ class InformacionInscripcionController extends Controller
     
         // Cargar relaciones y paginar los resultados
         $inscripciones = $inscripcionesQuery
-            ->with('datosIdentificacion', 'curso', 'periodo', 'cohorte', 'centro', 'Patrocinante1')
+            ->with('datosIdentificacion', 'curso', 'periodo', 'cohorte', 'centro', 'Patrocinante1','patrocinante2','patrocinante3')
             ->paginate(20);
     
         return response()->json($inscripciones);
@@ -64,7 +138,7 @@ class InformacionInscripcionController extends Controller
 public function show($id)
 {
     // Obtener la inscripción con la relación de curso
-    $inscripcion = InformacionInscripcion::with('curso','datosIdentificacion','centro','cohorte','periodo')->find($id);
+    $inscripcion = InformacionInscripcion::with('curso','datosIdentificacion','centro','cohorte','periodo','patrocinante1','patrocinante2','patrocinante3')->find($id);
 
 
     // Verificar si la inscripción existe
@@ -661,6 +735,11 @@ public function getIndicadoresWithStatistics(Request $request)
             $query->where('area_id', $request->area_id);
         });
     }
+    if ($request->filled('externo')) { 
+        $queryPaginated->whereHas('curso', function ($query) use ($request) {
+            $query-> where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
+        });
+    }
 
 
     // Obtener los datos paginados para mostrar en la tabla
@@ -769,6 +848,11 @@ public function getIndicadoresWithStatistics(Request $request)
     if ($request->filled('unidad_id')) {
         $queryStatistics->whereHas('curso', function ($query) use ($request) {
             $query->where('unidad_id', $request->unidad_id);
+        });
+    }
+    if ($request->filled('externo')) { 
+        $queryStatistics->whereHas('curso', function ($query) use ($request) {
+            $query-> where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
         });
     }
 
@@ -964,6 +1048,7 @@ public function getIndicadoresWithStatisticsPrint(Request $request)
             $query->where('apellidos', 'ILIKE', "%{$request->apellidos}%");
         });
     }
+  
 
     // Si en el request se envía 'tlf' con valor 'true', filtrar por registros donde telefono_celular no sea nulo
     if ($request->filled('tlf')) {
@@ -993,6 +1078,11 @@ public function getIndicadoresWithStatisticsPrint(Request $request)
     if ($request->filled('unidad_id')) {
         $queryStatistics->whereHas('curso', function ($query) use ($request) {
             $query->where('unidad_id', $request->unidad_id);
+        });
+    }
+    if ($request->filled('externo')) { 
+        $queryStatistics->whereHas('curso', function ($query) use ($request) {
+            $query-> where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
         });
     }
 

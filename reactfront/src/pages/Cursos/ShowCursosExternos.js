@@ -19,7 +19,7 @@ const endpoint = 'http://localhost:8000/api';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 
-const ShowCursos = () => {
+const ShowCursosExternos = () => {
     const [cursos, setCursos] = useState([]);
     const [searchCurso, setSearchCurso] = useState('');
     const [searchCod, setSearchCod] = useState(''); // Nuevo estado para el buscador por COD
@@ -79,7 +79,7 @@ const ShowCursos = () => {
       modalidad_id: '',
       tipo_programa_id: '',
       grupo_id:'',
-      externo:false,
+      externo:true,
       
   });
 
@@ -432,7 +432,7 @@ const participantsByAportePatrocinado = [
                     ) :null}
                       {userRole === 'admin'  || userRole === 'superuser' ? (
                         <>
-                            <Button variant="btn btn-success" onClick={() => navigate(`/inscribir/${curso.curso_id}`)} className="me-2" title="Inscribir Participante">
+                            <Button variant="btn btn-success" onClick={() => navigate(`/inscribir/externo/${curso.curso_id}`)} className="me-2" title="Inscribir Participante ">
                                 <i className="bi bi-person-plus-fill"></i>
                             </Button>
                         </>
@@ -500,7 +500,7 @@ const participantsByAportePatrocinado = [
           <div className="col-lg-9"> {/* Ajustado para más espacio a la tabla */}
             <div className="card-box" style={{ padding: '10px' }}> {/* Reduce padding de la tabla */}
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h2 style={{ fontSize: '1.8rem' }}>Unidad Curricular</h2>
+                <h2 style={{ fontSize: '1.8rem' }}>Unidad Curricular Externa</h2>
                 <div className="d-flex align-items-center">
                   <Form.Control
                     name="curso_descripcion"
@@ -544,7 +544,7 @@ const participantsByAportePatrocinado = [
                   </Button>
 
                   {userRole === 'admin' || userRole === 'superuser' ? (
-                    <Button variant="btn custom" onClick={() => navigate('/cursos/create')} className="btn-custom" style={{ fontSize: '0.9rem' }} title="Crear Unidad Curricular" >
+                    <Button variant="btn custom" onClick={() => navigate('/cursos/create/externo')} className="btn-custom" style={{ fontSize: '0.9rem' }} title="Crear Unidad Curricular" >
                       <i className="bi bi-book-half me-2"></i> Nuevo
                     </Button>
                   ) : null}
@@ -876,4 +876,4 @@ const participantsByAportePatrocinado = [
       
 };
 
-export default ShowCursos;
+export default ShowCursosExternos;

@@ -123,6 +123,10 @@ class CursosController extends Controller
             if ($request->filled('curso_descripcion')) {
                 $query->where('curso_descripcion', 'ILIKE', "%{$request->curso_descripcion}%");
             }
+            if ($request->filled('externo')) {
+                $query->where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
+            }
+           
         };
     
         // Obtener los datos paginados para la tabla de cursos (sin duplicar por inscritos)
@@ -282,6 +286,11 @@ class CursosController extends Controller
             if ($request->filled('curso_descripcion')) {
                 $query->where('curso_descripcion', 'ILIKE', "%{$request->curso_descripcion}%");
             }
+           
+            if ($request->filled('externo')) {
+                $query->where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
+            }
+           
         };
         $query = DB::table('vw_cursos_inscripciones')
         ->select('curso_id', 'cod', 'curso_descripcion','tipo_programa', 'cantidad_horas', 'sesiones','costo_inscripcion', 'costo', 'cuotas', 'fecha_inicio','area','nivel','modalidad','grupo')
@@ -437,6 +446,10 @@ class CursosController extends Controller
             if ($request->filled('curso_descripcion')) {
                 $query->where('curso_descripcion', 'ILIKE', "%{$request->curso_descripcion}%");
             }
+            if ($request->has('externo')) {
+                $query->where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN));
+            }
+           
         };
     
         // Obtener los datos paginados para la tabla de cursos (sin duplicar por inscritos)

@@ -43,12 +43,8 @@ const InscribirCedula = () => {
     const [totalPages, setTotalPages] = useState(1) 
     const [currentPageCursos, setCurrentPageCursos] = useState(1);
     const [paginatedCursos, setPaginatedCursos] = useState([]); // Usuarios en la página actual
-
-
-
-
     const [showCursoModal, setShowCursoModal] = useState(false); // Mostrar/ocultar modal de cursos
-
+    const userRole = localStorage.getItem('role');
 
 
 
@@ -279,52 +275,168 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
     };
     
 
-    const handleInscribir = async (action) => {
-        let errors = {};
+    // const handleInscribir = async (action) => {
+    //     let errors = {};
         
+    //     if (!formData.cohorte_id) errors.cohorte_id = 'El cohorte es requerido';
+    //     if (!formData.centro_id) errors.centro_id = 'El centro es requerido';
+    //     if (!formData.periodo_id) errors.periodo_id = 'El periodo es requerido';
+        
+    //     if (Object.keys(errors).length > 0) {
+    //         setFormErrors(errors);
+    //         return;
+    //     }
+        
+    //     try {
+    //         const token = localStorage.getItem('token');
+            
+    //         const formDataComplete = {
+    //             ...formData,
+    //             status_curso:1,
+    //             status_pay: formData.realiza_aporte === "false" && (!formData.es_patrocinado || formData.es_patrocinado === "false") ? 5 : (formData.es_patrocinado === "true" ? 4 : 1), 
+    //             patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado1?.id : null,
+    //             patrocinante_id2: formData.es_patrocinado === "true" ? patrocinanteSeleccionado2?.id || null :null,
+    //             patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
+    //             datos_identificacion_id:datos.id ,
+    //             curso_id:curso.curso_id,
+
+    //         };
+            
+    //         const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataComplete, {
+    //             headers: { Authorization: `Bearer ${token}` },
+    //         });
+            
+    //         const inscripcionId = inscripcionResponse.data.id;
+            
+    //         if ((formData.es_patrocinado === "false" || !formData.es_patrocinado)&& formData.realiza_aporte==='true') {
+    //             await axios.post(`${endpoint}/peticiones`, {
+    //                 zona_id: 3,
+    //                 comentario: 'Pago no realizado',
+    //                 user_id: userId,
+    //                 role_id: 4,
+    //                 status: false,
+    //                 key: inscripcionId,
+    //             }, {
+    //                 headers: { Authorization: `Bearer ${token}` },
+    //             });
+    //         }
+    
+    //         // Redirigir dependiendo de la acción seleccionada y del valor de es_patrocinado
+    //         if (action === 'siguiente') {
+    //             if ((formData.es_patrocinado === "false" || !formData.es_patrocinado)&& formData.realiza_aporte==='true') {
+    //                 // Si no es patrocinado, redirigir a pagos
+    //                 navigate(`/pagos/${cedula}/${inscripcionId}`);
+    //             } else {
+    //                 // Si es patrocinado, redirigir a cursos
+    //                 navigate('/cursos');
+    //             }
+    //         } else {
+    //             // Si la acción es 'guardar', redirigir siempre a cursos
+    //             navigate('/cursos');
+    //         }
+    
+    //     } catch (error) {
+    //         console.error('Error en la inscripción o en la creación de la petición:', error);
+    //         setFormErrors({ general: 'Error en la inscripción o en la creación de la petición' });
+    //     }
+    // };
+    
+
+
+    // if (error) {
+    //     return <div>{error}</div>;
+    // }
+
+    const handleInscribir = async (action) => {
+        // Objeto para almacenar errores
+        let errors = {};
+        let inscripcionId = null;
+    
+        // Validar si hay campos vacíos (excepto es_patrocinado)
+        if (!cedula) errors.cedula = 'La cédula es requerida';
         if (!formData.cohorte_id) errors.cohorte_id = 'El cohorte es requerido';
         if (!formData.centro_id) errors.centro_id = 'El centro es requerido';
         if (!formData.periodo_id) errors.periodo_id = 'El periodo es requerido';
-        
+    
+        // Si hay errores, detener la función y mostrar los errores
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
             return;
         }
-        
+    
         try {
             const token = localStorage.getItem('token');
-            
-            const formDataComplete = {
+    
+            if (userRole==='admin') {
+    
+            // Crear un nuevo objeto formDataWithStatus que extiende el formData original
+            const formDataWithStatus = {
                 ...formData,
-                status_curso:1,
                 status_pay: formData.realiza_aporte === "false" && (!formData.es_patrocinado || formData.es_patrocinado === "false") ? 5 : (formData.es_patrocinado === "true" ? 4 : 1), 
+                status_curso:1,
                 patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado1?.id : null,
                 patrocinante_id2: formData.es_patrocinado === "true" ? patrocinanteSeleccionado2?.id || null :null,
                 patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
-                datos_identificacion_id:datos.id ,
-                curso_id:curso.curso_id,
-
+                cedula_identidad: cedula,
+                datos_identificacion_id: formData.datos_identificacion_id, // Usar el ID de la identificación seleccionada
+                curso_id: cursoId,
+                check:false
+          
+            };
+    
+            // 1. Realizar la inscripción con todos los datos
+            const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataWithStatus, {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        )
+        inscripcionId = inscripcionResponse.data.id; // Asignar el ID recibido
+           
+        }
+    
+    
+            else if (userRole!='admin') {
+                
+           
+                // Crear un nuevo objeto formDataWithStatus que extiende el formData original
+                const formDataWithStatus = {
+                    ...formData,
+                    status_pay: formData.realiza_aporte === "false" && (!formData.es_patrocinado || formData.es_patrocinado === "false") ? 5 : (formData.es_patrocinado === "true" ? 4 : 1), 
+                    status_curso:1,
+                    patrocinante_id: formData.es_patrocinado === "true" ? patrocinanteSeleccionado1?.id : null,
+                    patrocinante_id2: formData.es_patrocinado === "true" ? patrocinanteSeleccionado2?.id || null :null,
+                    patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
+                    cedula_identidad: cedula,
+                    datos_identificacion_id: formData.datos_identificacion_id, // Usar el ID de la identificación seleccionada
+                    curso_id: cursoId,
+                    check:true
+              
+                };
+        
+                // 1. Realizar la inscripción con todos los datos
+                const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataWithStatus, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                inscripcionId = inscripcionResponse.data.id; // Asignar el ID recibido
             };
             
-            const inscripcionResponse = await axios.post(`${endpoint}/cursos_inscripcion`, formDataComplete, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            
-            const inscripcionId = inscripcionResponse.data.id;
-            
-            if ((formData.es_patrocinado === "false" || !formData.es_patrocinado)&& formData.realiza_aporte==='true') {
-                await axios.post(`${endpoint}/peticiones`, {
-                    zona_id: 3,
-                    comentario: 'Pago no realizado',
+    
+            // 2. Crear petición par confirmar inscripcion
+            if (userRole==='admin') {
+                const peticionResponse = await axios.post(`${endpoint}/peticiones`, {
+                    zona_id: 10,
+                    comentario: 'Inscripcion no confirmada',
                     user_id: userId,
-                    role_id: 4,
+                    role_id: 1,
                     status: false,
-                    key: inscripcionId,
+                    key: inscripcionId,  // Usar el ID de la inscripción como key
                 }, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
     
+    
+            // Si la inscripción fue exitosa, redirigir
+            toast.success("Participante inscrito con éxito");
             // Redirigir dependiendo de la acción seleccionada y del valor de es_patrocinado
             if (action === 'siguiente') {
                 if ((formData.es_patrocinado === "false" || !formData.es_patrocinado)&& formData.realiza_aporte==='true') {
@@ -336,20 +448,15 @@ const [filtrosPatrocinante, setFiltrosPatrocinante] = useState({
                 }
             } else {
                 // Si la acción es 'guardar', redirigir siempre a cursos
-                navigate('/cursos');
+                navigate(`/inscritos/${cursoId}`);
             }
-    
+            
         } catch (error) {
             console.error('Error en la inscripción o en la creación de la petición:', error);
             setFormErrors({ general: 'Error en la inscripción o en la creación de la petición' });
+            toast.error("Error al inscribir");
         }
     };
-    
-
-
-    if (error) {
-        return <div>{error}</div>;
-    }
 
     return (
         <div className="row" style={{ marginTop: '50px' }}>

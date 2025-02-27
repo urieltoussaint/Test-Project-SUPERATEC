@@ -76,7 +76,6 @@ const ShowPeticiones = () => {
             setPeticiones(peticiones.data || []);
             setTotalPages(peticiones.last_page || 1);
             setCurrentPage(page);
-
             setAtendidas(estadisticas.totalAtendidas || 0);
             setNoAtendidas(estadisticas.totalNoAtendidas || 0);
             setGraphData(estadisticas.graphData || []);

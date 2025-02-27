@@ -292,6 +292,7 @@ const handleCloseRetiradoModal = () => {
       });
       toast.success('Éxito al eliminar la inscripción');
       setFilteredInscripciones(filteredInscripciones.filter(inscripcion => inscripcion.id !== selectedId));
+      getInscritos();
       setShowModal(false); // Cierra el modal tras la eliminación exitosa
     } catch (error) {
       console.error('Error deleting inscripcion:', error);

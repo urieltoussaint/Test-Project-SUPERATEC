@@ -249,28 +249,7 @@ const EditInscripciones = () => {
     };
 
     
-    
-    // const searchDatos = async () => {
-    //     try {
-    //         const token = localStorage.getItem('token');
-    //         const response = await axios.get(`${endpoint}/identificacion/${cedula}`, {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //         });
-    //         setDatos(response.data); // Almacena los datos encontrados en el estado
-    //     } catch (error) {
-    //         if (error.response && error.response.status === 404) {
-    //             setError('Datos no encontrados'); // Mostrar mensaje si no se encuentran datos
-    //         } else {
-    //             setError('Error al buscar los datos'); // Error de otro tipo
-    //             console.error(error);
-    //         }
-    //     } finally {
-    //         setLoading(false); // Detener el loading cuando termina la búsqueda
-    //     }
-    // };
-    
+
 
     const handleInscribir = async () => {
         try {
@@ -418,7 +397,7 @@ const EditInscripciones = () => {
                     />
                     </Col>
 
-                    <Col md={6}>
+                    
                     {/* Periodo Selector */}
                     {formErrors.periodo_id && (
                     <div className="text-danger">{formErrors.periodo_id}</div>
@@ -435,23 +414,7 @@ const EditInscripciones = () => {
 
                     />
 
-
-                    {/* Es grupo */}
-                    {formErrors.grupo && (
-                        <div className="text-danger">{formErrors.grupo}</div>
-                    )}
-                    <Form.Group controlId="grupo">
-                        <Form.Label>Grupo</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="grupo"
-                            value={formData.grupo}
-                            onChange={handleChange}
-                            required
-                        />
-                        </Form.Group>
-
-                        </Col>
+                 
                         </Row>
                         
                         <Form.Group controlId="es_patrocinado">

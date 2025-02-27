@@ -11,7 +11,7 @@ import { FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 const userId = parseInt(localStorage.getItem('user'));  // ID del usuario logueado
 const endpoint = 'http://localhost:8000/api';
 
-const CreateCursos = () => {
+const CreateCursosExterno = () => {
   const { setLoading } = useLoading();
   const [selectedUserName, setSelectedUserName] = useState(''); // Nombre del usuario seleccionado
   const [showRoleSearchModal, setShowRoleSearchModal] = useState(false);  // Modal de búsqueda de roles
@@ -45,7 +45,7 @@ const CreateCursos = () => {
     modalidad_id:'',
     sesiones:0,
     grupo_id:'',
-    externo:false,
+    externo:true,
     area2_id:'',
     area3_id:'',
     area4_id:'',
@@ -159,8 +159,6 @@ const handleRolePageChange = async (newPage) => {
       return !formData[key];
     });
 
-
-
     if (emptyFields.length > 0) {
         // Si hay campos vacíos, mostramos el modal de confirmación
         setShowConfirmModal(true);
@@ -204,7 +202,7 @@ const handleRolePageChange = async (newPage) => {
         });
 
         toast.success('Petición enviada para agregar monto de curso');
-            navigate('/cursos');
+            navigate('/cursos/externos');
         
     } catch (error) {
         toast.error('Error al crear Curso o enviar la Petición');
@@ -326,22 +324,9 @@ const handleSeleccionar = async () => {
     <div className="row" style={{ marginTop: '50px' }}>
   <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
     <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
-      <h2 className="mb-2">Agregar Nueva Unidad Curricular</h2>
+      <h2 className="mb-2">Agregar Nueva Unidad Curricular Externa</h2>
       <Form onSubmit={handleSubmit} className="custom-gutter">
-      {/* <Form.Group controlId="externo">
-        <Form.Label>¿Programa externo a Superatec?</Form.Label>
-        <Form.Control
-            as="select"
-            name="externo"
-            value={formData.externo} // Asume que formData tiene la clave curso_externo
-            onChange={handleChange}
-            required
-        >
-            <option value="">Seleccione</option>
-            <option value="1">Sí</option>
-            <option value="0">No</option>
-        </Form.Control>
-    </Form.Group> */}
+     
 
       <Form.Group controlId="descripcion">
               <Form.Label>Nombre del Programa</Form.Label>
@@ -811,4 +796,4 @@ const handleSeleccionar = async () => {
   );
 };
 
-export default CreateCursos;
+export default CreateCursosExterno;

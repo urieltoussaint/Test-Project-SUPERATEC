@@ -17,8 +17,12 @@ const endpoint = 'http://localhost:8000/api';
 
 const ConfirmInscripciones = () => {
     const { inscripcionId } = useParams();
-    const { cedula } = useParams();
+    const [cursos, setCursos] = useState([]);
+    const [searchCod, setSearchCod] = useState(''); // Nuevo estado para el buscador por COD
     const [filteredCursos, setFilteredCursos] = useState([]);
+    const [searchCurso, setSearchCurso] = useState('');
+    const [areaOptions, setAreaOptions] = useState([]);
+    const [selectedArea, setSelectedArea] = useState('');
     const [error, setError] = useState(null);
     const { setLoading } = useLoading();
     const navigate = useNavigate();
@@ -40,31 +44,28 @@ const ConfirmInscripciones = () => {
     const [currentPatrocinante, setCurrentPatrocinante] = useState(null); // Para saber cuál botón abrió el modal
     const [paginatedPatrocinantes, setPaginatedPatrocinantes] = useState([]); // Patrocinantes en la página actual
     const [currentPagePatrocinantes, setCurrentPagePatrocinantes] = useState(1);
-
+    const [isPatrocinado, setIsPatrocinado] = useState(false); // Estado para almacenar si es patrocinado
+    const [mostrarPatrocinantes, setMostrarPatrocinantes] = useState(false);
 
 // Cursos que se mostrarán en la página actual
+
+
+
 
     const itemsPerPage = 3;  // Definir cuántos elementos por página
 
     useEffect(() => {
         console.log("ID de inscripción:", inscripcionId); // Para verificar si inscripcionId tiene valor
-
         getInscripcion();
-        if (cedula) {
-            searchDatos(); // Llama a la búsqueda de datos cuando cambie la cédula
-        }
-    }, [cedula,inscripcionId]); // Ejecutar solo cuando cambia la cédula
+     
+        
+    }, [inscripcionId]); // Ejecutar solo cuando cambia la cédula
     
     useEffect(() => {
         setLoading(true);
         handleSeleccionar(); // Solo ejecutar una vez, cuando se monta el componente
     }, []); // Ejecutar una vez, al montar
     
- 
-
-    
-    
-
     const cursosPaginados = filteredCursos.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
@@ -78,6 +79,18 @@ const ConfirmInscripciones = () => {
         }));
     };
 
+    const getPatrocinanteById = async (patrocinanteId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/patrocinantes/${patrocinanteId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data;  // Retorna el objeto del patrocinante
+        } catch (error) {
+            console.error(`Error obteniendo patrocinante con ID ${patrocinanteId}:`, error);
+            return null;  // Si hay error, retornamos null
+        }
+    };
     
 
     const handleSeleccionarPatrocinante = (patrocinante) => {
@@ -111,9 +124,10 @@ const ConfirmInscripciones = () => {
         cohorte_id: '',
         centro_id: '',
         periodo_id: '',
-        es_patrocinado: false,
+        es_patrocinado: '',
         grupo:'',
         observaciones:'',
+        realiza_aporte:'',
         
     });
 
@@ -128,32 +142,63 @@ const ConfirmInscripciones = () => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${endpoint}/cursos_inscripcion/${inscripcionId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
             });
     
             const inscripcionData = response.data;
             setInscripcion(inscripcionData);
+            setDatos(response.data.datos_identificacion); 
     
+            // Actualizar formData con datos de la inscripción
             setFormData({
-                cedula_identidad: inscripcionData.cedula_identidad || '',
                 cohorte_id: inscripcionData.cohorte_id || '',
                 periodo_id: inscripcionData.periodo_id || '',
                 centro_id: inscripcionData.centro_id || '',
                 nivel_id: inscripcionData.nivel_id || '',
-                grupo: inscripcionData.grupo || '',
                 es_patrocinado: inscripcionData.es_patrocinado || '',
                 patrocinante_id: inscripcionData.patrocinante_id || '',
+                patrocinante_id2: inscripcionData.patrocinante_id2 || '',
+                patrocinante_id3: inscripcionData.patrocinante_id3 || '',
                 observaciones: inscripcionData.observaciones || '',
+                realiza_aporte: inscripcionData.realiza_aporte || '',
             });
     
+            // Si hay patrocinantes en la inscripción, obtener sus detalles del backend
+            if (inscripcionData.patrocinante_id) {
+                const patrocinante1 = await getPatrocinanteById(inscripcionData.patrocinante_id);
+                if (patrocinante1) setPatrocinanteSeleccionado1(patrocinante1);
+            }
+    
+            if (inscripcionData.patrocinante_id2) {
+                const patrocinante2 = await getPatrocinanteById(inscripcionData.patrocinante_id2);
+                if (patrocinante2) setPatrocinanteSeleccionado2(patrocinante2);
+            }
+    
+            if (inscripcionData.patrocinante_id3) {
+                const patrocinante3 = await getPatrocinanteById(inscripcionData.patrocinante_id3);
+                if (patrocinante3) setPatrocinanteSeleccionado3(patrocinante3);
+            }
+    
+            setLoading(false);
         } catch (error) {
             setError('Error fetching course');
             console.error('Error fetching course:', error);
         }
     };
     
+
+    useEffect(() => {
+        console.log("Valor actual de es_patrocinado:", formData.es_patrocinado); // Debug
+    
+        if (String(formData.es_patrocinado) === "true") {
+            setMostrarPatrocinantes(true);
+        } else {
+            setMostrarPatrocinantes(false);
+        }
+    }, [formData.es_patrocinado]);  // Se ejecuta cuando `formData.es_patrocinado` cambia
+
+    
+
     
     
 
@@ -222,7 +267,14 @@ const ConfirmInscripciones = () => {
         setFiltrosPatrocinante(prev => ({ ...prev, [name]: value }));
       };
 
- 
+    
+
+    const filteredPatrocinantes = Array.isArray(patrocinantes) 
+        ? patrocinantes.filter(patrocinante =>
+            patrocinante.rif_cedula.toLowerCase().includes(searchCedula.toLowerCase())
+        )
+        : [];
+    
     
     // Llama a `fetchPatrocinantes` al abrir el modal:
     const handleOpenModal = () => {
@@ -230,29 +282,7 @@ const ConfirmInscripciones = () => {
         setShowModal(true);               // Mostrar el modal
     };
 
-    
-    
-    const searchDatos = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/identificacion/${cedula}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            setDatos(response.data); // Almacena los datos encontrados en el estado
-        } catch (error) {
-            if (error.response && error.response.status === 404) {
-                setError('Datos no encontrados'); // Mostrar mensaje si no se encuentran datos
-            } else {
-                setError('Error al buscar los datos'); // Error de otro tipo
-                console.error(error);
-            }
-        } finally {
-            setLoading(false); // Detener el loading cuando termina la búsqueda
-        }
-    };
-    
+
 
     const handleInscribir = async () => {
         try {
@@ -272,6 +302,8 @@ const ConfirmInscripciones = () => {
                 patrocinante_id3: formData.es_patrocinado === "true" ? patrocinanteSeleccionado3?.id || null:null,
                 check:true,
 
+
+
                 }, // Datos a actualizar
                 {
                     headers: {
@@ -280,6 +312,45 @@ const ConfirmInscripciones = () => {
                     },
                 }
             );
+
+            const response2 = await axios.get(`${endpoint}/peticiones-filtro`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                params: {
+                    key:inscripcionId,
+                    zona_id: 10,
+                    status: false
+                }
+              });
+              const peticionesFiltradas = response2.data.data;
+              const peticion = peticionesFiltradas[0];  // Obtener la primera petición que coincida
+
+            //   Actualizar el status de la petición a true
+             await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
+                status: true,   // Cambiar el estado a true
+                finish_time: new Date().toLocaleString('es-ES', { timeZone: 'America/Caracas' }), // Ejemplo para Caracas
+                user_success: userId, // Enviar el usuario que completó la tarea
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+          
+
+              if ((formData.es_patrocinado === false || !formData.es_patrocinado)&& formData.realiza_aporte===true) {
+
+                        const peticionResponse = await axios.post(`${endpoint}/peticiones`, {
+                            zona_id: 3,
+                            comentario: 'Pago no realizado',
+                            user_id: userId,
+                            role_id: 4,
+                            status: false,
+                            key: inscripcionId,  // Usar el ID de la inscripción como key
+                        }, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                    }
     
             if (response.status === 200) {
                 toast.success('Inscripción actualizada correctamente');
@@ -303,14 +374,39 @@ const ConfirmInscripciones = () => {
     if (error) {
         return <div>{error}</div>;
     }
+ 
 
 
+
+
+    const columns = ["COD", "Curso", "Horas", "Fecha de Inicio", "Costo", "Acciones"];
+
+    const renderItem = (curso) => (
+        <tr key={curso.id}>
+            <td>{curso.cod}</td>
+            <td>{curso.descripcion}</td>
+            <td>{curso.cantidad_horas} h</td>
+            <td>{curso.fecha_inicio}</td>
+            <td>{curso.costo} $</td>
+            <td>
+                <Button
+                    variant="success"
+                    onClick={() => handleInscribir(curso.id)}
+                    className="d-flex align-items-center"
+                >
+                    <i className="bi bi-person-plus-fill me-2"></i> 
+                </Button>
+            </td>
+        </tr>
+    );
 
     return (
         <div className="row" style={{ marginTop: '50px' }}>
         <div className="col-lg-6 mx-auto"> {/* Centrado del contenido */}
         <Form.Group controlId="cedula" className="custom-gutter" >
           <div className="card-box" style={{ padding: '20px', width: '100%', margin: '0 auto' }}>
+          {datos && (
+            <>
             <h1>Inscripción al Curso {curso && ` ${curso.cod}`}</h1>
             <div>
                 
@@ -318,7 +414,7 @@ const ConfirmInscripciones = () => {
                 <Form.Label>Cédula de Identidad</Form.Label>
                 <Form.Control
                     type="text"
-                    value={cedula}  // Usamos la cédula del parámetro de la URL
+                    value={datos.cedula_identidad}  // Usamos la cédula del parámetro de la URL
                     readOnly  // Hacemos el campo de solo lectura
                     className="is-valid"  // Marcamos el campo como válido directamente
                 />
@@ -327,7 +423,7 @@ const ConfirmInscripciones = () => {
                
             </div>
             {error && <div className="alert alert-danger">{error}</div>}
-            {datos && (
+            
                 <div className="mt-3">
                 <div className="d-flex">
                     <p className="me-3"><strong>Nombres:</strong> {datos.nombres}</p>
@@ -341,8 +437,9 @@ const ConfirmInscripciones = () => {
                 
 
             </div>
-            
+            </>
             )}
+           
 
             {selectVisible && filterOptions && (
                 <div className="mt-3">
@@ -380,7 +477,6 @@ const ConfirmInscripciones = () => {
                     />
                     </Col>
 
-                    <Col md={6}>
                     {/* Periodo Selector */}
                     {formErrors.periodo_id && (
                     <div className="text-danger">{formErrors.periodo_id}</div>
@@ -398,23 +494,15 @@ const ConfirmInscripciones = () => {
                     />
 
 
-                    {/* Es grupo */}
-                    {formErrors.grupo && (
-                        <div className="text-danger">{formErrors.grupo}</div>
-                    )}
-                    <Form.Group controlId="grupo">
-                        <Form.Label>Grupo</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="grupo"
-                            value={formData.grupo}
-                            onChange={handleChange}
-                            required
-                        />
-                        </Form.Group>
-
-                        </Col>
                         </Row>
+                        <Form.Group controlId="realiza_aporte">
+                        <Form.Label>¿Realiza Aporte?</Form.Label>
+                        <Form.Control as="select" name="realiza_aporte" value={formData.realiza_aporte} onChange={handleChange}>
+                            <option value="">Seleccione</option>
+                            <option value={true}>Sí</option>
+                            <option value={false}>No</option>
+                        </Form.Control>
+                        </Form.Group>
                         
                         <Form.Group controlId="es_patrocinado">
                         <Form.Label>¿Es patrocinado?</Form.Label>
@@ -426,8 +514,9 @@ const ConfirmInscripciones = () => {
                         
 
                         </Form.Group>
+                        
                         {/* Mostrar el campo de patrocinante solo si es_patrocinado es true */}
-                        {formData.es_patrocinado === "true" && (
+                        {mostrarPatrocinantes && (
                             <>
                                 <Form.Group controlId="patrocinante1">
                                     <Form.Label>Patrocinante 1 (Obligatorio)</Form.Label>
@@ -509,8 +598,13 @@ const ConfirmInscripciones = () => {
                         )}
                         
                         <div className="d-flex justify-content">
-                        <Button variant="info" onClick={() => handleInscribir('guardar')} className='mt-3 'style={{marginRight:"10px"}}>
-                            Confirmar
+                        <Button 
+                            variant="success" 
+                            onClick={() => handleInscribir('guardar')} 
+                            className="mt-3" 
+                            style={{ marginRight: "10px" }}
+                        >
+                            Aprobar
                         </Button>
 
                         <Button variant="secondary" onClick={() => navigate(-1)}   className='mt-3 '>

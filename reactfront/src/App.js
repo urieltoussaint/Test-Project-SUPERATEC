@@ -56,6 +56,9 @@ import ShowPagosProgramas from './pages/Participantes/ReportePagos/ShowPagosProg
 import CambiarClave from './pages/Users/CambiarClave';
 import ShowIndicadores from './pages/CalculoIndicadores/ShowIndicadores';
 import ConfirmInscripciones from './pages/Cursos/ConfirmInscripciones';
+import ShowCursosExternos from './pages/Cursos/ShowCursosExternos';
+import CreateCursosExterno from './pages/Cursos/CreateCursosExterno';
+import InscribirExterno from './pages/Cursos/InscribirExterno';
 
 function App() {
   return (
@@ -79,6 +82,7 @@ function App() {
             <Route path="/datos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><EditDatos /></AuthenticatedLayout></ProtectedRoute>} />
             <Route path="/datos/:id" element={<AuthenticatedLayout><ShowMoreDatos /></AuthenticatedLayout>} />
             <Route path="/inscribir/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscripcionCursos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/inscribir/externo/:cursoId" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscribirExterno /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/inscribir-cursos/:cedula" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><InscribirCedula /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/inscritos/:cursoId" element={<AuthenticatedLayout><ShowInscritos /></AuthenticatedLayout>} />
             <Route path="/inscritos/show/:id" element={<AuthenticatedLayout><ShowMoreInscripciones /></AuthenticatedLayout>} />
@@ -89,7 +93,11 @@ function App() {
 
 
             <Route path="/cursos" element={<AuthenticatedLayout><ShowCursos /></AuthenticatedLayout>} />
+            <Route path="/cursos/externos" element={<AuthenticatedLayout><ShowCursosExternos /></AuthenticatedLayout>} />
+
             <Route path="/cursos/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateCursos /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/cursos/create/externo" element={<ProtectedRoute allowedRoles={['admin', 'superuser']}><AuthenticatedLayout><CreateCursosExterno /></AuthenticatedLayout></ProtectedRoute>}  />
+
             <Route path="/cursos/:id/edit" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/cursos/:id/pagos" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreatePagoCursos /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/cursos/:id" element={<AuthenticatedLayout><ShowMoreCursos /></AuthenticatedLayout>}  />
@@ -322,6 +330,7 @@ const AuthenticatedLayout = ({ children }) => {
         </div>
         <ul className={`dropdown-menu ${openDropdown === 2 ? 'show' : ''}`}>
           <li><NavLink to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</NavLink></li>
+          <li><NavLink to="/cursos/externos"><i className="bi bi-book-half"></i> U.C Externa</NavLink></li>
         </ul>
       </li>
     </ul>

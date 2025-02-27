@@ -21,6 +21,82 @@ class DatosIdentificacionController extends Controller
     use ApiResourceTrait, ApiCrudTrait;
     protected $class = Model::class;
 
+
+
+
+    public function store(Request $request)
+    {
+        // Si la solicitud incluye 'participantes', procesarlos primero
+        if ($request->has('participantes')) {
+            $participantes = $request->participantes;
+    
+            if (is_array($participantes)) {
+                // Si es un array, insertar múltiples registros
+                $nuevosParticipantes = collect($participantes)->map(function ($participante) {
+                    return DatosIdentificacion::create([
+                        'cedula_identidad' => $participante['cedula_identidad'] ?? null,
+                        'nombres' => $participante['nombres'] ?? '',
+                        'apellidos' => $participante['apellidos'] ?? '',
+                        'fecha_nacimiento' => $participante['fecha_nacimiento'] ?? null,
+                        'genero_id' => $participante['genero_id'] ?? null,
+                        'direccion' => $participante['direccion'] ?? '',
+                        'nivel_instruccion_id' => $participante['nivel_instruccion_id'] ?? null,
+                        'direccion_email' => $participante['direccion_email'] ?? '',
+                        'telefono_celular' => $participante['telefono_celular'] ?? '',
+                        'superatec' => $participante['superatec'] ?? false,
+                    ]);
+                });
+    
+                // Convertir la colección a un array de IDs y cédulas
+                $participantesConIds = $nuevosParticipantes->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'cedula_identidad' => $p->cedula_identidad
+                    ];
+                });
+    
+                return response()->json([
+                    'participantes' => $participantesConIds
+                ], 201);
+            } elseif (is_object($participantes)) {
+                // Si es un solo objeto, insertarlo individualmente
+                $nuevoParticipante = DatosIdentificacion::create([
+                    'cedula_identidad' => $participantes->cedula_identidad ?? null,
+                    'nombres' => $participantes->nombres ?? '',
+                    'apellidos' => $participantes->apellidos ?? '',
+                    'fecha_nacimiento' => $participantes->fecha_nacimiento ?? null,
+                    'genero_id' => $participantes->genero_id ?? null,
+                    'direccion' => $participantes->direccion ?? '',
+                    'nivel_instruccion_id' => $participantes->nivel_instruccion_id ?? null,
+                    'direccion_email' => $participantes->direccion_email ?? '',
+                    'telefono_celular' => $participantes->telefono_celular ?? '',
+                    'superatec' => $participantes->superatec ?? false,
+                ]);
+    
+                return response()->json([
+                    'participantes' => [
+                        [
+                            'id' => $nuevoParticipante->id,
+                            'cedula_identidad' => $nuevoParticipante->cedula_identidad
+                        ]
+                    ]
+                ], 201);
+            }
+        }
+    
+        // Si no hay participantes, procesar la solicitud normal
+        $resource = $this->new(
+            $this->class,
+            $request
+        );
+    
+        return response($resource, 201);
+    }
+    
+
+    
+    
+
     public function searchByCedula1($cedula_identidad)
 {
     $dato = DatosIdentificacion::where('cedula_identidad', $cedula_identidad)->first();
@@ -31,6 +107,8 @@ class DatosIdentificacionController extends Controller
 
     return response()->json($dato);
 }
+
+
 
 
 

@@ -611,6 +611,20 @@ body {
 }
 
 
+.small-label {
+  font-size: 12px; /* Reduce el tamaño del texto */
+  margin-bottom: 2px;
+}
+.small-input {
+  width: 9%; /* Reduce el ancho */
+}
+.parent-container {
+  overflow: visible !important;
+}
+
+
+
+
 
 
 

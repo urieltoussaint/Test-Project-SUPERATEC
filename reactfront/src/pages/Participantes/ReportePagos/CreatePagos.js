@@ -179,13 +179,7 @@ const guardarNuevaTasa = async () => {
     }
   };
 
-// const handleChange = (event) => {
-//   const { name, value } = event.target;
-//   setFormData(prevState => ({
-//     ...prevState,
-//     [name]: value
-//   }));
-// };
+
   // Manejar cambios en los inputs
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -263,37 +257,7 @@ const guardarNuevaTasa = async () => {
     }
   }, [cursoSeleccionado, formData.tipo_pago_id]);
   
-  // const handlePay = async (selectedCursoId, selectedCurso) => {
-  //   try {
-  //     const { cantidadPagos, ultimoPago } = await getPagosByCurso(selectedCursoId, formData.tipo_pago_id);
-  //     setCuotas(cantidadPagos);
-  //     setCuotasCursos(selectedCurso.curso_cuotas);
-  
-  //     let montoTotal = parseFloat(selectedCurso.curso_costo); 
-  //     setCostoInscripcion(false);
-  //     if (cantidadPagos > 0) {
-  //       montoTotal = parseFloat(ultimoPago.monto_restante);
-  //     }
-  
-  //     const esUltimaCuota = cantidadPagos + 1 === selectedCurso.curso_cuotas;
-  
-  //     setFormData((prevState) => ({
-  //       ...prevState,
-  //       monto_total: montoTotal,  
-  //       monto_restante: montoTotal, 
-  //       conversion_total: calcularConversion(montoTotal),  
-  //       esUltimaCuota,  
-  //     }));
-  
-  //     console.log('Cuotas del curso:', selectedCurso.curso_cuotas);
-  //     console.log('Pagos realizados:', cantidadPagos);
-  //     console.log('Último pago:', ultimoPago);
-  //   } catch (error) {
-  //     console.error('Error fetching curso info:', error);
-  //     setError('Error al obtener la información del curso');
-  //   }
-  // };
-  
+ 
 
   const handlePay = async (selectedCursoId, selectedCurso) => {
     try {
@@ -338,11 +302,6 @@ const guardarNuevaTasa = async () => {
     }
   };
   
-  
-  
-  
-
- 
 
   const getPagosByCurso = async (informacion_inscripcion_id, tipo_pago_id) => {
     try {
@@ -363,9 +322,6 @@ const guardarNuevaTasa = async () => {
         return { cantidadPagos: 0, ultimoPago: null }; // Devolvemos valores por defecto
     }
 };
-
-  
-
 
   const handleSubmit = async (e) => {
     console.log(formData.informacion_inscripcion_id);
@@ -477,41 +433,7 @@ const guardarNuevaTasa = async () => {
         }
   
       }
-      //  if (montoRestante > 0 && montoRestante < parseFloat(formData.monto_total)) {
-      //   // Actualizar status_pay a 2 (pago en proceso)
-      //   await axios.put(`${endpoint}/informacion_inscripcion/${formData.informacion_inscripcion_id}`, {
-      //     status_pay: 2
-      //   }, {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   });
   
-      //   const response = await axios.get(`${endpoint}/peticiones-filtro`, {
-      //     headers: {
-      //         Authorization: `Bearer ${token}`,
-      //     },
-      //     params: {
-      //         key: formData.informacion_inscripcion_id,
-      //         zona_id: 3,
-      //         status: false
-      //     }
-      //   });
-
-      //   // Obtener solo las peticiones filtradas
-      //   const peticionesFiltradas = response.data.data;
-  
-      //   if (peticionesFiltradas.length > 0) {
-      //     const peticion = peticionesFiltradas[0]; // Tomar la primera petición coincidente
-      //     await axios.put(`${endpoint}/peticiones/${peticion.id}`, {
-      //       comentario: "Pagos Faltantes", // Actualizar el comentario
-      //     }, {
-      //       headers: {
-      //         Authorization: `Bearer ${token}`,
-      //       },
-      //     });
-      //   }
-      // }
   
       toast.success('Reporte de pago creado con Éxito');
       navigate('/pagos');
@@ -645,32 +567,7 @@ const guardarNuevaTasa = async () => {
             {/* Mostrar la tasa obtenida */}
             {tasaBcv && <p>Tasa BCV: {tasaBcv}</p>}
 
-            {/* Modal para ingresar nueva tasa si no existe */}
-            <Modal show={showModal2} onHide={() => setShowModal2(false)}>
-              <Modal.Header closeButton>
-                <Modal.Title>Tasa BCV no encontrada</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <p>No hay una tasa BCV para la fecha seleccionada. Ingresa la tasa manualmente.</p>
-                <Form.Group controlId="nueva_tasa">
-                  <Form.Label>Ingresar Tasa BCV</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    value={nuevaTasa}
-                    onChange={(e) => setNuevaTasa(e.target.value)}
-                  />
-                </Form.Group>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={() => setShowModal2(false)}>
-                  Cancelar
-                </Button>
-                <Button variant="primary" onClick={guardarNuevaTasa}>
-                  Guardar Tasa
-                </Button>
-              </Modal.Footer>
-            </Modal>
+           
     </>
             <Row className="g-2">
           <Col md={6}>
@@ -976,6 +873,33 @@ const guardarNuevaTasa = async () => {
           Volver
         </Button>
         </div>
+
+         {/* Modal para ingresar nueva tasa si no existe */}
+         <Modal show={showModal2} onHide={() => setShowModal2(false)}>
+              <Modal.Header closeButton>
+                <Modal.Title>Tasa BCV no encontrada</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <p>No hay una tasa BCV para la fecha seleccionada. Ingresa la tasa manualmente.</p>
+                <Form.Group controlId="nueva_tasa">
+                  <Form.Label>Ingresar Tasa BCV</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={nuevaTasa}
+                    onChange={(e) => setNuevaTasa(e.target.value)}
+                  />
+                </Form.Group>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowModal2(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="primary" onClick={guardarNuevaTasa}>
+                  Guardar Tasa
+                </Button>
+              </Modal.Footer>
+            </Modal>
       </Form>
 
       

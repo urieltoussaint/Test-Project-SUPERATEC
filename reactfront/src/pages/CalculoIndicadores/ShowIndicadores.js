@@ -88,6 +88,7 @@ const ShowIndicadores = () => {
         tlf:'',
         centro_id:'',
         grupo_id:'',
+        externo:'',
 
     });
     
@@ -598,6 +599,17 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                             />
                             </div>
                             <div className="d-flex mb-3 ">
+                            <Form.Select
+                                    name="externo"
+                                    value={filters.externo}
+                                    onChange={handleFilterChange}
+                                    className="me-2"
+                                    style={{ width: 'auto' }}
+                                    >
+                                    <option value="">¿U.C externa?</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                    </Form.Select>
                             <Form.Select
                                 name="status_pay"
                                 value={filters.status_pay}
