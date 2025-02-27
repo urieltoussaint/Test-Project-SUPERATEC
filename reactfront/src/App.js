@@ -59,6 +59,7 @@ import ConfirmInscripciones from './pages/Cursos/ConfirmInscripciones';
 import ShowCursosExternos from './pages/Cursos/ShowCursosExternos';
 import CreateCursosExterno from './pages/Cursos/CreateCursosExterno';
 import InscribirExterno from './pages/Cursos/InscribirExterno';
+import ShowBolsaEmpleo from './pages/BolsaEmpleo/ShowBolsaEmpleo';
 
 function App() {
   return (
@@ -123,6 +124,8 @@ function App() {
             <Route path="/procedencias" element={<AuthenticatedLayout><ShowProcedencias /></AuthenticatedLayout>} />
             <Route path="/procedencias/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreateProcedencias /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/procedencias/edit/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditProcedencias /></AuthenticatedLayout></ProtectedRoute>}  />
+            
+            <Route path="/bolsa-empleo" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowBolsaEmpleo /></AuthenticatedLayout></ProtectedRoute>}  />
 
 
 
@@ -331,6 +334,19 @@ const AuthenticatedLayout = ({ children }) => {
         <ul className={`dropdown-menu ${openDropdown === 2 ? 'show' : ''}`}>
           <li><NavLink to="/voluntariados"><i className="bi bi-person-raised-hand"></i> Voluntariados</NavLink></li>
           <li><NavLink to="/cursos/externos"><i className="bi bi-book-half"></i> U.C Externa</NavLink></li>
+
+        </ul>
+      </li>
+
+      <li className={openDropdown === 3 ? 'expanded' : ''}>
+        <div className="dropdown-button " onClick={() => toggleDropdown(3)}>
+          <i className="bi bi-person-workspace"></i> Empleo
+          <i className={`bi ${openDropdown === 3 ? 'bi-caret-up-fill' : 'bi-caret-down-fill'}`}></i>
+        </div>
+        <ul className={`dropdown-menu ${openDropdown === 3 ? 'show' : ''}`}>
+        
+          <li><NavLink to="/bolsa-empleo"><i className="bi bi-building"></i> Empresas</NavLink></li>
+
         </ul>
       </li>
     </ul>

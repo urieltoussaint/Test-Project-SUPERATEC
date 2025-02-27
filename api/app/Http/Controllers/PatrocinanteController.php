@@ -75,6 +75,10 @@ class PatrocinanteController extends Controller
         if ($request->filled('exterior')) {
             $queryPaginated->where('exterior', $request->exterior);
         }
+        if ($request->filled('nombre_patrocinante')) {
+            $queryPaginated->where('nombre_patrocinante', 'ILIKE', "%{$request->nombre_patrocinante}%");
+        }
+        
         
         // Obtener los datos paginados para mostrar en la tabla
         $datosPaginados = $queryPaginated->paginate(9);

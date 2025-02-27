@@ -134,6 +134,8 @@ const InscribirExterno = () => {
             telefono_celular: '',
             superatec:'',
             datos_identificacion_id:'',
+            bloqueado: false // Bloquear edición
+
           },
         ]);
       };
@@ -244,7 +246,9 @@ const InscribirExterno = () => {
                     telefono_celular: response.data.telefono_celular,
                     datos_identificacion_id: response.data.id, // Asegurar que el ID esté presente
                     superatec: true, // Marca el checkbox automáticamente
-                    errorMensaje: ""
+                    errorMensaje: "",
+                    bloqueado: true // Bloquear edición
+
                 };
                 setFilas(nuevoEstadoFilas);
             } else {
@@ -564,10 +568,14 @@ const InscribirExterno = () => {
                   name="nombres"
                   value={fila.nombres}
                   onChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].nombres = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
+
+              
                   maxLength={20}
                   placeholder="Nombre"
                 />
@@ -578,9 +586,11 @@ const InscribirExterno = () => {
                   name="apellidos"
                   value={fila.apellidos}
                   onChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].apellidos = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
                   maxLength={20}
                   placeholder="Apellido"
@@ -592,9 +602,11 @@ const InscribirExterno = () => {
                   name="fecha_nacimiento"
                   value={fila.fecha_nacimiento}
                   onChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].fecha_nacimiento = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
                 />
               </td>
@@ -605,9 +617,11 @@ const InscribirExterno = () => {
                   valueField="id"
                   selectedValue={fila.genero_id}
                   handleChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].genero_id = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
                   controlId={`genero_id_${index}`}
                 />
@@ -618,9 +632,11 @@ const InscribirExterno = () => {
                   name="direccion"
                   value={fila.direccion}
                   onChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].direccion = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
                   maxLength={20}
                   placeholder="Dirección"
@@ -633,9 +649,11 @@ const InscribirExterno = () => {
                   valueField="id"
                   selectedValue={fila.nivel_instruccion_id}
                   handleChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].nivel_instruccion_id = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
                   controlId={`nivel_instruccion_id_${index}`}
                 />
@@ -646,9 +664,11 @@ const InscribirExterno = () => {
                   name="direccion_email"
                   value={fila.direccion_email}
                   onChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].direccion_email = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
                   placeholder="Email"
                 />
@@ -659,9 +679,11 @@ const InscribirExterno = () => {
                   name="telefono_celular"
                   value={fila.telefono_celular}
                   onChange={(e) => {
+                    if (!filas[index].bloqueado) {
                     const nuevasFilas = [...filas];
                     nuevasFilas[index].telefono_celular = e.target.value;
                     setFilas(nuevasFilas);
+                    }
                   }}
                   maxLength={10}
                   placeholder="Tlf"
@@ -676,12 +698,10 @@ const InscribirExterno = () => {
                         />
                     </td>
                     <td>
-                    <button type="button" onClick={() => limpiarFila(index)} className="btn btn-danger ms-2">
-                                <i className="bi bi-x-circle"></i>
+                    <button type="button" onClick={() => limpiarFila(index)} className="btn btn-warning ms-2">
+                                <i className="bi bi-brush-fill"></i>
                             </button>
                     </td>
-
-              
             </tr>
             
           ))}
@@ -696,11 +716,8 @@ const InscribirExterno = () => {
         <Button variant="danger" onClick={eliminarFila} disabled={filas.length === 1} className="ms-3">
             ❌ Eliminar Fila
             </Button>
-
       </div>
                     </div>
-         
-  
                             </div>
 
                    
@@ -716,11 +733,8 @@ const InscribirExterno = () => {
                                     Volver
                                 </Button>
                             </div>
-
                     </div>
                     </Form.Group>
-
-
                     </div>
                     <Modal show={showModal} onHide={handleCloseModal} size="lg">
                     <Modal.Header closeButton>
@@ -779,15 +793,9 @@ const InscribirExterno = () => {
                                     </tr>
                                 ))}
                             </tbody>
-
-                            
                         </Table>
 
-
-                        
                         <div className="d-flex justify-content-between mt-3">
-                            
-
                             <Button
                                 variant="secondary"
                                 onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes - 1)}
@@ -795,8 +803,6 @@ const InscribirExterno = () => {
                             >
                                 Anterior
                             </Button>
-                            
-
                             <Button
                                 variant="secondary"
                                 onClick={() => handlePatrocinantesPageChange(currentPagePatrocinantes + 1)}
@@ -812,10 +818,8 @@ const InscribirExterno = () => {
                         </Button>
                     </Modal.Footer>
                 </Modal>
-
 </div>
         
     );
 };
-
 export default InscribirExterno;

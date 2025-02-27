@@ -307,7 +307,18 @@ const handleBlur = async () => {
           <meta name="csrf-token" content="{{ csrf_token() }}" />
               <h4 className="mb-4">Datos de la Empresa o Individuo</h4>
 
-              
+              <Form.Group controlId="empresa_persona">
+                      <Form.Label>¿Empresa o Persona?</Form.Label>
+                      <Form.Select
+                        name="empresa_persona"
+                        value={formData.empresa_persona}
+                        onChange={handleChange}
+                      >
+                        <option value="">Seleccione una opción</option>
+                        <option value="Empresa">Empresa</option>
+                        <option value="Persona">Persona</option>
+                      </Form.Select>
+                    </Form.Group>
                    
                     <Row className="g-2"> 
                     <Col md={6}>
