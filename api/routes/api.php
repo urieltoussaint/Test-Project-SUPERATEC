@@ -37,6 +37,8 @@ use App\Http\Controllers\StatusProcessController;
 use App\Http\Controllers\TipoIndustriaController;
 use App\Http\Controllers\TipoPatrocinanteController;
 use App\Http\Controllers\InformacionInscripcionController;
+use App\Http\Controllers\InscBolsaEmpleoController;
+use App\Http\Controllers\PartBolsaEmpleoController;
 use App\Models\InformacionInscripcion;
 
 // Rutas definidas en routes/api.php
@@ -169,6 +171,21 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
      Route::get('patrocinantes-estadisticas', [PatrocinanteController::class, 'getPatrocinantesWithStatistics'])->middleware('role:admin,superuser,invitado,pagos');
      Route::get('patrocinantes-paginate', [PatrocinanteController::class, 'getPatrocinantes'])->middleware('role:admin,superuser,invitado,pagos');
 
+     //bolsa
+     Route::get('participantes-bolsa', [PartBolsaEmpleoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::post('participantes-bolsa', [PartBolsaEmpleoController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::put('participantes-bolsa/{id}', [PartBolsaEmpleoController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::delete('participantes-bolsa/{id}', [PartBolsaEmpleoController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('participantes-bolsa/{id}', [PartBolsaEmpleoController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('empleo', [InscBolsaEmpleoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::post('empleo', [InscBolsaEmpleoController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::put('empleo/{id}', [InscBolsaEmpleoController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::delete('empleo/{id}', [InscBolsaEmpleoController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('cedula-empleo/{cedula_identidad}', [PartBolsaEmpleoController::class, 'searchByCedulaInscBolsaEmpleo'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('postulados-estadisticas', [PartBolsaEmpleoController::class, 'getStatistics'])->middleware('role:admin,superuser,invitado,pagos');
+
+    
+
 
     // Procedencia
     Route::get('procedencia', [ProcedenciaController::class, 'index'])->middleware('role:admin,superuser,invitado');
@@ -226,6 +243,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
 
     //slect
     Route::get('select-inc', [InformacionInscripcionController::class, 'SelectInsc'])->middleware('role:admin,superuser,invitado,pagos');
+    Route::get('select-bolsa', [PartBolsaEmpleoController::class, 'SelectBolsa'])->middleware('role:admin,superuser,invitado,pagos');
+
 
 
     

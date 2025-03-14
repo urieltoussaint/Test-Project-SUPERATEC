@@ -21,9 +21,6 @@ class DatosIdentificacionController extends Controller
     use ApiResourceTrait, ApiCrudTrait;
     protected $class = Model::class;
 
-
-
-
     public function store(Request $request)
     {
         // Si la solicitud incluye 'participantes', procesarlos primero
@@ -112,13 +109,37 @@ class DatosIdentificacionController extends Controller
 
 
 
+// public function searchByCedula2(Request $request)
+// {
+//     $query = $request->input('query');
+    
+//     $datos = DatosIdentificacion::where('cedula_identidad', 'LIKE', "%{$query}%")
+//         ->select('id', 'cedula_identidad')  // Solo devuelve la cedula e ID en la búsqueda
+//         ->get();
+
+//     if ($datos->isEmpty()) {
+//         return response()->json([], 404);
+//     }
+
+//     return response()->json($datos);
+// }
+
 public function searchByCedula2(Request $request)
 {
     $query = $request->input('query');
-    
+    $mayorEdad = $request->input('mayor_edad'); // Flag opcional para filtrar mayores de edad
+
     $datos = DatosIdentificacion::where('cedula_identidad', 'LIKE', "%{$query}%")
-        ->select('id', 'cedula_identidad')  // Solo devuelve la cedula e ID en la búsqueda
+        ->select('id', 'cedula_identidad', 'fecha_nacimiento') // Agregar fecha de nacimiento para filtro
         ->get();
+
+    // Si el flag 'mayor_edad' está presente y es true, filtrar mayores de 18 años
+    if ($mayorEdad) {
+        $fechaActual = now()->subYears(18)->format('Y-m-d'); // Fecha límite para ser mayor de edad
+        $datos = $datos->filter(function ($dato) use ($fechaActual) {
+            return $dato->fecha_nacimiento <= $fechaActual;
+        });
+    }
 
     if ($datos->isEmpty()) {
         return response()->json([], 404);
@@ -126,6 +147,7 @@ public function searchByCedula2(Request $request)
 
     return response()->json($datos);
 }
+
 
     public function getDatosByCedula($cedula)
     {

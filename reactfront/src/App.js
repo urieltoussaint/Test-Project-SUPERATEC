@@ -60,6 +60,10 @@ import ShowCursosExternos from './pages/Cursos/ShowCursosExternos';
 import CreateCursosExterno from './pages/Cursos/CreateCursosExterno';
 import InscribirExterno from './pages/Cursos/InscribirExterno';
 import ShowBolsaEmpleo from './pages/BolsaEmpleo/ShowBolsaEmpleo';
+import IncsParticipanteBolsa from './pages/BolsaEmpleo/IncsParticipanteBolsa';
+import IncsEmpleo from './pages/BolsaEmpleo/IncsEmpleo';
+import ShowPostulados from './pages/BolsaEmpleo/ShowPostulados';
+import ShowMorePostulados from './pages/BolsaEmpleo/ShowMorePostulados';
 
 function App() {
   return (
@@ -126,6 +130,12 @@ function App() {
             <Route path="/procedencias/edit/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditProcedencias /></AuthenticatedLayout></ProtectedRoute>}  />
             
             <Route path="/bolsa-empleo" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowBolsaEmpleo /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/postulaciones/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowBolsaEmpleo /></AuthenticatedLayout></ProtectedRoute>}  />
+
+            <Route path="/inscribir-part-bolsa" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><IncsParticipanteBolsa /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/bolsa-empleo/:patrocinanteId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><IncsEmpleo /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/postulados-bolsa-empleo" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowPostulados /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/postulados-bolsa-empleo/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowMorePostulados /></AuthenticatedLayout></ProtectedRoute>}  />
 
 
 
@@ -346,6 +356,7 @@ const AuthenticatedLayout = ({ children }) => {
         <ul className={`dropdown-menu ${openDropdown === 3 ? 'show' : ''}`}>
         
           <li><NavLink to="/bolsa-empleo"><i className="bi bi-building"></i> Empresas</NavLink></li>
+          <li><NavLink to="/postulados-bolsa-empleo"><i className="bi bi-person"></i> Postulados</NavLink></li>
 
         </ul>
       </li>

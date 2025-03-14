@@ -104,8 +104,6 @@ class InformacionInscripcionController extends Controller
 }
 
     
-
-
     public function index(Request $request, $datos_identificacion_id = null)
     {
         // Verificar si datos_identificacion_id viene como parámetro o en la query string
