@@ -269,22 +269,6 @@ const ShowPostulados = () => {
     : [];
 
 
-    const comoEnteroSuperatecData = statistics?.comoEnteroSuperatec
-    ? Object.entries(statistics.comoEnteroSuperatec).map(([name, obj]) => ({
-        name,
-        value: obj.percentage,
-    }))
-    : [];
-
-const grupoPrioritarioData = statistics?.grupoPrioritario
-    ? Object.entries(statistics.grupoPrioritario).map(([name, obj]) => ({
-        name,
-        value: obj.percentage,
-    }))
-    : [];
-
-
-
     const nivelesInstruccionData = statistics?.nivelesInstruccion
     ? Object.entries(statistics.nivelesInstruccion).map(([name, obj]) => ({
         name,
@@ -321,9 +305,9 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                 </Button>
                 <Button
                     variant="btn btn-info" 
-                    onClick={() => navigate(`/datos/cursos/${dato.id}`)}
+                    onClick={() => navigate(`/postulaciones/${dato.id}`)}
                     className="me-2"
-                    title="Ver Unidades Curriculares del Participante"
+                    title="Ver Unidades Postulaciones del Participante"
                 >
                     <i className="bi bi-building"></i>
                 </Button>
@@ -331,7 +315,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                         <>
                             <Button
                                 variant="btn btn-warning"
-                                onClick={() => navigate(`/postulados-bolsa-empleo/edit/${dato.id}/edit`)}
+                                onClick={() => navigate(`/edit-part-bolsa/${dato.id}`)}
                                 className="me-2 icon-white"
                                 title="Editar"
                             >

@@ -73,6 +73,135 @@ class InscBolsaEmpleoController extends Controller
     }
     
 
+    
+public function getStatistics(Request $request)
+{
+    // 1. Consulta para obtener los datos paginados que se mostrarán en la tabla
+    $queryPaginated = InscBolsaEmpleo::query()
+        ->with(['PartBolsaEmpleo','PartBolsaEmpleo.datosIdentificacion','Patrocinante']) // Incluir la relación
+        ->whereHas('Patrocinante', function ($q) use ($request) {
+            
+            if ($request->filled('nombre_patrocinante')) {
+                $q->where('nombre_patrocinante', 'ILIKE', "%{$request->nombre_patrocinante}%");
+            }
+        })
+        
+        ->orderBy('id', 'desc'); // Ordena por id de forma descendente para mostrar los últimos primero
+
+        if ($request->filled('cargo_ofrecido')) {
+            $queryPaginated->where('cargo_ofrecido', 'ILIKE', "%{$request->cargo_ofrecido}%");
+        }
+
+        $datosPaginados = $queryPaginated->paginate(9);
+    // 2. Consulta para obtener todos los datos filtrados para las estadísticas
+    $queryStatistics = InscBolsaEmpleo::query()
+        ->with(['PartBolsaEmpleo','PartBolsaEmpleo.datosIdentificacion','Patrocinante']) // Incluir la relación
+        ->whereHas('Patrocinante', function ($q) use ($request) {
+            if ($request->filled('nombre_patrocinante')) {
+                $q->where('nombre_patrocinante', 'ILIKE', "%{$request->nombre_patrocinante}%");
+            }
+        })
+        ->orderBy('id', 'desc');
+
+        if ($request->filled('cargo_ofrecido')) {
+            $queryStatistics->where('cargo_ofrecido', 'ILIKE', "%{$request->cargo_ofrecido}%");
+        }
+
+        $datosEstadisticas = $queryStatistics->get();
+
+        // Contar total de participantes
+        $totalPostulaciones = $datosEstadisticas->count();
+  
+    return response()->json([
+        'datos' => $datosPaginados,
+        'estadisticas' => [
+            'totalPostulaciones' => $totalPostulaciones,
+            
+        ],
+    ]);
+}
+
+
+public function getStatisticsEmpresas(Request $request)
+{
+    // 1. Consulta para obtener los datos paginados que se mostrarán en la tabla
+    $queryPaginated = InscBolsaEmpleo::query()
+        ->with(['PartBolsaEmpleo','PartBolsaEmpleo.datosIdentificacion','Patrocinante','PartBolsaEmpleo.datosIdentificacion.nivelInstruccion',
+        'PartBolsaEmpleo.datosIdentificacion.genero','PartBolsaEmpleo.datosIdentificacion.estado']) // Incluir la relación
+        ->whereHas('PartBolsaEmpleo.datosIdentificacion', function ($q) use ($request) {
+
+            if ($request->filled('cedula_identidad')) {
+                $q->where('cedula_identidad', 'LIKE', "%{$request->cedula_identidad}%");
+            }
+            if ($request->filled('nombres')) {
+                $q->where('nombres', 'ILIKE', "%{$request->nombres}%");
+            }
+            if ($request->filled('apellidos')) {
+                $q->where('apellidos', 'ILIKE', "%{$request->apellidos}%");
+            }
+            if ($request->filled('nivel_instruccion_id')) {
+                $q->where('nivel_instruccion_id', $request->nivel_instruccion_id);
+            }
+            if ($request->filled('genero_id')) {
+                $q->where('genero_id', $request->genero_id);
+            }
+            if ($request->filled('estado_id')) {
+                $q->where('estado_id', $request->estado_id);
+            }
+           
+        })
+        ->orderBy('id', 'desc'); // Ordena por id de forma descendente para mostrar los últimos primero
+
+        if ($request->filled('cargo_ofrecido')) {
+            $queryPaginated->where('cargo_ofrecido', 'ILIKE', "%{$request->cargo_ofrecido}%");
+        }
+
+        $datosPaginados = $queryPaginated->paginate(9);
+    // 2. Consulta para obtener todos los datos filtrados para las estadísticas
+    $queryStatistics = InscBolsaEmpleo::query()
+    ->with(['PartBolsaEmpleo','PartBolsaEmpleo.datosIdentificacion','Patrocinante','PartBolsaEmpleo.datosIdentificacion.nivelInstruccion',
+    'PartBolsaEmpleo.datosIdentificacion.genero','PartBolsaEmpleo.datosIdentificacion.estado']) // Incluir la relación
+    ->whereHas('PartBolsaEmpleo.datosIdentificacion', function ($q) use ($request) {
+
+        if ($request->filled('cedula_identidad')) {
+            $q->where('cedula_identidad', 'LIKE', "%{$request->cedula_identidad}%");
+        }
+        if ($request->filled('nombres')) {
+            $q->where('nombres', 'ILIKE', "%{$request->nombres}%");
+        }
+        if ($request->filled('apellidos')) {
+            $q->where('apellidos', 'ILIKE', "%{$request->apellidos}%");
+        }
+        if ($request->filled('nivel_instruccion_id')) {
+            $q->where('nivel_instruccion_id', $request->nivel_instruccion_id);
+        }
+        if ($request->filled('genero_id')) {
+            $q->where('genero_id', $request->genero_id);
+        }
+        if ($request->filled('estado_id')) {
+            $q->where('estado_id', $request->estado_id);
+        }
+       
+    })
+        ->orderBy('id', 'desc');
+
+        if ($request->filled('cargo_ofrecido')) {
+            $queryStatistics->where('cargo_ofrecido', 'ILIKE', "%{$request->cargo_ofrecido}%");
+        }
+
+        $datosEstadisticas = $queryStatistics->get();
+
+        // Contar total de participantes
+        $totalPostulaciones = $datosEstadisticas->count();
+  
+    return response()->json([
+        'datos' => $datosPaginados,
+        'estadisticas' => [
+            'totalPostulaciones' => $totalPostulaciones,
+            
+        ],
+    ]);
+}
 
 
 }
