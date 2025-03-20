@@ -14,6 +14,8 @@ import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, Cartes
 import { FaUserFriends, FaClock, FaBook,FaSync,FaBuilding,FaSearch  } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import moment from 'moment';  // Asegúrate de tener moment.js instalado para manejar fechas
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 
 const endpoint = 'http://localhost:8000/api';
@@ -34,6 +36,11 @@ const ShowBolsaEmpleo = () => {
     const [tipoIndustriaOptions, setTipoIndustriaOptions] = useState([]);  // Inicializa con un array vacío
     const [statistics, setStatistics] = useState({});
     const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
+    const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+                    
+    const toggleTablaExpandida = () => {
+        setMostrarSoloTabla(prevState => !prevState);
+    }; 
 
 
 
@@ -262,6 +269,15 @@ const ShowBolsaEmpleo = () => {
 
     return (
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
+             <motion.div 
+                        initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                        animate={{
+                            opacity: mostrarSoloTabla ? 0 : 1,
+                            maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                        }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                        style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+                    >
             <div className="stat-box d-flex justify-content-between" style={{ maxWidth: '100%' }}> 
                 {/* Total de Patrocinados */}
                 <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%' }}>
@@ -327,15 +343,24 @@ const ShowBolsaEmpleo = () => {
                 </div>
 
             </div>
-
+            </motion.div>
 
             <div className="row" style={{ marginTop: '10px' }}>
+                
                 {/* Columna para la tabla */}
                 <div className="col-lg-12"> {/* Ajustado para más espacio a la tabla */}
                     <div className="card-box" style={{ padding: '10px' }}> {/* Reduce padding de la tabla */}
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h2 style={{ fontSize: '1.8rem' }}>Lista de Empresas</h2>
                             <div className="d-flex align-items-center">
+                                 <Button 
+                                    variant="info me-2" 
+                                    onClick={toggleTablaExpandida} 
+                                    style={{ padding: '5px 15px' }}
+                                    title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                                >
+                                    {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                                </Button>
                                 <Form.Control
                                         name="rif_cedula"
                                         type="text"
@@ -495,6 +520,11 @@ const ShowBolsaEmpleo = () => {
             </div>
             
             </div>
+            <motion.div 
+                            initial={{ opacity: 1, height: "auto" }}
+                            animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+                            transition={{ duration: 0.5 }}
+                        >
             {/* Gráfica  justo debajo de la tabla */}
             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
                 <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
@@ -551,7 +581,13 @@ const ShowBolsaEmpleo = () => {
                         </ResponsiveContainer>
                 </div>
 
-            </div>    
+            </div>  
+            </motion.div>
+            <motion.div 
+                            initial={{ opacity: 1, height: "auto" }}
+                            animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+                            transition={{ duration: 0.5 }}
+                        >
             {/* segunda fila de graficos                        */}
             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
 
@@ -600,6 +636,7 @@ const ShowBolsaEmpleo = () => {
                 </div>
                 
             </div>
+            </motion.div>  
 
 
     </div>

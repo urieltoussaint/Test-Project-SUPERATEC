@@ -17,6 +17,8 @@ import * as XLSX from "xlsx";
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch  } from 'react-icons/fa';  // Importamos íconos de react-icons
 import ProgressBar from 'react-bootstrap/ProgressBar';
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 
 const endpoint = 'http://localhost:8000/api';
@@ -62,6 +64,11 @@ const ShowIndicadores = () => {
     const porcentajeFemenino = statistics?.porcentajesGenero?.femenino || 0;
     const porcentajeOtros = statistics?.porcentajesGenero?.otros || 0;
     const [showModalInfo, setShowModalInfo] = useState(false);
+    const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+                  
+    const toggleTablaExpandida = () => {
+        setMostrarSoloTabla(prevState => !prevState);
+    }; 
 
     const [filters, setFilters] = useState({
         nivel_instruccion_id: '',
@@ -89,6 +96,8 @@ const ShowIndicadores = () => {
         centro_id:'',
         grupo_id:'',
         externo:'',
+        edad_mayor:'',
+        edad_menor:''
 
     });
     
@@ -349,16 +358,18 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
           color,
         };
       });
+
+      
       
 
-    const columns = ["Cédula", "Nombres", "Apellidos","Status","Cod Unidad C.","Unidad Curricular","Centro","Cohorte","Periodo","Grupo","Fecha Insc", "Email", "Teléfono","Procedencia","Estado","Es Patrocinado"];
+    const columns = ["Cédula", "Nombres", "Apellidos","Edad","Cod Unidad C.","Unidad Curricular","Centro","Cohorte","Periodo","Grupo","Fecha Insc", "Email", "Teléfono","Procedencia","Estado","Es Patrocinado"];
 
     const renderItem = (dato) => (
         <tr key={dato.id}>
             <td className="col">{dato?.datos_identificacion?.cedula_identidad}</td>
             <td className="col">{dato?.datos_identificacion?.nombres}</td>
             <td className="col">{dato?.datos_identificacion?.apellidos}</td>
-            <td className="col">{dato?.status_curso}</td>
+            <td className="col">{dato?.edad}</td>
             <td className="col">{dato?.curso?.cod}</td>
             <td className="col">{dato?.curso?.descripcion}</td>
             <td className="col">{dato?.centro?.descripcion}</td>
@@ -380,6 +391,15 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
 
     return (
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
+             <motion.div 
+                initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                animate={{
+                    opacity: mostrarSoloTabla ? 0 : 1,
+                    maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                }}
+                transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+            >
             <div className="stat-box d-flex justify-content-between" style={{ maxWidth: '100%' }}> 
                 {/* Total de Participantes */}
                 <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%' }}>
@@ -523,6 +543,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
 
             </div>
 
+            </motion.div>
 
             <div className="row" style={{ marginTop: '10px' }}>
                 {/* Columna para la tabla */}
@@ -531,6 +552,14 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h2 style={{ fontSize: '1.8rem' }}>Cálculo de Indicadores</h2>
                             <div className="d-flex align-items-center">
+                                <Button 
+                                    variant="info me-2" 
+                                    onClick={toggleTablaExpandida} 
+                                    style={{ padding: '5px 15px' }}
+                                    title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                                >
+                                    {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                                </Button>
                            
                                     <Button
                                     variant="info me-2"
@@ -827,6 +856,26 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                             </Form.Select>
 
                         </div>
+                        <div className="d-flex mb-3 ">
+                        <Form.Control
+                                type="number"
+                                placeholder="Edad mayor que"
+                                value={filters.edad_mayor} // Conecta el campo de cédula al estado de filtros
+                                name="edad_mayor"
+                                onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
+                                className="me-2"
+                            />
+
+                        <Form.Control
+                                type="number"
+                                placeholder="Edad menor que"
+                                value={filters.edad_menor} // Conecta el campo de cédula al estado de filtros
+                                name="edad_menor"
+                                onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
+                                className="me-2"
+                            />  
+
+                            </div>
                         
                        
                         <PaginationTable
@@ -852,11 +901,15 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
            
 
 
-
+        <motion.div 
+                initial={{ opacity: 1, height: "auto" }}
+                animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+                transition={{ duration: 0.5 }}
+            >
             <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px' }}>
 
 
-                <div className="chart-box" style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+                <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
 
                 <   h4 style={{ fontSize: '1.2rem' }}>Cantidad de Participantes por Estado</h4>
     
@@ -877,28 +930,66 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                 </div>
 
                
-                <div className="chart-box "style={{ flex: '1 1 50%', maxWidth: '50%', marginRight: '10px'}}>
+                <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
                     <h4 style={{ fontSize: '1.2rem', color: 'gray' }}>Distribución por Áreas</h4>
-                                 <ResponsiveContainer width="100%" height={400}>
-                                 <PieChart >
-                                   <Pie
-                                     data={AreaGraphic}
-                                     cx={420}
-                                     cy={150}
-                                     outerRadius={150}
-                                     fill="#8884d8"
-                                     dataKey="value"
-                                     label={({ name, percent }) => ` ${(percent * 100).toFixed(0)}%`}
-                                   >
-                                     {AreaGraphic.map((entry, index) => (
-                                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                     ))}
-                                   </Pie>
-                                   <Tooltip />
-                                   <Legend/>
-                                 </PieChart>
-                                 
-                                 </ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height={400}>
+                        <PieChart >
+                        <Pie
+                            data={AreaGraphic}
+                            cx={250}
+                            cy={150}
+                            outerRadius={150}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({ name, percent }) => ` ${(percent * 100).toFixed(0)}%`}
+                        >
+                            {AreaGraphic.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend/>
+                        </PieChart>
+                        
+                        </ResponsiveContainer>
+                        </div>  
+
+                <div className="chart-box "style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
+                <h4 style={{ fontSize: '1.2rem', color: 'gray' }}>Distribución por Rango de Edad</h4>
+                    <ResponsiveContainer width="100%" height={300} >
+                        <PieChart>
+                            <Pie
+                                data={rangoEdades}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="60%"
+                                outerRadius={120}
+                                fill="#82ca9d"
+                                label={({ name, percent }) => `${(percent * 100).toFixed(2)}%`}
+                            >
+                                {rangoEdades.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `${value}%`} />
+                            <Legend 
+                                layout="horizontal" 
+                                verticalAlign="bottom" 
+                                align="center" 
+                                wrapperStyle={{ 
+                                    position: "relative",  // Hace que "top" funcione
+                                    top: "20px",  // Ajusta el valor para empujar la leyenda hacia abajo
+                                    width: "90%", 
+                                    textAlign: "center", 
+                                    fontSize: '15px' 
+                                }}
+                            />
+
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>  
+
 
                     {/* Modal de confirmación */}
                     <Modal show={showModalInfo} onHide={() => setShowModalInfo(false)} centered>
@@ -921,10 +1012,15 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
                     </Modal.Footer>
                 </Modal>
                 
-                </div>
+                
 
             </div>
-
+            </motion.div>
+            <motion.div 
+                initial={{ opacity: 1, height: "auto" }}
+                animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+                transition={{ duration: 0.5 }}
+            >
 
  {/* Gráfica de Estado de Pagos justo debajo de la tabla */}
               <div className="col-lg-12 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
@@ -970,6 +1066,7 @@ const participantesPorEstadoData = statistics?.participantesPorEstado
 
                 </div>
               </div>
+              </motion.div>
 
 
              

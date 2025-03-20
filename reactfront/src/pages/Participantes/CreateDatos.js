@@ -158,17 +158,7 @@ const handleRolePageChange = async (newPage) => {
 };
 
 
-  const calcularEdad = (fechaNacimiento) => {
-    const hoy = new Date();
-    const fechaNac = new Date(fechaNacimiento);
-    let edad = hoy.getFullYear() - fechaNac.getFullYear();
-    const mes = hoy.getMonth() - fechaNac.getMonth();
-  
-    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
-      edad--;
-    }
-    return edad;
-  };
+
   
   
   const handleEstadoChange = (e) => {
@@ -209,10 +199,8 @@ const handleRolePageChange = async (newPage) => {
       let dataToSend = { ...formData }; // Inicia dataToSend con los datos del formulario
       
       if (formData.fecha_nacimiento) { // Verifica si fecha_nacimiento NO es nulo
-        const edadCalculada = calcularEdad(formData.fecha_nacimiento);
         dataToSend = {
           ...dataToSend,
-          edad: edadCalculada // Agrega la edad calculada solo si fecha_nacimiento no es nulo
         };
       }
   
@@ -351,11 +339,8 @@ const handleChange = (event) => {
     const fieldsToIgnore = ['direccion_email', 'telefono_casa'];
   
     setLoading(true); // Inicia el proceso de carga
-    // Calcular la edad y agregarla a los datos del formulario
-    const edadCalculada = calcularEdad(formData.fecha_nacimiento);
     const dataToSend = {
       ...formData,
-      edad: edadCalculada // Agregar la edad calculada
     };
   
     // Filtra los campos vacíos, excepto los de la lista fieldsToIgnore

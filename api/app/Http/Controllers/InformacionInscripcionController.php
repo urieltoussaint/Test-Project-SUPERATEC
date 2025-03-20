@@ -634,9 +634,15 @@ public function getIndicadoresWithStatistics(Request $request)
 
     // Consulta paginada con filtros
     $queryPaginated = InformacionInscripcion::query()
-        ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion','curso','datosIdentificacion.procedencia','datosIdentificacion.estado','curso.grupo'])
-        ->where('check', true) // Filtrar SIEMPRE los registros con check = true
-        ->orderBy('id', 'desc'); // Ordenar por ID descendente
+    ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion', 'curso', 'datosIdentificacion.procedencia', 'datosIdentificacion.estado', 'curso.grupo'])
+    ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id') // Asegurar JOIN
+    ->select(
+        'informacion_inscripcion.*',
+        DB::raw("DATE_PART('year', AGE(datos_identificacion.fecha_nacimiento)) as edad") // Calcular edad correctamente
+    )
+    ->where('check', true) // Filtrar SIEMPRE los registros con check = true
+    ->orderBy('informacion_inscripcion.id', 'desc'); // Ordenar por ID descendente
+
 
     // Aplicar filtros adicionales 
     if ($request->filled('cohorte_id')) {
@@ -738,6 +744,18 @@ public function getIndicadoresWithStatistics(Request $request)
             $query-> where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
         });
     }
+    if ($request->filled('edad_mayor')) {
+        $queryPaginated->whereHas('datosIdentificacion', function ($query) use ($request) {
+            $query->whereRaw("DATE_PART('year', AGE(fecha_nacimiento)) > ?", [$request->edad_mayor]);
+        });
+    }
+    
+    if ($request->filled('edad_menor')) {
+        $queryPaginated->whereHas('datosIdentificacion', function ($query) use ($request) {
+            $query->whereRaw("DATE_PART('year', AGE(fecha_nacimiento)) < ?", [$request->edad_menor]);
+        });
+    }
+    
 
 
     // Obtener los datos paginados para mostrar en la tabla
@@ -745,8 +763,15 @@ public function getIndicadoresWithStatistics(Request $request)
 
     // Consulta para estadísticas (sin paginación)
     $queryStatistics = InformacionInscripcion::query()
-        ->where('check', true) // Filtrar SIEMPRE los registros con check = true
-        ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion']);
+    ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion', 'curso', 'datosIdentificacion.procedencia', 'datosIdentificacion.estado', 'curso.grupo'])
+    ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id') // Asegurar JOIN
+    ->select(
+        'informacion_inscripcion.*',
+        DB::raw("DATE_PART('year', AGE(datos_identificacion.fecha_nacimiento)) as edad") // Calcular edad correctamente
+    )
+    ->where('check', true) // Filtrar SIEMPRE los registros con check = true
+    ->orderBy('informacion_inscripcion.id', 'desc'); // Ordenar por ID descendente
+
         
      // Aplicar filtros adicionales 
      if ($request->filled('cohorte_id')) {
@@ -853,6 +878,18 @@ public function getIndicadoresWithStatistics(Request $request)
             $query-> where('externo', filter_var($request->externo, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
         });
     }
+    if ($request->filled('edad_mayor')) {
+        $queryStatistics->whereHas('datosIdentificacion', function ($query) use ($request) {
+            $query->whereRaw("DATE_PART('year', AGE(fecha_nacimiento)) > ?", [$request->edad_mayor]);
+        });
+    }
+    
+    if ($request->filled('edad_menor')) {
+        $queryStatistics->whereHas('datosIdentificacion', function ($query) use ($request) {
+            $query->whereRaw("DATE_PART('year', AGE(fecha_nacimiento)) < ?", [$request->edad_menor]);
+        });
+    }
+    
 
 
     // Obtener todos los datos filtrados para estadísticas
@@ -901,6 +938,18 @@ public function getIndicadoresWithStatistics(Request $request)
             'cantidad' => $count
         ];
     }
+
+    $promedioEdad = $totalInscritos > 0 ? $datosParaEstadisticas->avg('edad') : 0;
+    $mayorEdad = $totalInscritos > 0 ? $datosParaEstadisticas->max('edad') : 0;
+    $menorEdad = $totalInscritos > 0 ? $datosParaEstadisticas->min('edad') : 0;
+      // Cálculo de edades en rangos
+      $rangoEdades = [
+        '6-12' => $datosParaEstadisticas->whereBetween('edad', [6, 12])->count(),
+        '13-17' => $datosParaEstadisticas->whereBetween('edad', [13, 17])->count(),
+        '18-25' => $datosParaEstadisticas->whereBetween('edad', [18, 25])->count(),
+        '26-35' => $datosParaEstadisticas->whereBetween('edad', [26, 35])->count(),
+        'Más de 35' => $datosParaEstadisticas->where('edad', '>', 35)->count(),
+    ];
 
 // Contar géneros respetando la relación `datosIdentificacion`
 $totalMasculino = $datosParaEstadisticas->filter(function ($item) {
@@ -962,6 +1011,7 @@ $cursosPorArea = $datosParaEstadisticas->groupBy('curso.area.descripcion')->map(
                 'inscritosPatrocinados' => $inscritosPatrocinados,
             'participantesPorEstado' => $participantesPorEstado,    
             'cursosPorArea' => $cursosPorArea,
+            'rangoEdades' => $rangoEdades,
         ],
         
     ]);
@@ -974,9 +1024,14 @@ public function getIndicadoresWithStatisticsPrint(Request $request)
 
     // Consulta para estadísticas (sin paginación)
     $queryStatistics = InformacionInscripcion::query()
-    ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion','curso','datosIdentificacion.procedencia','datosIdentificacion.estado','curso.grupo'])
+    ->with(['centro', 'periodo', 'cohorte', 'datosIdentificacion', 'curso', 'datosIdentificacion.procedencia', 'datosIdentificacion.estado', 'curso.grupo'])
+    ->join('datos_identificacion', 'informacion_inscripcion.datos_identificacion_id', '=', 'datos_identificacion.id') // Asegurar JOIN
+    ->select(
+        'informacion_inscripcion.*',
+        DB::raw("DATE_PART('year', AGE(datos_identificacion.fecha_nacimiento)) as edad") // Calcular edad correctamente
+    )
     ->where('check', true) // Filtrar SIEMPRE los registros con check = true
-    ->orderBy('id', 'desc'); // Ordenar por ID descendente
+    ->orderBy('informacion_inscripcion.id', 'desc'); // Ordenar por ID descendente
      // Aplicar filtros adicionales 
      if ($request->filled('cohorte_id')) {
         $queryStatistics->where('cohorte_id', $request->cohorte_id);
@@ -1046,6 +1101,19 @@ public function getIndicadoresWithStatisticsPrint(Request $request)
             $query->where('apellidos', 'ILIKE', "%{$request->apellidos}%");
         });
     }
+
+    if ($request->filled('edad_mayor')) {
+        $queryStatistics->whereHas('datosIdentificacion', function ($query) use ($request) {
+            $query->whereRaw("DATE_PART('year', AGE(fecha_nacimiento)) > ?", [$request->edad_mayor]);
+        });
+    }
+    
+    if ($request->filled('edad_menor')) {
+        $queryStatistics->whereHas('datosIdentificacion', function ($query) use ($request) {
+            $query->whereRaw("DATE_PART('year', AGE(fecha_nacimiento)) < ?", [$request->edad_menor]);
+        });
+    }
+    
   
 
     // Si en el request se envía 'tlf' con valor 'true', filtrar por registros donde telefono_celular no sea nulo
@@ -1130,6 +1198,17 @@ public function getIndicadoresWithStatisticsPrint(Request $request)
             'cantidad' => $count
         ];
     }
+    $promedioEdad = $totalInscritos > 0 ? $datosParaEstadisticas->avg('edad') : 0;
+    $mayorEdad = $totalInscritos > 0 ? $datosParaEstadisticas->max('edad') : 0;
+    $menorEdad = $totalInscritos > 0 ? $datosParaEstadisticas->min('edad') : 0;
+      // Cálculo de edades en rangos
+      $rangoEdades = [
+        '6-12' => $datosParaEstadisticas->whereBetween('edad', [6, 12])->count(),
+        '13-17' => $datosParaEstadisticas->whereBetween('edad', [13, 17])->count(),
+        '18-25' => $datosParaEstadisticas->whereBetween('edad', [18, 25])->count(),
+        '26-35' => $datosParaEstadisticas->whereBetween('edad', [26, 35])->count(),
+        'Más de 35' => $datosParaEstadisticas->where('edad', '>', 35)->count(),
+    ];
 
 // Contar géneros respetando la relación `datosIdentificacion`
 $totalMasculino = $datosParaEstadisticas->filter(function ($item) {
@@ -1191,6 +1270,7 @@ $datos = $queryStatistics->get();
                 'inscritosPatrocinados' => $inscritosPatrocinados,
             'participantesPorEstado' => $participantesPorEstado,    
             'cursosPorArea' => $cursosPorArea,
+            'rangoEdades'=>$rangoEdades,
         ],
         
     ]);

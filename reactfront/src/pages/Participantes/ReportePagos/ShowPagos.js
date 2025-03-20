@@ -17,6 +17,8 @@ import { RiCoinsFill} from "react-icons/ri";
 import { TbCoins } from "react-icons/tb";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 
 
@@ -54,6 +56,11 @@ const ShowPagos = () => {
     const [formaPagoOptions, setFormaPagoOptions] = useState([]);
 
     const [showModalInfo, setShowModalInfo] = useState(false);
+    const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+              
+    const toggleTablaExpandida = () => {
+        setMostrarSoloTabla(prevState => !prevState);
+    };  
 
      const [filters, setFilters] = useState({
                 cedula_identidad: '',
@@ -284,6 +291,15 @@ const handlePageChange = (newPage) => {
 
     return (
         <div className="container-fluid mt-2" style={{ fontSize: '0.85rem' }}>
+             <motion.div 
+                initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                animate={{
+                    opacity: mostrarSoloTabla ? 0 : 1,
+                    maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                }}
+                transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+            >
             <div className="col-lg-11 mx-auto"> 
             <div className="stat-box d-flex justify-content-between" style={{ maxWidth: '100%' }}>
                 {/* Total de Pagos */}
@@ -310,7 +326,7 @@ const handlePageChange = (newPage) => {
             </div>
             </div>
 
-
+            </motion.div>
 
             <div className="row" style={{ marginTop: '10px' }}>
            
@@ -325,6 +341,14 @@ const handlePageChange = (newPage) => {
                     <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
                         <h2>Lista de Reportes de Pagos</h2>
                         <div className="d-flex align-items-center">
+                             <Button 
+                                variant="info me-2" 
+                                onClick={toggleTablaExpandida} 
+                                style={{ padding: '5px 15px' }}
+                                title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                            >
+                                {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                            </Button>
                             <Form.Control
                                 type="text"
                                 placeholder="Buscar por Cédula"

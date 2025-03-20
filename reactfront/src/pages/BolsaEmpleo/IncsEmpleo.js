@@ -273,9 +273,6 @@ const IncsEmpleo = () => {
         };
         setFilas(nuevoEstadoFilas);
     };
-  
-
-
 
         const handleInscripcion = async () => {
             let todosParticipantes = [...filas];

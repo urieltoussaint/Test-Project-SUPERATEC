@@ -16,10 +16,11 @@ protected $fillable = ['datos_identificacion_id','estado_civil_id','discapacidad
     'aspectos_mejorables','exp_laboral_id','quien_vive_id','rol_hogar_id','tlf_casa','tlf_celular','email','sector','horario_mañana_id','horario_tarde_id'
 ];
 
-public function DatosIdentificacion()
+public function datosIdentificacion()
 {
     return $this->hasOne(DatosIdentificacion::class,  'id','datos_identificacion_id');
 }
+
 
 public function EstadoCivil()
 {

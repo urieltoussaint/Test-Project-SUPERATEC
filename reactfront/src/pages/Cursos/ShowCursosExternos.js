@@ -14,6 +14,8 @@ import { ResponsiveContainer,PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, C
 import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 const endpoint = 'http://localhost:8000/api';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -68,6 +70,11 @@ const ShowCursosExternos = () => {
     const [mayorIngreso, setMayorIngreso] = useState({});
     const [totalPages, setTotalPages] = useState(1);  // Agregar estado para el total de páginas
     const [showModalInfo, setShowModalInfo] = useState(false);
+    const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+        
+    const toggleTablaExpandida = () => {
+        setMostrarSoloTabla(prevState => !prevState);
+    };
     
 
     const [filters, setFilters] = useState({
@@ -450,6 +457,15 @@ const participantsByAportePatrocinado = [
    
     return (
       <div className="container-fluid mt-2" style={{ fontSize: '0.85rem' }}>
+          <motion.div 
+                initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                animate={{
+                    opacity: mostrarSoloTabla ? 0 : 1,
+                    maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                }}
+                transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+            >
        <div className="stat-box d-flex justify-content-between" style={{ maxWidth: '100%' }}> {/* Limitar el ancho máximo */}
         <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%' }}> {/* Reducir el ancho a 22% */}
           <div className="stat-icon"><FaBook /></div>
@@ -492,16 +508,28 @@ const participantsByAportePatrocinado = [
 
         </div>
       </div>
+      </motion.div>
 
 
     
         <div className="row mt-2">
-          {/* Columna para la tabla */}
-          <div className="col-lg-9"> {/* Ajustado para más espacio a la tabla */}
+            <motion.div
+                initial={{ width: "75%" }}
+                animate={{ width: mostrarSoloTabla ? "100%" : "75%" }}
+                transition={{ duration: 0.5 }}
+            >
             <div className="card-box" style={{ padding: '10px' }}> {/* Reduce padding de la tabla */}
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 style={{ fontSize: '1.8rem' }}>Unidad Curricular Externa</h2>
                 <div className="d-flex align-items-center">
+                  <Button 
+                        variant="info me-2" 
+                        onClick={toggleTablaExpandida} 
+                        style={{ padding: '5px 15px' }}
+                        title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                    >
+                        {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                    </Button>
                   <Form.Control
                     name="curso_descripcion"
                     type="text"
@@ -647,8 +675,10 @@ const participantsByAportePatrocinado = [
 
               
 
-            </div>
+            
           </div>
+          </motion.div>
+          {!mostrarSoloTabla && (
     
     
           <div className="col-lg-3" style={{ marginLeft: '-100px' }}> {/* Reduce espacio entre columnas */}
@@ -691,7 +721,13 @@ const participantsByAportePatrocinado = [
           </div>
 
           </div>
+          )}
         </div>
+        <motion.div 
+              initial={{ opacity: 1, height: "auto" }}
+              animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+              transition={{ duration: 0.5 }}
+          >
          {/* Gráfica de Estado de Pagos justo debajo de la tabla */}
          <div className="col-lg-12 d-flex  mt-2 justify-content-between"> {/* Añadido justify-content-between para separar */} 
                 <div className="chart-box" style={{ flex: '1 1 30%', maxWidth: '30%', marginRight: '10px' }}>
@@ -823,6 +859,7 @@ const participantsByAportePatrocinado = [
 
                 </div>
               </div>
+              </motion.div>
 
 
        {/* Modal  de eliminación */}

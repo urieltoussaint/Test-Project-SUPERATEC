@@ -14,26 +14,47 @@ const ShowMoreDatos = ({ onReload }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true); // Inicia la animación de carga
-      try {
-        let relationsArray = ['nacionalidad', 'estado', 'statusSeleccion', 'grupoPrioritario', 'procedencia', 'genero', 'nivelInstruccion','comoEnteroSuperatec'];
-        const relations = relationsArray.join(',');
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${endpoint}/datos/${id}?with=${relations}`,{
-          headers: {
-              Authorization: `Bearer ${token}`,
-          },
-        });
-        setData(response.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false); // Detiene la animación de carga
-      }
+        setLoading(true); // Inicia la animación de carga
+        try {
+            let relationsArray = ['nacionalidad', 'estado', 'statusSeleccion', 'grupoPrioritario', 'procedencia', 'genero', 'nivelInstruccion', 'comoEnteroSuperatec'];
+            const relations = relationsArray.join(',');
+            const token = localStorage.getItem('token');
+
+            const response = await axios.get(`${endpoint}/datos/${id}?with=${relations}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            let data = response.data;
+
+            // Calcular la edad usando la fecha de nacimiento y la fecha actual
+            if (data.fecha_nacimiento) {
+                const birthDate = new Date(data.fecha_nacimiento);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+
+                // Ajustar edad si el cumpleaños aún no ha ocurrido este año
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                // Agregar la edad al objeto de datos
+                data.edad = age;
+            }
+
+            setData(data);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setLoading(false); // Detiene la animación de carga
+        }
     };
 
     fetchData();
-  }, [id, setLoading]);
+}, [id, setLoading]);
+
 
   return (
     <div className="container my-5"> {/* Añadido margen superior */}

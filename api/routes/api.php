@@ -177,7 +177,8 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
      Route::put('participantes-bolsa/{id}', [PartBolsaEmpleoController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
      Route::delete('participantes-bolsa/{id}', [PartBolsaEmpleoController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
      Route::get('participantes-bolsa/{id}', [PartBolsaEmpleoController::class, 'show'])->middleware('role:admin,superuser,invitado,pagos');
-     Route::get('empleo', [InscBolsaEmpleoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('participantes-bolsas/{cedula}', [PartBolsaEmpleoController::class, 'searchCedula'])->middleware('role:admin,superuser,invitado,pagos');   
+    Route::get('empleo', [InscBolsaEmpleoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
      Route::post('empleo', [InscBolsaEmpleoController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
      Route::put('empleo/{id}', [InscBolsaEmpleoController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
      Route::delete('empleo/{id}', [InscBolsaEmpleoController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');

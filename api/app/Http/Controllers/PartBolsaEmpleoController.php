@@ -71,6 +71,35 @@ public function searchByCedulaInscBolsaEmpleo(Request $request)
     return response()->json($datos);
 }
 
+public function searchCedula(Request $request)
+{
+    $query = $request->input('query');
+
+    // Buscar en PartBolsaEmpleo, relacionando con DatosIdentificacion
+    $datos = PartBolsaEmpleo::whereHas('datosIdentificacion', function ($q) use ($query) {
+            $q->where('cedula_identidad', 'LIKE', "%{$query}%");
+        })
+        ->get();
+
+    if ($datos->isEmpty()) {
+        return response()->json([
+            'error' => true,
+            'message' => 'Participante no está inscrito en la bolsa de empleo'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Participante ya está inscrito en la bolsa de empleo',
+        'data' => $datos
+    ], 200);
+}
+
+
+
+
+
+
 
 
 

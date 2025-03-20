@@ -83,6 +83,7 @@ const IncsParticipanteBolsa = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
+            
     
             return response.data.map((cedula) => ({
                 value: cedula.cedula_identidad,
@@ -124,14 +125,39 @@ const IncsParticipanteBolsa = () => {
     };
     
 
-    const handleSeleccionar = async () => {
+    const handleSeleccionar = async (cedula) => {
+        try {
+            const token = localStorage.getItem('token');
+    
+            // Verificar si el participante ya está inscrito en la bolsa de empleo
+            const checkResponse = await axios.get(`${endpoint}/participantes-bolsas/${cedula}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+    
+            // Si la respuesta es válida, significa que ya está inscrito
+            if (checkResponse.status === 200) {
+                setError("El participante ya está inscrito en la bolsa de empleo");
+                return;
+            }
+        } catch (error) {
+            // Si obtenemos un 404, significa que NO está inscrito, y podemos proceder
+            if (error.response && error.response.status === 404) {
+                console.log("Participante no está inscrito, procediendo con la selección...");
+                setError(""); // Limpiar cualquier error anterior
+            } else {
+                console.error("Error verificando inscripción en la bolsa de empleo:", error);
+                setError("Error al verificar la inscripción en la bolsa de empleo");
+                return;
+            }
+        }
+    
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${endpoint}/select-bolsa`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
     
-            const { estado_civil, discapacidad, disponibilidad,exp_laboral,quien_vive,rol_hogar,horario_mañana,horario_tarde } = response.data;
+            const { estado_civil, discapacidad, disponibilidad, exp_laboral, quien_vive, rol_hogar, horario_mañana, horario_tarde } = response.data;
     
             // Guardar las opciones en el estado de filterOptions
             setFilterOptions({
@@ -148,8 +174,11 @@ const IncsParticipanteBolsa = () => {
             setSelectVisible(true);  // Mostrar los selectores
         } catch (error) {
             console.error('Error fetching filter options:', error);
+            setError("Error al obtener las opciones de la bolsa de empleo");
         }
     };
+    
+    
 
 const handleInscripcion = async (action) => {
     // Objeto para almacenar errores
@@ -228,19 +257,17 @@ const handleInscripcion = async (action) => {
 
                
             </div>
-            {error && <div className="alert alert-danger">{error}</div>}
+            {error && <div className="alert alert-danger mt-2">{error}</div>}
+
             {datos && (
                 <div className="mt-3">
-                <div className="d-flex">
-                    <p className="me-3"><strong>Nombres:</strong> {datos.nombres}</p>
-                    <p><strong>Apellidos:</strong> {datos.apellidos}</p>
-                </div>
-                <div className="d-flex">
-                    
-                </div>
-                <Button variant="info" onClick={handleSeleccionar}>
-                    Seleccionar
-                </Button>
+                    <div className="d-flex">
+                        <p className="me-3"><strong>Nombres:</strong> {datos.nombres}</p>
+                        <p><strong>Apellidos:</strong> {datos.apellidos}</p>
+                    </div>
+                    <Button variant="info" onClick={() => handleSeleccionar(datos.cedula_identidad)}>
+                        Seleccionar
+                    </Button>
 
             </div>
             
