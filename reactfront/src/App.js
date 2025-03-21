@@ -205,20 +205,9 @@ const AuthenticatedLayout = ({ children }) => {
           },
         });
 
-        // Llamar a la API para guardar la tasa
-        console.log("Llamando a /save");
-
-        const token2 = localStorage.getItem('token');
-        const response2 = await axios.get(`${endpoint}/tasa-bcv/save`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
         console.log("Tasa guardada correctamente");
   
-       
-        
+
         // Mostrar la tasa actual (puedes ajustar según sea necesario)
         console.log("Tasa BCV:", response.data.dolarBcv);
   
@@ -232,12 +221,12 @@ const AuthenticatedLayout = ({ children }) => {
   
   
   const scheduleTasaUpdate = () => {
-    const targetHour = 9; // Hora a la que deseas ejecutar la función (22 = 10 PM)
-    const targetMinutes = 50; // Minutos de la hora objetivo (por ejemplo, 12)
+    const targetHour = 12; // Hora a la que deseas ejecutar la función (22 = 10 PM)
+    const targetMinutes = 31; // Minutos de la hora objetivo (por ejemplo, 12)
     
     // Obtener la hora actual en la zona horaria de Caracas (UTC-4)
     const now = new Date();
-  
+
     // Crear un formato de fecha para Caracas
     const timeZone = 'America/Caracas';
     const formatter = new Intl.DateTimeFormat('es-VE', {

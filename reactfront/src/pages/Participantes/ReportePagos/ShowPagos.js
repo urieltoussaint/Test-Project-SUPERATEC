@@ -141,7 +141,20 @@ const handlePageChange = (newPage) => {
 };
 
 
+const getBCV = async () => {
+    try {
+        console.log("Llamando a /get");
 
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${endpoint}/tasa-bcv/get`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+    } catch (error) {
+        console.error('Error al obtener la última tasa BCV:', error);
+    }
+};
 
     const getLatestTasaBCV = async () => {
         try {
@@ -341,6 +354,13 @@ const handlePageChange = (newPage) => {
                     <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
                         <h2>Lista de Reportes de Pagos</h2>
                         <div className="d-flex align-items-center">
+                        <Button
+                                variant="info me-2"
+                                onClick={getBCV}
+                                style={{ padding: '5px 10px', width: '90px' }} // Ajusta padding y ancho
+                                title= "Recargar datos"
+
+                                ></Button>
                              <Button 
                                 variant="info me-2" 
                                 onClick={toggleTablaExpandida} 
