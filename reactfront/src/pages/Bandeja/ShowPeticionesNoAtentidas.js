@@ -14,6 +14,8 @@ import { FaCheckCircle, FaSync, FaUserFriends,FaSearch } from 'react-icons/fa';
 import { ProgressBar } from 'react-bootstrap';
 import { RiCheckboxBlankCircleFill, RiCheckboxIndeterminateFill } from "react-icons/ri";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 
 
@@ -50,6 +52,12 @@ const ShowPeticiones = () => {
     const [selectedDateRange, setSelectedDateRange] = useState('30d');
 
     const [selectedFinishDateRange, setSelectedFinishDateRange] = useState(''); 
+     const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+                  
+        const toggleTablaExpandida = () => {
+            setMostrarSoloTabla(prevState => !prevState);
+        }; 
+    
 
     // Ajusta el handle para este nuevo filtro
     const handleFinishDateRangeChange = (e) => {
@@ -303,6 +311,15 @@ const handleNavigate = (peticiones) => {
 
     return (
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
+             <motion.div 
+                                    initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                                    animate={{
+                                        opacity: mostrarSoloTabla ? 0 : 1,
+                                        maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                                    }}
+                                    transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                                    style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+                                >
             <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
                 <div className="stat-card" style={{  }}>
                     <div className="stat-icon" style={{ fontSize: '14px', color: '#333', marginBottom: '1px' }}><RiCheckboxBlankCircleFill /></div>
@@ -333,6 +350,8 @@ const handleNavigate = (peticiones) => {
                 </div>
                         
         </div>
+        </motion.div>
+
         
                 <div className="row" style={{ marginTop: '10px' }}>
                 {/* Columna para la tabla */}
@@ -342,6 +361,14 @@ const handleNavigate = (peticiones) => {
                         <h1 style={{ marginRight: '10px' }}>Bandeja de Entrada</h1>
 
                         <div className="d-flex" style={{ gap: '5px' }}> 
+                             <Button 
+                                variant="info me-2" 
+                                onClick={toggleTablaExpandida} 
+                                style={{ padding: '5px 15px' }}
+                                title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                            >
+                                {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                            </Button>
                             <Button
                             variant="info"
                             onClick={loadData}
@@ -428,6 +455,11 @@ const handleNavigate = (peticiones) => {
 
             <ToastContainer />
             </div>
+            <motion.div 
+                                        initial={{ opacity: 1, height: "auto" }}
+                                        animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+                                        transition={{ duration: 0.5 }}
+                                    >
             <div className="col-lg-11 mx-auto">
                 <div className="chart-box" style={{ marginRight: '10px', marginTop:'30px' }}>
                     <h4>Comparativa de Peticiones Recibidas vs. Atendidas</h4>
@@ -463,6 +495,7 @@ const handleNavigate = (peticiones) => {
                         </ResponsiveContainer>
                 </div>
             </div>
+            </motion.div>
         
         
         </div>

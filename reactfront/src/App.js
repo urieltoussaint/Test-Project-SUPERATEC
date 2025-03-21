@@ -232,8 +232,8 @@ const AuthenticatedLayout = ({ children }) => {
   
   
   const scheduleTasaUpdate = () => {
-    const targetHour = 12; // Hora a la que deseas ejecutar la función (22 = 10 PM)
-    const targetMinutes = 30; // Minutos de la hora objetivo (por ejemplo, 12)
+    const targetHour = 9; // Hora a la que deseas ejecutar la función (22 = 10 PM)
+    const targetMinutes = 50; // Minutos de la hora objetivo (por ejemplo, 12)
     
     // Obtener la hora actual en la zona horaria de Caracas (UTC-4)
     const now = new Date();

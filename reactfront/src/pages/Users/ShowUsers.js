@@ -12,6 +12,8 @@ import PaginationTable from '../../components/PaginationTable';
 import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { Modal } from 'react-bootstrap';
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F', '#FFBB28'];
 
@@ -51,6 +53,11 @@ const ShowUsers = () => {
     const [averageAntiquity, setAverageAntiquity] = useState(0);  // Total de páginas desde el backend
 
     const [statistics, setStatistics] = useState({});  // Datos de estadísticas
+     const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+                  
+        const toggleTablaExpandida = () => {
+            setMostrarSoloTabla(prevState => !prevState);
+        }; 
 
 
 
@@ -228,6 +235,15 @@ const ShowUsers = () => {
         
         
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
+             <motion.div 
+                initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                animate={{
+                    opacity: mostrarSoloTabla ? 0 : 1,
+                    maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                }}
+                transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+            >
             <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
                 {/* Total de Uduarios */}
                 <div className="stat-card" style={{  }}>
@@ -246,6 +262,7 @@ const ShowUsers = () => {
 
       
         </div>
+        </motion.div>
 
 
         <div className="row" style={{ marginTop: '10px' }}>
@@ -256,6 +273,14 @@ const ShowUsers = () => {
                         <h1 style={{ marginRight: '10px' }}>Lista de Usuarios</h1>
 
                         <div className="d-flex" style={{ gap: '5px' }}> 
+                             <Button 
+                                variant="info me-2" 
+                                onClick={toggleTablaExpandida} 
+                                style={{ padding: '5px 15px' }}
+                                title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                            >
+                                {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                            </Button>
                             <Button
                             variant="info"
                             onClick={loadData}
@@ -355,7 +380,11 @@ const ShowUsers = () => {
             <ToastContainer />
         </div>
 
-        
+         <motion.div 
+                initial={{ opacity: 1, height: "auto" }}
+                animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+                transition={{ duration: 0.5 }}
+            >
         <div className="col-lg-12 d-flex justify-content-between flex-wrap" style={{ gap: '20px', marginTop: '10px' }}>
             <div className="chart-box" style={{ flex: '1 1 45%', maxWidth: '45%', marginRight: '10px' }}>
                 <h4 style={{ fontSize: '1.2rem' }}>Distribución de Cargos</h4>
@@ -396,6 +425,7 @@ const ShowUsers = () => {
                     </ResponsiveContainer>
             </div>
         </div>
+        </motion.div>
             
 
 

@@ -12,6 +12,8 @@ import PaginationTable from '../../components/PaginationTable';  // Importa el c
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaUserFriends, FaClock, FaBook,FaSync,FaSearch  } from 'react-icons/fa';  // Importamos íconos de react-icons
@@ -45,6 +47,11 @@ const ShowPostulacionesEmpresas = () => {
     const totalParticipantes = statistics?.totalPostulaciones || 0;
 
     const [showModalInfo, setShowModalInfo] = useState(false);
+    const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+                        
+        const toggleTablaExpandida = () => {
+            setMostrarSoloTabla(prevState => !prevState);
+        }; 
 
     const [filters, setFilters] = useState({
         cedula_identidad: '',
@@ -307,6 +314,15 @@ const ShowPostulacionesEmpresas = () => {
 
     return (
         <div className="container-fluid " style={{ fontSize: '0.85rem' }}>
+            <motion.div 
+                        initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                        animate={{
+                            opacity: mostrarSoloTabla ? 0 : 1,
+                            maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                        }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                        style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+                    >
             <div className="stat-box d-flex " style={{ maxWidth: '100%' }}> 
                 {/* Total de Participantes */}
                 <div className="stat-card" style={{ padding: '5px', margin: '0 10px', width: '22%' }}>
@@ -316,7 +332,7 @@ const ShowPostulacionesEmpresas = () => {
                 </div>
                 
             </div>
-
+            </motion.div>
 
             <div className="row" style={{ marginTop: '10px' }}>
                 {/* Columna para la tabla */}
@@ -325,6 +341,14 @@ const ShowPostulacionesEmpresas = () => {
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h2 style={{ fontSize: '1.8rem' }}>Lista de Postulaciones para {data.nombre_patrocinante}</h2>
                             <div className="d-flex align-items-center">
+                            <Button 
+                                    variant="info me-2" 
+                                    onClick={toggleTablaExpandida} 
+                                    style={{ padding: '5px 15px' }}
+                                    title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                                >
+                                    {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                                </Button>
                            
                                     <Button
                                     variant="info me-2"

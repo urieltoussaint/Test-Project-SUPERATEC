@@ -13,8 +13,8 @@ import { FaLocationDot } from "react-icons/fa6";
 import { FaPerson } from "react-icons/fa6";
 import { FaSync,FaSearch } from 'react-icons/fa';  // Importamos íconos de react-icons
 import { ResponsiveContainer,Line, LineChart,BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,AreaChart,Area,Radar,RadarChart, PieChart, Cell, Pie, ComposedChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-
-
+import { FaExpand, FaCompress } from 'react-icons/fa'; // Íconos para expandir/contraer
+import { motion } from 'framer-motion';
 
 
 
@@ -43,6 +43,11 @@ const ShowVoluntariados = () => {
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FF4567'];
     const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
     const [statistics, setStatistics] = useState({});
+    const [mostrarSoloTabla, setMostrarSoloTabla] = useState(false);
+                      
+            const toggleTablaExpandida = () => {
+                setMostrarSoloTabla(prevState => !prevState);
+            }; 
 
     
 
@@ -237,6 +242,15 @@ const ShowVoluntariados = () => {
     
     return (
         <div className="container-fluid mt-2" style={{ fontSize: '0.85rem' }}>
+            <motion.div 
+                            initial={{ opacity: 1, maxHeight: "500px" }} // Establece una altura máxima inicial
+                            animate={{
+                                opacity: mostrarSoloTabla ? 0 : 1,
+                                maxHeight: mostrarSoloTabla ? 0 : "500px", // Reduce la altura en transición
+                            }}
+                            transition={{ duration: 0.5, ease: "easeInOut" }} // Animación más fluida
+                            style={{ overflow: "hidden" }} // Evita que los elementos internos se muestren fuera de la caja
+                        >
             <div className="col-lg-11 mx-auto d-flex justify-content-center"> 
             <div className="stat-box mx-auto col-lg-11" style={{ maxWidth: '100%' }}> 
             {/* Total de Voluntariados */}
@@ -287,6 +301,7 @@ const ShowVoluntariados = () => {
                 </div>
                 </div>
                 </div> 
+                </motion.div>
 
                 <div className="row" style={{ marginTop: '10px' }}>
                 <div className="col-lg-11 mx-auto"> {/* Agregamos 'mx-auto' para centrar */}
@@ -294,6 +309,14 @@ const ShowVoluntariados = () => {
                             <div className="d-flex justify-content-between align-items-center mb-3" style={{ gap: '0px' }}>
                         <h1>Lista de Voluntarios</h1>
                         <div className="d-flex align-items-center">
+                        <Button 
+                                variant="info me-2" 
+                                onClick={toggleTablaExpandida} 
+                                style={{ padding: '5px 15px' }}
+                                title={mostrarSoloTabla ? "Mostrar Todo" : "Modo Tabla Expandida"}
+                            >
+                                {mostrarSoloTabla ? <FaCompress /> : <FaExpand />}
+                            </Button>
                             <Form.Control
                                 name="cedula_identidad"
                                 type="text"
@@ -418,6 +441,11 @@ const ShowVoluntariados = () => {
             </Modal>
             <ToastContainer />
         </div>
+        <motion.div 
+            initial={{ opacity: 1, height: "auto" }}
+            animate={{ opacity: mostrarSoloTabla ? 0 : 1, height: mostrarSoloTabla ? 0 : "auto" }}
+            transition={{ duration: 0.5 }}
+        >
         <div className="col-lg-12 d-flex justify-content-between" style={{ gap: '20px', marginTop:'10px' }}>
             <div className="chart-box" style={{ flex: '1 1 31%', maxWidth: '31%', marginRight: '10px'}}>
             <h4 style={{ fontSize: '1.2rem', textAlign: 'center' }}>Distribución por Área</h4>
@@ -476,7 +504,9 @@ const ShowVoluntariados = () => {
 
             </div>
             </div>
+            </motion.div>
         </div>
+        
         </div>
         </div>
     );
