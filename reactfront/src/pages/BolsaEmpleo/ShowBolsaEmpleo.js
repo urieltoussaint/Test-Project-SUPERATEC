@@ -226,6 +226,14 @@ const ShowBolsaEmpleo = () => {
                 >
                     <i className="bi bi-eye"></i>
                 </Button>
+                <Button
+                    variant="btn btn-info" // Cambia aquí, solo debes pasar 'outline-info'
+                    onClick={() => navigate(`/postulaciones-empresas/${dato.id}`)}
+                    className="me-2"
+                    title='Ver Postulados'
+                >
+                    <i className="bi bi-person"></i>
+                </Button>
 
     
                     {userRole === 'admin' || userRole === 'superuser' ? (

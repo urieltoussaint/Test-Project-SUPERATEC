@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Table from 'react-bootstrap/Table';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { Modal } from 'react-bootstrap';
@@ -21,9 +21,9 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 const endpoint = 'http://localhost:8000/api';
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F', '#FFBB28'];
 
-const ShowPostulaciones = () => {
+const ShowPostulacionesEmpresas = () => {
     const [datos, setDatos] = useState([]);
-
+    const [data, setData] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
     const [showModal, setShowModal] = useState(false);
@@ -31,6 +31,10 @@ const ShowPostulaciones = () => {
     const [loadingData, setLoadingData] = useState(false); // Estado para controlar la recarga
     const [totalPages, setTotalPages] = useState(1); // Default to 1 page initially
     const [statistics, setStatistics] = useState({});
+    const [nivelInstruccionOptions, setNivelInstruccionOptions] = useState([]);
+    const [generoOptions, setGeneroOptions] = useState([]);
+    const [estadoOptions, setEstadoOptions] = useState([]);
+    const { id } = useParams();
     // Mueve esto al principio del componente
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -43,8 +47,13 @@ const ShowPostulaciones = () => {
     const [showModalInfo, setShowModalInfo] = useState(false);
 
     const [filters, setFilters] = useState({
-        nombre_patrocinante: '',
+        cedula_identidad: '',
+        nombres: '',
+        apellidos: '',
+        nivel_instruccion_id: '',
         cargo_ofrecido:'',
+        genero_id: '',
+        estado_id:'',
      
     });
     
@@ -73,6 +82,8 @@ const ShowPostulaciones = () => {
     useEffect(() => {
         setLoading(true);
         getAllDatos ();
+        fetchData();
+        fetchFilterOptions();
         setLoading(false);
        
     }, []); 
@@ -88,7 +99,7 @@ const ShowPostulaciones = () => {
     const getAllDatos = async (page = 1) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${endpoint}/postulaciones-participantes`, {
+            const response = await axios.get(`${endpoint}/postulaciones-empresas`, {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { ...filters, page }, // Incluye `page` en los parámetros
             });
@@ -107,22 +118,22 @@ const ShowPostulaciones = () => {
     };
 
 
-    // const fetchFilterOptions = async () => {
-    //     try {
-    //         const token = localStorage.getItem('token');
-    //         const response = await axios.get(`${endpoint}/filter-datos`, { headers: { Authorization: `Bearer ${token}` } });
+    const fetchFilterOptions = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${endpoint}/filter-datos`, { headers: { Authorization: `Bearer ${token}` } });
             
-    //         setNivelInstruccionOptions(response.data.nivel_instruccion);
-    //         setGeneroOptions(response.data.genero);
-    //         setEstadoOptions(response.data.estado);
+            setNivelInstruccionOptions(response.data.nivel_instruccion);
+            setGeneroOptions(response.data.genero);
+            setEstadoOptions(response.data.estado);
             
 
     
-    //     } catch (error) {
-    //         setError('Error fetching filter options');
-    //         console.error('Error fetching filter options:', error);
-    //     }
-    // };
+        } catch (error) {
+            setError('Error fetching filter options');
+            console.error('Error fetching filter options:', error);
+        }
+    };
 
 
     const deleteDatos = async () => {
@@ -143,16 +154,29 @@ const ShowPostulaciones = () => {
             setShowModal(false); // Cierra el modal tras el error
         }
     };
+
+    const fetchData = async () => {
+        setLoading(true); // Inicia la animación de carga
+        try {
+          const token = localStorage.getItem('token');
+          const response = await axios.get(`${endpoint}/patrocinantes/${id}`,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+          });
+          setData(response.data);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+      
+        }
+      };
     
-
-
-
-
 
     const loadData = async () => {
         setLoadingData(true); // Inicia el estado de carga
         try {
-            await (getAllDatos()); // Espera a que getAllDatos haga la solicitud y actualice los datos
+            await (getAllDatos(),fetchFilterOptions()); // Espera a que getAllDatos haga la solicitud y actualice los datos
         } catch (error) {
             console.error('Error recargando los datos:', error); // Maneja el error si ocurre
         } finally {
@@ -243,11 +267,15 @@ const ShowPostulaciones = () => {
       };
     
     
-    const columns = ["Empresa", "Cargo Ofrecido", "Fecha de Postulación", "Acciones"];
+    const columns = ["cedula_identidad", "Nombres", "Apellidos","Estado","Nivel de Instrucción","Cargo Ofrecido", "Fecha de Postulación", "Acciones"];
 
     const renderItem = (dato) => (
         <tr key={dato.id}>
-            <td >{dato?.patrocinante?.nombre_patrocinante}</td>
+            <td >{dato?.part_bolsa_empleo?.datos_identificacion?.cedula_identidad}</td>
+            <td >{dato?.part_bolsa_empleo?.datos_identificacion?.nombres}</td>
+            <td >{dato?.part_bolsa_empleo?.datos_identificacion?.apellidos}</td>
+            <td >{dato?.part_bolsa_empleo?.datos_identificacion?.estado?.descripcion}</td>
+            <td >{dato?.part_bolsa_empleo?.datos_identificacion?.nivel_instruccion?.descripcion}</td>
             <td >{dato?.cargo_ofrecido}</td>
             <td >{dato?.fecha_post}</td>
 
@@ -295,7 +323,7 @@ const ShowPostulaciones = () => {
                 <div className="col-lg-12"> {/* Ajustado para más espacio a la tabla */}
                     <div className="card-box" style={{ padding: '10px' }}> {/* Reduce padding de la tabla */}
                         <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h2 style={{ fontSize: '1.8rem' }}>Lista de Postulaciones</h2>
+                            <h2 style={{ fontSize: '1.8rem' }}>Lista de Postulaciones para {data.nombre_patrocinante}</h2>
                             <div className="d-flex align-items-center">
                            
                                     <Button
@@ -341,13 +369,65 @@ const ShowPostulaciones = () => {
                         <div className="d-flex mb-3 ">
                         <Form.Control
                                 type="text"
-                                placeholder="Buscar por Nombre de Empresa"
-                                value={filters.nombre_patrocinante} // Conecta el campo de cédula al estado de filtros
-                                name="nombre_patrocinante"
+                                placeholder="Buscar por Cédula"
+                                value={filters.cedula_identidad} // Conecta el campo de cédula al estado de filtros
+                                name="cedula_identidad"
+                                onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
+                                className="me-2"
+                            />
+                         <Form.Control
+                                type="text"
+                                placeholder="Buscar por Nombre"
+                                value={filters.nombres} // Conecta el campo de cédula al estado de filtros
+                                name="nombres"
                                 onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
                                 className="me-2"
                             />
 
+                        <Form.Control
+                                type="text"
+                                placeholder="Buscar por Apellido"
+                                value={filters.apellidos} // Conecta el campo de cédula al estado de filtros
+                                name="apellidos"
+                                onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
+                                className="me-2"
+                            />
+                            <Form.Select
+                                name="nivel_instruccion_id"
+                                value={filters.nivel_instruccion_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Nivel de Instrucción</option>
+                                {nivelInstruccionOptions?.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+
+                            </Form.Select>
+                            <Form.Select
+                                name="genero_id"
+                                value={filters.genero_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Género</option>
+                                {generoOptions?.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+
+                            </Form.Select>
+                            <Form.Select
+                                name="estado_id"
+                                value={filters.estado_id}
+                                onChange={handleFilterChange}
+                                className="me-2"
+                            >
+                                <option value="">Estado</option>
+                                {estadoOptions?.map(option => (
+                                    <option key={option.id} value={option.id}>{option.descripcion}</option>
+                                ))}
+
+                            </Form.Select>
                         <Form.Control
                                 type="text"
                                 placeholder="Buscar por Cargo Ofrecido"
@@ -356,6 +436,8 @@ const ShowPostulaciones = () => {
                                 onChange={handleFilterChange} // Usa handleFilterChange para actualizar el valor
                                 className="me-2"
                             />
+
+                        
                        
 
                         </div>
@@ -453,4 +535,4 @@ const ShowPostulaciones = () => {
                 );
 };
 
-export default ShowPostulaciones;
+export default ShowPostulacionesEmpresas;

@@ -64,6 +64,9 @@ import IncsParticipanteBolsa from './pages/BolsaEmpleo/IncsParticipanteBolsa';
 import IncsEmpleo from './pages/BolsaEmpleo/IncsEmpleo';
 import ShowPostulados from './pages/BolsaEmpleo/ShowPostulados';
 import ShowMorePostulados from './pages/BolsaEmpleo/ShowMorePostulados';
+import ShowPostulaciones from './pages/BolsaEmpleo/ShowPostulaciones';
+import ShowPostulacionesEmpresas from './pages/BolsaEmpleo/ShowPostulacionesEmpresa';
+import EditIncsParticipanteBolsa from './pages/BolsaEmpleo/EditIncsParticipanteBolsa.js';
 
 function App() {
   return (
@@ -128,17 +131,14 @@ function App() {
             <Route path="/procedencias" element={<AuthenticatedLayout><ShowProcedencias /></AuthenticatedLayout>} />
             <Route path="/procedencias/create" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><CreateProcedencias /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/procedencias/edit/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditProcedencias /></AuthenticatedLayout></ProtectedRoute>}  />
-            
             <Route path="/bolsa-empleo" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowBolsaEmpleo /></AuthenticatedLayout></ProtectedRoute>}  />
-            <Route path="/postulaciones/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowBolsaEmpleo /></AuthenticatedLayout></ProtectedRoute>}  />
-
+            <Route path="/postulaciones/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowPostulaciones /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/postulaciones-empresas/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowPostulacionesEmpresas /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/inscribir-part-bolsa" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><IncsParticipanteBolsa /></AuthenticatedLayout></ProtectedRoute>}  />
+            <Route path="/edit-part-bolsa/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><EditIncsParticipanteBolsa /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/bolsa-empleo/:patrocinanteId" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><IncsEmpleo /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/postulados-bolsa-empleo" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowPostulados /></AuthenticatedLayout></ProtectedRoute>}  />
             <Route path="/postulados-bolsa-empleo/:id" element={<ProtectedRoute allowedRoles={['admin', 'superuser','pagos']}><AuthenticatedLayout><ShowMorePostulados /></AuthenticatedLayout></ProtectedRoute>}  />
-
-
-
 
 
           </Routes>

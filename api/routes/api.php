@@ -181,6 +181,9 @@ Route::middleware('auth.token','throttle:400,1')->group(function () {
     Route::get('empleo', [InscBolsaEmpleoController::class, 'index'])->middleware('role:admin,superuser,invitado,pagos');
      Route::post('empleo', [InscBolsaEmpleoController::class, 'store'])->middleware('role:admin,superuser,invitado,pagos');
      Route::put('empleo/{id}', [InscBolsaEmpleoController::class, 'update'])->middleware('role:admin,superuser,invitado,pagos');
+     Route::get('postulaciones-empresas', [InscBolsaEmpleoController::class, 'getStatisticsEmpresas'])->middleware('role:admin,superuser,invitado,pagos');
+
+     Route::get('postulaciones-participantes', [InscBolsaEmpleoController::class, 'getStatistics'])->middleware('role:admin,superuser,invitado,pagos');
      Route::delete('empleo/{id}', [InscBolsaEmpleoController::class, 'destroy'])->middleware('role:admin,superuser,invitado,pagos');
      Route::get('cedula-empleo/{cedula_identidad}', [PartBolsaEmpleoController::class, 'searchByCedulaInscBolsaEmpleo'])->middleware('role:admin,superuser,invitado,pagos');
      Route::get('postulados-estadisticas', [PartBolsaEmpleoController::class, 'getStatistics'])->middleware('role:admin,superuser,invitado,pagos');
